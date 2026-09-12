@@ -41,16 +41,14 @@ function OrbisSession({ clearJwt }: { clearJwt: () => void }) {
   return (
     <>
       <div className="session-grid">
-        <OrbisPlayer
-          connected={session.connected}
-          muted={session.muted}
-          runStarted={session.runStarted}
-          status={session.status}
-        />
-        <OrbisControls session={session} />
+        <OrbisPlayer session={session} />
+        <HeartWorld session={session} />
       </div>
 
-      <HeartWorld session={session} />
+      <details className="advanced">
+        <summary>Orbis controls</summary>
+        <OrbisControls session={session} />
+      </details>
 
       <NanoBananaExample
         disabled={

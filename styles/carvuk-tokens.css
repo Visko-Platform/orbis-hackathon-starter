@@ -1,0 +1,186 @@
+/* Carvuk Design System */
+
+/*
+ * Color Primitives
+ * Raw color scales - use semantic tokens in components
+ */
+:root {
+  /* Indigo Scale */
+  --indigo-50: 232 100% 96.5%;
+  --indigo-100: 234 96% 92.5%;
+  --indigo-200: 236 92% 87%;
+  --indigo-300: 238 87% 79%;
+  --indigo-400: 242 81% 70%;
+  --indigo-500: 245 76% 60.5%;
+  --indigo-600: 247 76% 57%;
+  --indigo-700: 248 74% 52%;
+  --indigo-800: 248 72% 43%;
+  --indigo-900: 248 69% 33%;
+  --indigo-950: 248 66% 21%;
+
+  /* Soft Scale */
+  --soft-50: 264 70% 97%;
+  --soft-100: 263 68% 94%;
+  --soft-200: 262 66% 90%;
+  --soft-300: 261 65% 85%;
+  --soft-400: 260 63% 79%;
+  --soft-500: 259 60% 72%;
+  --soft-600: 258 50% 61%;
+  --soft-700: 257 48% 48%;
+  --soft-800: 256 55% 32%;
+  --soft-900: 255 58% 22%;
+  --soft-950: 254 60% 13%;
+
+  /* Volt Scale (Mint) — anchored on volt-400 #55f4a7 */
+  --volt-50: 151 100% 95.1%;
+  --volt-100: 151 100% 90.2%;
+  --volt-200: 151 96% 82.5%;
+  --volt-300: 151 91% 73.5%;
+  --volt-400: 150.9 87.8% 64.5%;
+  --volt-500: 152.5 72% 52%;
+  --volt-600: 155.5 78% 42%;
+  --volt-700: 158.5 82% 33.5%;
+  --volt-800: 161.5 80% 27%;
+  --volt-900: 165 76% 22%;
+  --volt-950: 168.5 80% 13.5%;
+
+  /* Gray Scale (Tailwind Stone — warm neutral) */
+  --gray-50: 60 9% 98%;
+  --gray-100: 60 5% 96%;
+  --gray-200: 20 6% 90%;
+  --gray-300: 24 6% 83%;
+  --gray-400: 24 5% 64%;
+  --gray-500: 25 5% 45%;
+  --gray-600: 33 5% 32%;
+  --gray-700: 30 6% 25%;
+  --gray-800: 12 6% 15%;
+  --gray-900: 24 10% 10%;
+  --gray-950: 20 14% 4%;
+
+  /* Success Scale */
+  --success-50: 143.2 76.5% 96.7%;
+  --success-100: 144.2 85.5% 89.2%;
+  --success-200: 145.4 83.8% 78.2%;
+  --success-300: 147.6 76.9% 64.3%;
+  --success-400: 149.5 66% 50.4%;
+  --success-500: 150.4 80.4% 40%;
+  --success-600: 151.7 83.9% 31.6%;
+  --success-700: 152.3 77.4% 26.1%;
+  --success-800: 153.1 69.4% 21.8%;
+  --success-900: 152.9 60.8% 19%;
+  --success-950: 155.6 84.3% 10%;
+
+  /* Warning Scale */
+  --warning-50: 48 100% 96.1%;
+  --warning-100: 48 96.5% 88.8%;
+  --warning-200: 48 96.6% 76.7%;
+  --warning-300: 45.9 96.7% 64.5%;
+  --warning-400: 43.3 96.4% 56.3%;
+  --warning-500: 37.7 92.1% 50.2%;
+  --warning-600: 32.1 94.6% 43.7%;
+  --warning-700: 26 90.5% 37.1%;
+  --warning-800: 22.7 82.5% 31.4%;
+  --warning-900: 21.7 77.8% 26.5%;
+  --warning-950: 20.9 91.7% 14.1%;
+
+  /* Error Scale */
+  --error-50: 355.7 100% 97.3%;
+  --error-100: 355.6 100% 94.7%;
+  --error-200: 352.7 96.1% 90%;
+  --error-300: 352.6 95.7% 81.8%;
+  --error-400: 351.3 94.5% 71.4%;
+  --error-500: 349.7 89.2% 60.2%;
+  --error-600: 346.8 77.2% 49.8%;
+  --error-700: 345.3 82.7% 40.8%;
+  --error-800: 343.4 79.7% 34.7%;
+  --error-900: 341.5 75.5% 30.4%;
+  --error-950: 343.1 87.7% 15.9%;
+}
+
+/*
+ * Light Mode Semantic Tokens
+ * Maps primitives to semantic meanings
+ */
+:root {
+  --radius: 0.625rem;
+
+  /* Background & Foreground */
+  --background: 0 0% 100%;
+  --background-subtle: var(--gray-100);
+  --foreground: var(--gray-950);
+
+  /* Card */
+  --card: 0 0% 100%;
+  --card-filled: var(--gray-100);
+  --card-inset: var(--gray-50);
+  --card-foreground: var(--gray-950);
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: var(--gray-950);
+
+  /* Primary (Indigo) */
+  --primary: var(--indigo-600);
+  --primary-hover: var(--indigo-700);
+  --primary-pressed: var(--indigo-800);
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary (Indigo) */
+  --secondary: var(--indigo-100);
+  --secondary-hover: var(--indigo-200);
+  --secondary-pressed: var(--indigo-300);
+  --secondary-foreground: var(--indigo-600);
+
+  /* Muted */
+  --muted: var(--gray-200);
+  --muted-foreground: var(--gray-600);
+
+  /* Tertiary Text */
+  --tertiary-foreground: var(--gray-500);
+
+  /* Accent (Volt) */
+  --accent: var(--volt-400);
+  --accent-hover: var(--volt-500);
+  --accent-pressed: var(--volt-600);
+  --accent-foreground: var(--indigo-600);
+
+  /* Status Colors */
+  --success: var(--success-500);
+  --warning: var(--warning-500);
+  --error: var(--error-500);
+  --destructive: var(--error-600);
+
+  /* Disabled */
+  --disabled: var(--gray-100);
+  --disabled-foreground: var(--gray-400);
+
+  /* Border & Input */
+  --border: var(--gray-200);
+  --input: var(--gray-300);
+  --ring: var(--indigo-600);
+
+  /* Chart Colors */
+  --chart-1: var(--indigo-600);
+  --chart-2: var(--soft-500);
+  --chart-3: var(--volt-500);
+  --chart-4: var(--indigo-300);
+  --chart-5: var(--soft-300);
+
+  /* Motion — M3 Expressive (web-converted springs) */
+  --motion-spatial-fast: cubic-bezier(0.42, 1.67, 0.21, 0.9);
+  --motion-spatial-default: cubic-bezier(0.38, 1.21, 0.22, 1);
+  --motion-spatial-slow: cubic-bezier(0.39, 1.29, 0.35, 0.98);
+  --motion-effects-fast: cubic-bezier(0.31, 0.94, 0.34, 1);
+  --motion-effects-default: cubic-bezier(0.34, 0.8, 0.34, 1);
+  --motion-effects-slow: cubic-bezier(0.34, 0.88, 0.34, 1);
+
+  /* Sidebar */
+  --sidebar: var(--gray-50);
+  --sidebar-foreground: var(--gray-950);
+  --sidebar-primary: var(--indigo-600);
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: var(--gray-200);
+  --sidebar-accent-foreground: var(--gray-950);
+  --sidebar-border: var(--gray-300);
+  --sidebar-ring: var(--indigo-600);
+}

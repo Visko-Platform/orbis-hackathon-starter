@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import dogImage from "@/dog.png";
 import { NANO_BANANA_PROMPT, ORBIS_KICKOFF_PROMPT } from "@/lib/nano-banana";
+import { Badge, Button, Icon } from "@/components/ui";
 
 type NanoBananaExampleProps = {
   disabled: boolean;
@@ -98,13 +99,24 @@ export function NanoBananaExample({
   };
 
   return (
-    <details className="nano-demo">
-      <summary>Livestreaming example</summary>
+    <details id="image-lab" className="nano-demo panel">
+      <summary>
+        <span className="lab-icon">
+          <Icon name="sparkles" />
+        </span>
+        <span className="lab-summary">
+          <strong className="heading-6">Image lab</strong>
+          <span className="body-sm muted">
+            From a single image to a moving story.
+          </span>
+        </span>
+        <Badge>Nano Banana + Orbis</Badge>
+        <Icon name="chevron" className="disclosure-icon" />
+      </summary>
       <div className="nano-demo-content">
-        <p className="hint">
-          Connect to Orbis, then run the complete example with one button. Nano
-          Banana edits the bundled image, Gemini grounds the user prompt in that
-          result, and Orbis starts streaming from the edited frame.
+        <p className="body-sm muted">
+          Transform the reference image with Nano Banana, then bring it to life
+          with Orbis. Connect your session to try it.
         </p>
 
         <div className="nano-preview-grid">
@@ -117,7 +129,7 @@ export function NanoBananaExample({
                 sizes="(max-width: 800px) 100vw, 50vw"
               />
             </div>
-            <figcaption>Source: dog.png</figcaption>
+            <figcaption>Original image</figcaption>
           </figure>
 
           <figure className="nano-preview">
@@ -126,11 +138,13 @@ export function NanoBananaExample({
                 <img src={outputUrl} alt="Nano Banana edited output" />
               ) : (
                 <span className="nano-output-placeholder">
-                  {busy ? "Editing image…" : "Nano Banana output"}
+                  {busy
+                    ? "Creating your image…"
+                    : "Your transformed image will appear here"}
                 </span>
               )}
             </div>
-            <figcaption>Output · Orbis start image</figcaption>
+            <figcaption>Transformed image · First frame</figcaption>
           </figure>
         </div>
 
@@ -151,14 +165,24 @@ export function NanoBananaExample({
           </p>
         </div>
 
-        <button type="button" disabled={disabled || busy} onClick={editImage}>
+        <Button loading={busy} disabled={disabled} onClick={editImage}>
           {stage === "editing" && "Editing image…"}
           {stage === "analyzing" && "Analyzing image and prompt…"}
           {stage === "starting" && "Starting stream…"}
           {stage === "idle" && "Edit and start stream"}
-        </button>
+        </Button>
 
-        {error && <p className="error">{error}</p>}
+        {disabled && !busy && (
+          <p className="caption muted">
+            Connect to Orbis and reset any active generation to use Image lab.
+          </p>
+        )}
+
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
     </details>
   );

@@ -231,6 +231,11 @@ export function useOrbisSession(onDisconnected: () => void) {
 
   const startRun = () => runAction(() => startGeneration(image, prompt));
 
+  // Start a run from a prompt the caller owns, without going through the
+  // prompt input. Used by the heart rate panel.
+  const startWith = (runPrompt: string) =>
+    runAction(() => startGeneration(null, runPrompt));
+
   const startFromNanoOutput = async (
     editedImage: File,
     groundedPrompt: string,
@@ -296,6 +301,7 @@ export function useOrbisSession(onDisconnected: () => void) {
     selectImage,
     setResolution,
     startRun,
+    startWith,
     startFromNanoOutput,
     setNanoBusy,
     steer,
