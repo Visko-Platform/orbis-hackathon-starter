@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { load } = require("./load.cjs");
 
-const { demoFlows, demoFlowFor, resolveDemoStep, demoChips, stepIndex, stepAssetIds, demoContinuity, ledgerLine } = load("lib/demo/flows.ts");
+const { demoFlows, demoFlowFor, resolveDemoStep, demoChips, stepIndex, stepAssetIds, demoContinuity, ledgerLine, previousStep, watchIdentity, canFollow, followReason } = load("lib/demo/flows.ts");
 const { demoContract } = load("lib/demo/contract.ts");
 const { parseContract, contractClause } = load("lib/knowledge/contract.ts");
 const { productNotesFor } = load("lib/product-cues.ts");
@@ -20,7 +20,8 @@ test("every demo step points at real campaign assets and passes the product know
     for (const step of flow.steps) {
       assert.ok(campaign.assets.some((asset) => asset.id === step.assetId), `${step.id} asset`);
       for (const id of stepAssetIds(step)) assert.ok(campaign.assets.some((asset) => asset.id === id), `${step.id} state ${id}`);
-      assert.ok(step.watches.onWrist || step.watches.inHands, `${step.id} says where the watch is`);
+      assert.ok(step.state.onWrist || step.state.inHands, `${step.id} says where the watch is`);
+      assert.ok(step.state.place === "street" || step.state.place === "boutique", `${step.id} says where he is`);
       assert.deepEqual(validateEngineered(knowledge, step.brief), { ok: true }, step.id);
       assert.ok(step.cues.every((cue) => cue === cue.toLowerCase()), `${step.id} cues are lower-case`);
     }
@@ -37,7 +38,9 @@ test("the Rolex walk follows street → boutique → swap → inspect → wear �
   const inspect = rolex.steps[3];
   assert.ok(inspect.brief.includes("mirror-polished stainless steel screw-down case back") && inspect.brief.includes("no window, engraving or text"));
   assert.ok(inspect.action && inspect.action.includes("single rigid piece"));
-  assert.ok(rolex.steps.filter((step) => step.action).map((step) => step.id).join(",") === "swap,inspect,wear");
+  assert.ok(rolex.steps.slice(1).every((step) => step.action), "every beat after the first has an authored action");
+  assert.ok(inspect.brief.includes("the dial face is never plain steel") && inspect.action.includes("slate dial rotating away"));
+  assert.ok(rolex.steps[2].action.includes("his left wrist bare for a moment"), "the swap takes one watch off before the other goes on");
 });
 
 test("one cast member and a watch ledger carry through every beat", () => {
@@ -45,14 +48,37 @@ test("one cast member and a watch ledger carry through every beat", () => {
   assert.ok(rolex.cast.startsWith("a Chinese man"));
   assert.ok(rolex.steps[0].brief.startsWith("A Chinese man"));
   assert.ok(rolex.steps.slice(1).every((step) => step.brief.includes("The same man")));
-  assert.deepEqual(rolex.steps.map((step) => step.watches.onWrist ?? step.watches.inHands), ["rolex-submariner", "rolex-submariner", "rolex-datejust", "rolex-datejust-back", "rolex-datejust", "rolex-datejust"]);
-  assert.deepEqual(rolex.steps.map((step) => step.watches.onTray ?? null), [null, null, "rolex-submariner", "rolex-submariner", "rolex-submariner", null]);
-  const continuity = demoContinuity(rolex, rolex.steps[3], campaign);
+  assert.deepEqual(rolex.steps.map((step) => step.state.onWrist ?? step.state.inHands), ["rolex-submariner", "rolex-submariner", "rolex-datejust", "rolex-datejust", "rolex-datejust", "rolex-datejust"]);
+  assert.deepEqual(rolex.steps.map((step) => step.state.onTray ?? null), [null, null, "rolex-submariner", "rolex-submariner", "rolex-submariner", null]);
+  assert.deepEqual(rolex.steps.map((step) => step.state.place), ["street", "boutique", "boutique", "boutique", "boutique", "street"]);
+  const continuity = demoContinuity(rolex, rolex.steps[3], campaign, rolex.steps[2]);
   assert.ok(continuity.includes("The same person throughout: a Chinese man"));
-  assert.ok(continuity.includes("In his hands: the Datejust 41, case back"));
+  assert.ok(continuity.includes("In his hands: the Datejust 41 he was just wearing, taken off and held, turned over so its flat steel case back faces the camera and its slate dial faces away"));
+  assert.ok(!continuity.includes("Datejust 41, case back"), "the held watch is named as a watch, not as a case back");
   assert.ok(continuity.includes("On the green leather tray, lying still and unchanged: the Submariner Date."));
   assert.ok(continuity.includes("never animated, morphed, multiplied"));
-  assert.deepEqual(stepAssetIds(rolex.steps[3]), ["rolex-datejust-back", "rolex-submariner", "rolex-datejust-open"]);
+  assert.deepEqual(stepAssetIds(rolex.steps[3]), ["rolex-datejust-back", "rolex-datejust", "rolex-submariner"], "the back view, then the watch itself so its dial side is described, then the tray watch");
+  assert.equal(watchIdentity(campaign, "rolex-datejust-back"), "Datejust 41");
+});
+
+test("the ledger is told as a change from the previous beat, never as 'the same watch' after a swap", () => {
+  const campaign = campaigns.find((item) => item.id === "rolex-perpetual-moment");
+  const [street, boutique, swap, inspect, wear, exit] = rolex.steps;
+  assert.equal(previousStep(rolex, swap).id, "boutique");
+  assert.equal(previousStep(rolex, inspect, "exit").id, "exit", "a replayed beat comes from wherever the take is");
+  assert.equal(previousStep(rolex, street), null);
+  const swapped = demoContinuity(rolex, swap, campaign, boutique);
+  assert.ok(swapped.includes("the Datejust 41, the watch just fastened on; the Submariner Date he wore until now comes off first, so his wrist never carries two watches"));
+  assert.ok(swapped.includes("Now lying on the green leather tray: the Submariner Date, just set down there."));
+  assert.ok(!swapped.includes("the same physical watch as in the previous shot"));
+  const worn = demoContinuity(rolex, wear, campaign, inspect);
+  assert.ok(worn.includes("the Datejust 41 he was holding, now fastened on again"));
+  assert.ok(worn.includes("lying still and unchanged: the Submariner Date"));
+  const left = demoContinuity(rolex, exit, campaign, wear);
+  assert.ok(left.includes("On his left wrist: the Datejust 41, the same physical watch as in the previous shot"));
+  assert.ok(left.includes("The Submariner Date stays behind on the tray in the boutique."));
+  const opening = demoContinuity(rolex, street, campaign, null);
+  assert.ok(opening.includes("On his left wrist: the Submariner Date; its model") && !opening.includes("previous shot"));
 });
 
 test("every beat leaves the take under a contract that carries the cast, the ledger and the marks", () => {
@@ -71,7 +97,7 @@ test("every beat leaves the take under a contract that carries the cast, the led
     const clause = contractClause(contract);
     assert.ok(clause.includes("a Chinese man") && clause.includes("Rain on the boutique window"));
   }
-  assert.equal(ledgerLine(rolex.steps[3], campaign), "In his hands: the Datejust 41, case back, the watch he was wearing; On the green leather tray, unchanged: the Submariner Date");
+  assert.equal(ledgerLine(rolex.steps[3], campaign), "In his hands: the Datejust 41 he was wearing, turned over so its flat steel case back faces the camera and its slate dial faces away; On the green leather tray, unchanged: the Submariner Date");
   assert.ok(ledgerLine(rolex.steps[0], campaign).startsWith("On his left wrist: the Submariner Date"));
 });
 
@@ -96,20 +122,40 @@ test("free text resolves to a beat by its longest cue; open directions resolve t
   assert.equal(resolveDemoStep(rolex, "backdrop of mountains"), null);
 });
 
-test("bubbles offer the next beats, then replayable ones, three at a time", () => {
-  assert.deepEqual(demoChips(rolex, null).map((step) => step.id), ["street"]);
-  assert.deepEqual(demoChips(rolex, "street").map((step) => step.id), ["boutique", "swap", "inspect"]);
-  assert.deepEqual(demoChips(rolex, "inspect").map((step) => step.id), ["wear", "exit", "boutique"]);
-  assert.deepEqual(demoChips(rolex, "exit").map((step) => step.id), ["boutique", "swap", "inspect"]);
+test("bubbles offer only beats the story can show from where it is", () => {
+  const ids = (current) => demoChips(rolex, current).map((step) => step.id);
+  assert.deepEqual(ids(null), ["street"]);
+  assert.deepEqual(ids("street"), ["boutique"], "no trying on or inspecting out on the street");
+  assert.deepEqual(ids("boutique"), ["swap"], "he still wears the Submariner, so no showing the Datejust's back yet");
+  assert.deepEqual(ids("swap"), ["inspect", "exit"]);
+  assert.deepEqual(ids("inspect"), ["wear"], "the watch is in his hands, so only putting it on follows");
+  assert.deepEqual(ids("wear"), ["exit", "inspect"], "he can look at the back again before leaving");
+  assert.deepEqual(ids("exit"), [], "the walk is over; nothing puts him back at a tray he left");
   assert.equal(stepIndex(rolex, "wear"), 4);
+});
+
+test("a beat can only follow a state it fits, and the refusal says what it needs", () => {
+  const campaign = campaigns.find((item) => item.id === "rolex-perpetual-moment");
+  const [street, boutique, swap, inspect, wear, exit] = rolex.steps;
+  assert.equal(canFollow(null, street), true);
+  assert.equal(canFollow(exit, street), false, "the opening never follows a running take");
+  assert.equal(canFollow(boutique, inspect), false);
+  assert.equal(canFollow(swap, inspect), true);
+  assert.equal(canFollow(wear, inspect), true);
+  assert.equal(canFollow(exit, inspect), false);
+  assert.equal(canFollow(inspect, exit), false, "he cannot leave with the watch in his hands");
+  assert.equal(canFollow(wear, swap), false, "no swapping to the Datejust he already wears");
+  assert.equal(followReason(inspect, campaign), "“Show the back” needs the Datejust 41 on his wrist, inside the boutique.");
+  assert.equal(followReason(wear, campaign), "“Put it back on” needs the Datejust 41 in his hands, inside the boutique.");
 });
 
 test("a beat's state views become product notes in order", () => {
   const campaign = campaigns.find((item) => item.id === "rolex-perpetual-moment");
   const notes = productNotesFor(campaign, stepAssetIds(rolex.steps[3]));
   assert.equal(notes.length, 3);
-  assert.ok(notes[0].startsWith("Datejust 41, case back:"), "the held watch comes first");
-  assert.ok(notes[1].startsWith("Submariner Date:"), "the watch left on the tray is described too");
-  assert.ok(notes[2].startsWith("Datejust 41, Oysterclasp open:"), "extra views follow the ledger");
+  assert.ok(notes[0].startsWith("Datejust 41, case back:"), "the view shown comes first");
+  assert.ok(notes[1].startsWith("Datejust 41: Oystersteel"), "then the watch itself, so its hidden dial is described");
+  assert.ok(notes[2].startsWith("Submariner Date:"), "then the watch left on the tray");
+  assert.ok(notes[0].includes("the slate dial is still on the other side, hidden"), "the back view names the hidden dial");
   assert.deepEqual(productNotesFor(campaign, ["missing"]), []);
 });

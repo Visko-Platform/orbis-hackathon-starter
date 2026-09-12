@@ -92,7 +92,14 @@ Three CC BY 3.0 Blender Foundation clips ship with the app.
 `lib/demo/flows.ts` holds an authored six-beat walk (street → boutique → swap →
 inspect → wear → exit) with a fixed cast, a per-beat watch ledger (on the wrist,
 in his hands, on the tray) and static brand marks, all restated as a continuity
-line in both transition beats. `POST /api/continuations/demo` runs one beat,
+line in both transition beats; the ledger is told as a change from the beat the
+take was on (`fromStepId`, else the previous beat), so a swapped watch is never
+called "the same watch as before". Every view note is two-faced: a dial on one
+side, the plain steel back on the other, one face visible at a time. Each beat
+declares the state it needs (`requires`: place, watch on the wrist or in his
+hands); bubbles offer only beats that fit, and the route answers 409 with what
+the beat needs when a typed cue asks for one that does not. `POST
+/api/continuations/demo` runs one beat,
 validated against the product knowledge but never rewritten, and returns the
 scene contract the beat leaves the take under. The path is presented to viewers
 in the user demo's interactive ad (below); the studio's director panel has no

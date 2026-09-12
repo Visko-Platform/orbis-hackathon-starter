@@ -19,7 +19,12 @@ type DirectionInput = {
 };
 
 const RIGID_BODY_RULE =
-  "Rigid-body rule: the product is one solid object. When it is handled, turned over, or put on, it rotates as a single piece, keeps its exact proportions, and never bends, stretches, melts, doubles, or merges with hands, clothing, or the background.";
+  "Rigid-body rule: the product is one solid object. When it is handled, turned over, or put on, it rotates as a single piece, keeps its exact proportions, and never bends, stretches, melts, doubles, or merges with hands, clothing, or the background. Turning it over swaps which face is visible; it never makes both faces plain.";
+
+/** A direction without its closing punctuation, so templates can end the sentence themselves. */
+function sentence(text: string) {
+  return text.trim().replace(/[.!?]+$/, "");
+}
 
 /** Orbis applies a prompt at the next chunk boundary (~1.8 s); the action beat gets two chunks. */
 export const TRANSITION_BEAT_MS = 3_600;
@@ -30,7 +35,7 @@ export const MAX_CURRENT_PROMPT_CHARS = 16_000;
 function fidelityLine(input: DirectionInput) {
   const notes = input.productNotes ?? [];
   if (notes.length === 0) return null;
-  return `Product view in this shot, exactly as in the brand's reference photos; this view takes precedence over the general product description: ${notes.join(" ")} ${RIGID_BODY_RULE}`;
+  return `Product views in this shot, exactly as in the brand's reference photos: ${notes.join(" ")} Each note describes one face or state of the watch it names; a watch always has its dial on one face and its plain steel case back on the other, only one face is visible at a time, and the dial face is never plain steel. ${RIGID_BODY_RULE}`;
 }
 
 // Used by both beats, so the scene contract is restated in the action beat as well as the settled prompt.
@@ -43,7 +48,7 @@ function brandLine(input: DirectionInput) {
 }
 
 export function buildLiveDirection(input: DirectionInput) {
-  const direction = input.direction.trim();
+  const direction = sentence(input.direction);
   const continuity = input.continuity?.trim();
   const scene = input.mode === "pivot"
     ? continuity
@@ -63,14 +68,14 @@ export function buildLiveDirection(input: DirectionInput) {
 export function buildLiveDirectionBeats(input: DirectionInput) {
   const settled = buildLiveDirection(input);
   if (input.mode !== "pivot") return { action: null, settled };
-  const direction = input.direction.trim();
+  const direction = sentence(input.direction);
   const motion = input.actionDirection?.trim();
   const opening = motion
     // A handled object: describe the physical motion, never a scene "transforming".
     ? [`Right now, in one continuous take, ${motion.charAt(0).toLowerCase()}${motion.slice(1)}${/[.!?]$/.test(motion) ? "" : "."}`,
       "The motion is physical and already under way: every object keeps its solid shape and proportions while it moves, and the camera follows it smoothly."]
     : [`Right now, in one continuous camera move, the scene transforms into: ${direction}.`,
-      `The change is large and clearly visible within the next moments: the environment, light, and framing are already becoming ${direction}.`];
+      "The change is large and clearly visible within the next moments: the environment, light, and framing are already moving toward it."];
   const continuity = input.continuity?.trim();
   const action = [
     ...opening,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { demoContract } from "@/lib/demo/contract";
-import { demoChips, demoContinuity, demoFlowFor, resolveDemoStep, stepAssetIds, stepIndex } from "@/lib/demo/flows";
+import { canFollow, demoChips, demoContinuity, demoFlowFor, followReason, previousStep, resolveDemoStep, stepAssetIds, stepIndex } from "@/lib/demo/flows";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { parseContract, type SceneContract } from "@/lib/knowledge/contract";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
   if (!body || !campaign || typeof body.currentPrompt !== "string" || body.currentPrompt.length > MAX_CURRENT_PROMPT_CHARS ||
     (body.stepId !== undefined && typeof body.stepId !== "string") ||
+    (body.fromStepId !== undefined && body.fromStepId !== null && (typeof body.fromStepId !== "string" || body.fromStepId.length > 100)) ||
     (body.direction !== undefined && (typeof body.direction !== "string" || body.direction.length > MAX_INPUT_CHARS))) {
     return NextResponse.json({ error: "Choose a valid campaign and demo step." }, { status: 400 });
   }
@@ -31,6 +32,12 @@ export async function POST(request: Request) {
   if (!flow) return NextResponse.json({ error: "This campaign has no demo path." }, { status: 404 });
   const step = body.stepId ? flow.steps.find((item) => item.id === body.stepId) : resolveDemoStep(flow, body.direction ?? "");
   if (!step) return NextResponse.json({ error: "No demo step matches that direction." }, { status: 422 });
+
+  // A beat only runs from a state it can follow: no showing the back of a watch he is not wearing.
+  const fromStep = body.fromStepId ? previousStep(flow, step, body.fromStepId) : null;
+  if (!canFollow(fromStep, step)) {
+    return NextResponse.json({ error: `That does not follow from where the take is. ${followReason(step, campaign)}` }, { status: 409, headers: NO_STORE });
+  }
 
   const knowledge = await loadKnowledge(campaign.id);
   // The contract the take was running under; only the operator's own lines carry into the beat's.
@@ -63,7 +70,8 @@ export async function POST(request: Request) {
     preserveBrand: true,
     productNotes,
     actionDirection: step.action,
-    continuity: demoContinuity(flow, step, campaign),
+    // The ledger is told as a change from the beat the take was on (the client names it; else the previous beat).
+    continuity: demoContinuity(flow, step, campaign, fromStep ?? previousStep(flow, step)),
   });
   const engineered: Engineered = { source: (body.direction ?? "").trim() || step.chip, text: step.brief, model: "passthrough", notes: productNotes, rejected: [] };
   const version = await recordPromptVersion({ campaignId: campaign.id, role: step.mode, engineered, prompt: beats.settled, outcome: "steer", contract });

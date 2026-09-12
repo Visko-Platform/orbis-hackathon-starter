@@ -99,7 +99,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     if (!canSteer) return;
     setSending(true); setAnswer(""); setError("");
     try {
-      const result = await requestDemoBeat({ campaignId: CAMPAIGN_ID, stepId: step.id, direction: source, currentPrompt: currentPrompt(), contract });
+      const result = await requestDemoBeat({ campaignId: CAMPAIGN_ID, stepId: step.id, fromStepId: stepId ?? undefined, direction: source, currentPrompt: currentPrompt(), contract });
       await session.steer(result.prompt, result.actionPrompt);
       setStepId(step.id); setAssetId(step.assetId); setContract(result.contract); setPrompt(result.prompt);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "That direction did not go through."); }
@@ -145,7 +145,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     </div>
     <div className="yt-ad-bottom">
       <div className="yt-ad-steer">
-        <span className="yt-ad-steer-label">{status === "live" ? "You direct this ad" : status === "offline" ? "Preview: the live model is not connected" : status === "failed" ? "Interactive controls unavailable" : "Preparing the live ad…"}</span>
+        <span className="yt-ad-steer-label">{status === "live" ? (chips.length ? "You direct this ad" : "The walk is over. Say anything, or skip") : status === "offline" ? "Preview: the live model is not connected" : status === "failed" ? "Interactive controls unavailable" : "Preparing the live ad…"}</span>
         <div className="yt-ad-chips">{chips.map((step) => <button key={step.id} type="button" disabled={!canSteer} onClick={() => void runStep(step)}>{step.chip}</button>)}</div>
         <form className="yt-ad-say" onSubmit={(event) => { event.preventDefault(); void submitText(); }}>
           <input type="text" aria-label="Direct the ad" value={text} placeholder="Or say it your way: “show the back”, “make it rain”" disabled={!canSteer} maxLength={400} onChange={(event) => setText(event.target.value)} />

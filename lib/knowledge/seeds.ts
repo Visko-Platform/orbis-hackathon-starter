@@ -73,7 +73,7 @@ const seeds: Record<string, Omit<CampaignKnowledge, "campaignId">> = {
       aliases: ["the watch", "the Rolex", "the Submariner", "the Datejust", "the boutique", "the store", "the shop"],
       competitors: ["Omega", "Patek Philippe", "Audemars Piguet", "Cartier", "TAG Heuer", "Tudor", "Breitling", "IWC", "Seiko", "Apple Watch"],
       appearance:
-        "A Rolex Oyster Perpetual wristwatch: one solid stainless steel (Oystersteel) object with brushed lugs and a polished bezel. On the dial, the word ROLEX in small printed capitals sits beneath a gold five-point crown at twelve; both are fixed printed marks that keep their exact shape, spelling and position. A metal bracelet is attached at the lugs and closes in a folding clasp with a small raised crown. The back is a flat, mirror-polished stainless steel screw-down case back with a finely fluted edge and no window, engraving or text. The exact model (dial colour, bezel type, bracelet style) is the one in the reference view for this take, and it never changes within a scene unless someone visibly takes the watch off and picks up a different one.",
+        "A Rolex Oyster Perpetual wristwatch: one solid stainless steel (Oystersteel) watch with two faces. The dial face: brushed lugs, a polished bezel, and on the dial the word ROLEX in small printed capitals beneath a gold five-point crown at twelve; both are fixed printed marks that keep their exact shape, spelling and position. The back face: a flat, mirror-polished stainless steel screw-down case back with a finely fluted edge and no window, engraving or text, seen only when the watch is turned over; the dial face is never plain steel. A metal bracelet is attached at the lugs and closes in a folding clasp with a small raised crown. The exact model (dial colour, bezel type, bracelet style) is the one in the reference view for this take, and it never changes within a scene unless someone visibly takes the watch off and picks up a different one.",
     },
     visualNotes: [
       "A Rolex boutique storefront has a dark green facade, a gold five-point crown emblem and the word ROLEX in gold capitals above the window.",
@@ -103,6 +103,7 @@ const seeds: Record<string, Omit<CampaignKnowledge, "campaignId">> = {
       "a watch keeps its own model, dial, bezel and bracelet for the whole scene unless someone visibly takes it off and picks up a different one",
       "every Rolex boutique interior shows the word ROLEX with the gold crown on the back wall and only Rolex watches in its cases",
       "the watch dial keeps its real markings and the case back stays a flat, mirror-polished stainless steel disc with a fluted edge and no window, engraving or text",
+      "only one face of a watch shows at a time: turned over it shows the plain steel back and hides the dial, turned back it shows the dial again, and a watch never has two plain faces",
       "the watch is one solid stainless steel object that keeps its exact shape and proportions when worn, handled, or turned over",
       "no other watch brand or logo appears anywhere in the scene",
     ],

@@ -52,6 +52,8 @@ export type Campaign = {
     cues?: string[];
     /** Id of the asset this one is another view of (e.g. the case back of a watch). */
     variantOf?: string;
+    /** For a variant view: how the watch is held or shown, for continuity lines. */
+    view?: string;
   }[];
   campaign: string;
   category: string;
@@ -318,11 +320,12 @@ export const campaigns: Campaign[] = [
         kind: "product",
         sourceUrl: "https://www.rolex.com/watches/submariner/m126610ln-0001",
         variantOf: "rolex-submariner",
+        view: "turned over so its flat steel case back faces the camera and its black dial faces away",
         cues: ["back", "caseback", "turn it over", "turn the watch over", "flip", "underside", "clasp", "behind"],
         integration:
           "The Submariner is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
         appearance:
-          "Seen from behind, one solid stainless steel (Oystersteel) object: a flat, mirror-polished screw-down case back with a finely fluted edge and no engraving, window, or text; brushed steel lugs; the three-link Oyster bracelet attached at the lugs; a folding Oysterlock clasp with a small raised Rolex crown at its centre.",
+          "Seen from behind, the same Submariner Date turned over: its black dial and black bezel now face away from the camera, and the face toward the camera is a flat, mirror-polished stainless steel screw-down case back with a finely fluted edge and no engraving, window, or text, the black bezel edge just visible around it; brushed steel lugs; the three-link Oyster bracelet attached at the lugs; a folding Oysterlock clasp with a small raised Rolex crown. Only this back face is plain steel: the black dial with its luminous markers is still on the other side, hidden.",
       },
       {
         id: "rolex-datejust-back",
@@ -331,11 +334,12 @@ export const campaigns: Campaign[] = [
         kind: "product",
         sourceUrl: "https://www.rolex.com/watches/datejust/m126334-0014",
         variantOf: "rolex-datejust",
+        view: "turned over so its flat steel case back faces the camera and its slate dial faces away",
         cues: ["back", "caseback", "turn it over", "turn the watch over", "flip", "underside", "clasp", "behind"],
         integration:
           "The Datejust is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
         appearance:
-          "Seen from behind, one solid stainless steel (Oystersteel) object: a flat, mirror-polished screw-down case back with a finely fluted edge and no engraving, window, or text, the fluted white-gold bezel edge just visible around it; brushed steel lugs; the five-link Jubilee bracelet attached at the lugs; a folding clasp with a small raised Rolex crown at its centre.",
+          "Seen from behind, the same Datejust 41 turned over: its slate dial, fluted white-gold bezel and Cyclops date window now face away from the camera, and the face toward the camera is a flat, mirror-polished stainless steel screw-down case back with a finely fluted edge and no engraving, window, or text, the fluted bezel edge just visible around it; brushed steel lugs; the five-link Jubilee bracelet attached at the lugs; a folding Oysterclasp with a small raised Rolex crown. Only this back face is plain steel: the slate dial is still on the other side, hidden.",
       },
       {
         id: "rolex-submariner-open",
@@ -344,11 +348,12 @@ export const campaigns: Campaign[] = [
         kind: "product",
         sourceUrl: "https://www.rolex.com/watchmaking/features/bracelets/glidelock",
         variantOf: "rolex-submariner",
+        view: "with its Oyster bracelet unclasped and lying open",
         cues: ["open the strap", "strap open", "open the bracelet", "bracelet open", "unclasp", "open the clasp", "clasp open", "undo the clasp", "take it off", "unbuckle"],
         integration:
           "The Submariner lies turned over with its Oyster bracelet unfolded flat, the Glidelock clasp open exactly as in the reference, so the plain polished case back is fully exposed.",
         appearance:
-          "Stainless steel Oyster bracelet opened out flat: the folding Oysterlock safety clasp unfolded, its polished cover and the Glidelock extension blade visible, brushed three-piece links either side; at the centre the flat, mirror-polished stainless steel screw-down case back with a fluted edge and no engraving, window, or text. Every part stays a solid metal piece.",
+          "The same Submariner Date with its three-link Oyster bracelet opened out flat, the folding Oysterlock clasp unfolded to show its polished cover with a small raised Rolex crown; the watch head keeps its black dial and black bezel on one face and its flat, mirror-polished steel case back on the other, and only one face shows at a time. Every part stays a solid metal piece.",
       },
       {
         id: "rolex-datejust-open",
@@ -357,11 +362,12 @@ export const campaigns: Campaign[] = [
         kind: "product",
         sourceUrl: "https://www.rolex.com/watchmaking/features/bracelets/oysterclasp",
         variantOf: "rolex-datejust",
+        view: "with its Jubilee bracelet unclasped and lying open",
         cues: ["open the strap", "strap open", "open the bracelet", "bracelet open", "unclasp", "open the clasp", "clasp open", "undo the clasp", "take it off", "unbuckle"],
         integration:
           "The Datejust lies turned over with its Jubilee bracelet unfolded flat and the Oysterclasp open as in the reference, so the plain polished case back is fully exposed. On this watch the whole bracelet is Oystersteel.",
         appearance:
-          "Five-link Jubilee bracelet opened out flat with the folding Oysterclasp unfolded, polished clasp cover with a small raised Rolex crown; all stainless steel on this reference, never two-tone; at the centre the flat, mirror-polished stainless steel screw-down case back with a fluted edge and no engraving, window, or text, the fluted bezel edge just visible. Every part stays a solid metal piece.",
+          "The same Datejust 41 with its five-link Jubilee bracelet opened out flat, the folding Oysterclasp unfolded to show its polished cover with a small raised Rolex crown; all stainless steel on this reference, never two-tone; the watch head keeps its slate dial and fluted bezel on one face and its flat, mirror-polished steel case back on the other, and only one face shows at a time. Every part stays a solid metal piece.",
       },
       {
         id: "rolex-submariner-campaign",
