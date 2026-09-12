@@ -260,3 +260,16 @@ test("a page can release its live session by id; bad ids are refused, unknown on
   assert.equal(unknown.status, 200);
   assert.deepEqual(await unknown.json(), { released: false, alreadyGone: true });
 });
+
+test("the voiceover route writes grounded narrator lines for a scene", async () => {
+  // Writing the lines and synthesizing speech takes longer than the shared 15 s helper allows.
+  const response = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", scene: "A man in a grey coat crosses a rainy street at night, the Rolex on his wrist catching the light.", role: "pivot" }), signal: AbortSignal.timeout(45_000) });
+  assert.ok([200, 503].includes(response.status), `status ${response.status}`);
+  if (response.status === 200) {
+    const result = await response.json();
+    assert.ok(Array.isArray(result.lines) && result.lines.length >= 1 && result.lines.length <= 2);
+    assert.ok(result.lines.every((line) => line.split(/\s+/).length <= 24));
+    assert.ok(result.audio === null || typeof result.audio === "string");
+  }
+  assert.equal((await post("/api/continuations/voiceover", { campaignId: "nope", scene: "x", role: "pivot" })).status, 400);
+});

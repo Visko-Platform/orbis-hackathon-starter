@@ -316,3 +316,22 @@ test("engineer falls back to the director's words when the rewrite adds framing"
   assert.equal(result.model, "passthrough");
   assert.ok(result.rejected[0].includes("framing"));
 });
+
+const { sanitizeLines, pcmToWav, MAX_LINES } = load("lib/knowledge/dialogue.ts");
+
+test("voiceover lines are capped, guarded, and free of forbidden claims", () => {
+  const lines = sanitizeLines(pepsi, { lines: ["  He checks the time. ", "A healthy choice, every time.", "Better than Coca-Cola.", "Cold. Simple. Pepsi.", "one more"] });
+  assert.deepEqual(lines, ["He checks the time.", "Cold. Simple. Pepsi."]);
+  assert.equal(lines.length, MAX_LINES);
+  assert.deepEqual(sanitizeLines(pepsi, null), []);
+  assert.deepEqual(sanitizeLines(pepsi, { lines: ["x ".repeat(30)] }), []);
+});
+
+test("PCM is wrapped as a 24 kHz mono 16-bit WAV", () => {
+  const wav = pcmToWav(Buffer.alloc(4800));
+  assert.equal(wav.length, 44 + 4800);
+  assert.equal(wav.toString("ascii", 0, 4), "RIFF");
+  assert.equal(wav.readUInt32LE(24), 24000);
+  assert.equal(wav.readUInt16LE(22), 1);
+  assert.equal(wav.readUInt32LE(40), 4800);
+});

@@ -70,6 +70,33 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [knowledgeVersion, setKnowledgeVersion] = useState(0);
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
+  const [voiceover, setVoiceover] = useState(true);
+  const narrator = useRef<HTMLAudioElement | null>(null);
+  const voiceoverTake = useRef(0);
+
+  // Narrator lines for the scene now on screen: written from the knowledge base,
+  // spoken by Gemini, shown as a caption. Never blocks the take; failures are logged.
+  async function speakScene(campaignId: string, scene: string, role: "opening" | "pivot" | "refine", direction?: string) {
+    if (!voiceover) return;
+    const ticket = ++voiceoverTake.current;
+    try {
+      const response = await fetch("/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId, scene, role, direction, contractLines: contract?.lines.map((line) => line.text) ?? [] }), signal: AbortSignal.timeout(30_000) });
+      const result = await response.json();
+      if (!response.ok || ticket !== voiceoverTake.current) return;
+      const lines: string[] = Array.isArray(result.lines) ? result.lines : [];
+      if (!lines.length) return;
+      narrator.current?.pause();
+      if (result.audio) {
+        const audio = new Audio(`data:${result.mimeType || "audio/wav"};base64,${result.audio}`);
+        narrator.current = audio;
+        audio.play().catch((caught) => console.warn("voiceover playback blocked", caught));
+      }
+      setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
+      addActivity("Voiceover", lines.join(" "));
+    } catch (caught) {
+      console.warn("voiceover unavailable", caught);
+    }
+  }
   // What must stay true for the take; restated in every direction. Set by prepare, advanced by each pivot.
   const [contract, setContract] = useState<SceneContract | null>(null);
   // The product view the live take is running with; directions name it so views of the same product are preferred.
@@ -215,7 +242,8 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       setContract(result.contract ?? null);
       if (result.engineered?.model === "gemini") addActivity("Scene brief engineered", result.engineered.text);
       if (result.contract?.lines?.length) addActivity("Scene contract set", result.contract.lines.map((line: { text: string }) => line.text).join(" · "));
-      await session.startContinuation({ image: composite.file, prompt: result.prompt });
+      await session.startContinuation({ image: composite.file, prompt: result.prompt, audioPrompt: result.audioPrompt ?? null });
+      void speakScene(campaign.id, result.engineered?.text ?? sceneBrief, "opening");
       setLiveAssetId(assetId);
       addActivity("Live take started", `${campaign.brand} · ${assetId === "upload" ? upload?.file.name : asset.label} · ${result.runId.slice(0, 8)}`);
       return true;
@@ -235,8 +263,9 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
         return { ok: true, answer };
       }
       if (!session.runStarted) throw new Error("Start a live take before sending a direction.");
-      await session.steer(result.prompt, result.actionPrompt ?? null);
+      await session.steer(result.prompt, result.actionPrompt ?? null, result.audioPrompt ?? null);
       setBrandRetained(preserveBrand);
+      void speakScene(target.id, (result.engineered as Engineered | undefined)?.text ?? direction, mode, direction);
       if (result.contract !== undefined) setContract(result.contract);
       const engineered = result.engineered as Engineered | undefined;
       addActivity(mode === "pivot" ? "New direction accepted" : "Scene refinement accepted", engineered?.model === "gemini" ? `${direction} → ${engineered.text}` : direction);
@@ -291,7 +320,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
 
       <div hidden={section !== "studio"} className="studio-screen">
         <div className="studio-grid">
-          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} contract={contract} onContractChange={setContract} onReadContract={readContractFromFrame} canReadContract={Boolean(composite)} onStart={() => void startContinuation()} onUserDemo={openUserDemo} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} voiceover={voiceover} onVoiceoverChange={setVoiceover} knowledgeVersion={knowledgeVersion} contract={contract} onContractChange={setContract} onReadContract={readContractFromFrame} canReadContract={Boolean(composite)} onStart={() => void startContinuation()} onUserDemo={openUserDemo} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
           <aside className="inspector" aria-label="Product setup">
             {locked && <div className="locked-notice"><Icon name="check" size={14} />Product and frame are held for this take. Use the director to steer live.</div>}
             <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />

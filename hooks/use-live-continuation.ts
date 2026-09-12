@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { MAX_CURRENT_PROMPT_CHARS, TRANSITION_BEAT_MS } from "@/lib/live-direction";
 import { type OrbisMessage, unwrapOrbisMessage } from "@/lib/orbis";
 
-type StartInput = { image: File; prompt: string };
+type StartInput = { image: File; prompt: string; audioPrompt?: string | null };
 type MessageWaiter = {
   receive: (message: OrbisMessage) => void;
   cancel: () => void;
@@ -294,7 +294,19 @@ export function useLiveContinuation(onDisconnected: () => void) {
     }
   }
 
-  async function startContinuation({ image, prompt }: StartInput) {
+  // A one-sentence sound caption for Orbis. Never blocks the take: a rejected
+  // caption just leaves the audio picture-driven.
+  async function sendAudioPrompt(caption?: string | null) {
+    const text = caption?.trim();
+    if (!text) return;
+    try {
+      await sendCommand("set_audio_prompt", { prompt: text.slice(0, 400) });
+    } catch (caught) {
+      console.warn("set_audio_prompt was not accepted", caught);
+    }
+  }
+
+  async function startContinuation({ image, prompt, audioPrompt }: StartInput) {
     await runAction(async (check) => {
       const nextPrompt = validatePrompt(prompt);
       if (!image || !image.size || !image.type.startsWith("image/")) {
@@ -328,6 +340,8 @@ export function useLiveContinuation(onDisconnected: () => void) {
       }
       check();
       setPendingPrompt(activePromptRef.current === nextPrompt ? "" : nextPrompt);
+      await sendAudioPrompt(audioPrompt);
+      check();
       setChunk(0);
       setPhase("Starting your live take");
       await confirmedCommand(
@@ -345,7 +359,7 @@ export function useLiveContinuation(onDisconnected: () => void) {
    * is visible at the next chunk boundary, then the settled prompt follows
    * two chunks later. Any newer action cancels the pending settle.
    */
-  async function steer(prompt: string, actionPrompt?: string | null) {
+  async function steer(prompt: string, actionPrompt?: string | null, audioPrompt?: string | null) {
     await runAction(async (check) => {
       const nextPrompt = validatePrompt(prompt);
       if (!runStartedRef.current || status !== "ready") {
@@ -364,6 +378,7 @@ export function useLiveContinuation(onDisconnected: () => void) {
       await confirmedCommand("set_prompt", { prompt: nextPrompt }, (message) => message.type === "prompt_accepted", "your new direction");
       check();
       setPendingPrompt(activePromptRef.current === nextPrompt ? "" : nextPrompt);
+      await sendAudioPrompt(audioPrompt);
       setPhase(paused ? "Paused" : "Live");
     });
   }

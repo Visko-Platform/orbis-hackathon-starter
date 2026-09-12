@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { afterPivot, contractClause, type ContractLine, draftContractWithGemini, draftFromBrief, lineId, MAX_CONTRACT_LINES, parseContract, type SceneContract, validateLine } from "@/lib/knowledge/contract";
+import { writeSoundCaption } from "@/lib/knowledge/dialogue";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
@@ -88,5 +89,10 @@ export async function POST(request: Request) {
       .filter((line) => line.text && validateLine(knowledge, line.text) === null);
     nextContract = { lines: [...nextContract.lines, ...settings].slice(0, MAX_CONTRACT_LINES) };
   }
-  return NextResponse.json({ outcome: "steer", prompt: beats.settled, actionPrompt: beats.action, productNotes, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
+  // What the new scene sounds like, for Orbis's audio prompt. Optional.
+  let audioPrompt = "";
+  if (hasGemini()) {
+    try { audioPrompt = await writeSoundCaption(engineered.text); } catch (caught: unknown) { console.error("pivot: sound caption failed", caught); }
+  }
+  return NextResponse.json({ outcome: "steer", prompt: beats.settled, actionPrompt: beats.action, audioPrompt, productNotes, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
 }

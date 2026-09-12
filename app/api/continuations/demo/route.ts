@@ -8,6 +8,8 @@ import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import type { Engineered } from "@/lib/knowledge/engineer";
 import { loadKnowledge } from "@/lib/knowledge/store";
 import { validateEngineered } from "@/lib/knowledge/validate";
+import { writeSoundCaption } from "@/lib/knowledge/dialogue";
+import { hasGemini } from "@/lib/knowledge/llm";
 import { buildLiveDirectionBeats, MAX_CURRENT_PROMPT_CHARS } from "@/lib/live-direction";
 import { productNotesFor } from "@/lib/product-cues";
 import { campaigns } from "@/lib/studio-data";
@@ -65,7 +67,12 @@ export async function POST(request: Request) {
   });
   const engineered: Engineered = { source: (body.direction ?? "").trim() || step.chip, text: step.brief, model: "passthrough", notes: productNotes, rejected: [] };
   const version = await recordPromptVersion({ campaignId: campaign.id, role: step.mode, engineered, prompt: beats.settled, outcome: "steer", contract });
+  let audioPrompt = "";
+  if (hasGemini()) {
+    try { audioPrompt = await writeSoundCaption(step.brief); } catch (caught: unknown) { console.error("demo: sound caption failed", caught); }
+  }
   return NextResponse.json({
+    audioPrompt,
     outcome: "steer",
     step: { id: step.id, chip: step.chip, title: step.title, index: stepIndex(flow, step.id), total: flow.steps.length, assetId: step.assetId },
     prompt: beats.settled,

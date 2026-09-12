@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildContinuationPrompt } from "@/lib/continuation-prompt";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { draftContractWithGemini, draftFromBrief, mergeDraft, productLines } from "@/lib/knowledge/contract";
+import { writeSoundCaption } from "@/lib/knowledge/dialogue";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
@@ -84,12 +85,17 @@ export async function POST(request: Request) {
   }
   const contract = mergeDraft({ lines: productLines(knowledge, true) }, draft, "brief", knowledge);
 
+  let audioPrompt = "";
+  if (hasGemini()) {
+    try { audioPrompt = await writeSoundCaption(engineered.text); } catch (caught: unknown) { console.error("prepare: sound caption failed", caught); }
+  }
+
   const runId = crypto.randomUUID();
   const prompt = buildContinuationPrompt({ title, campaign, profile, sceneBrief: engineered.text, assetId: body?.assetId, knowledge });
   const version = await recordPromptVersion({ campaignId: campaign.id, runId, role: "opening", engineered, prompt, outcome: "start", contract });
 
   return NextResponse.json(
-    { runId, assetId: body?.assetId ?? "", prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id, contract },
+    { runId, assetId: body?.assetId ?? "", prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id, contract, audioPrompt },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

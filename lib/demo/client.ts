@@ -19,6 +19,8 @@ export type DemoBeatResult = {
   step: Pick<DemoStep, "id" | "chip" | "title" | "assetId"> & { index: number; total: number };
   prompt: string;
   actionPrompt: string | null;
+  // One-sentence sound caption for Orbis; empty when none was written.
+  audioPrompt?: string | null;
   productNotes: string[];
   engineered: Engineered;
   promptVersionId: string;
@@ -37,7 +39,7 @@ export type PivotRequest = {
 };
 
 export type PivotResponse =
-  | { outcome: "steer"; prompt: string; actionPrompt: string | null; productNotes: string[]; mode: DirectionMode; engineered: Engineered; promptVersionId: string; contract: SceneContract | null }
+  | { outcome: "steer"; prompt: string; actionPrompt: string | null; audioPrompt?: string | null; productNotes: string[]; mode: DirectionMode; engineered: Engineered; promptVersionId: string; contract: SceneContract | null }
   | { outcome: "overlay"; answer: string; mode: DirectionMode };
 
 const TIMEOUT_MS = 15_000;
