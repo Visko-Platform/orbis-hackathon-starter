@@ -1,15 +1,16 @@
 // Session-local handoff between the "Add Family" intake flow and the live
-// Orbis session. /add-family collects a photo plus who/where/when/context
-// answers into a FamilyPhotoInput and stores it here, keyed by photo id;
-// /session's MemoryAutostart (see app/components/MemoryAutostart.tsx) reads
-// it back from the `?memoryId=` query param and runs it through the same
-// restore -> ground -> start pipeline app/internal/upload-test/UploadTestApp.tsx
-// exercises by hand.
+// Orbis session. /add-family runs the photo through groundFamilyMemory()
+// (memory-pipeline.ts) at save time — restoring/reframing it (Nano Banana)
+// and grounding an Orbis prompt in it (Gemini) — and stores the full
+// FamilyPhotoInput, prompt included, here, keyed by photo id. /session's
+// MemoryAutostart (see app/components/MemoryAutostart.tsx) reads it back
+// from the `?memoryId=` query param and just starts the stream: no more
+// Gemini calls needed at that point.
 //
 // sessionStorage (not a server-side store) is enough: it only needs to
 // survive the same-tab navigation from /add-family to /session, and
 // clearing on tab close is the right lifetime for a real family photo's
-// base64 bytes — nothing here is sent anywhere until MemoryAutostart runs.
+// base64 bytes.
 export type ParsedTime = {
   userText: string;
   approximateYear?: number;
@@ -24,6 +25,11 @@ export type FamilyPhotoInput = {
   time?: ParsedTime;
   sceneDescription?: string;
   familyContext?: string;
+  /** Nano-Banana-restored, 16:9 anchor image (data: URL) — set once
+   * groundFamilyMemory() (memory-pipeline.ts) has run. */
+  anchorImage?: string;
+  /** Gemini-grounded Orbis prompt — set alongside anchorImage. */
+  groundedPrompt?: string;
 };
 
 const STORAGE_PREFIX = "family-world:memory:";

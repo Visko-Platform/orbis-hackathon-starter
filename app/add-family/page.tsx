@@ -15,8 +15,9 @@ export const metadata: Metadata = {
 
 // "Add Family" design import (Claude Design project 868bef8e) — a fuller,
 // multi-photo alternative to the single-photo "Add someone" tile inline on
-// the front page (FamilyGallery.tsx). Public route: /add-family is
-// unmatched by middleware.ts, same as / and /explore-grandmas-world.
+// the front page (FamilyGallery.tsx). Gated behind Google sign-in (proxy.ts)
+// since saving now calls the billable Gemini routes via groundFamilyMemory()
+// (AddFamily.tsx) — unlike / and /explore-grandmas-world, which stay public.
 export default function AddFamilyPage() {
   return (
     <div className={`family-world ${archivo.variable}`}>

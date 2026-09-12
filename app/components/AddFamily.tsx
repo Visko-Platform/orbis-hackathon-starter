@@ -6,6 +6,7 @@ import {
   type FamilyPhotoInput,
   type ParsedTime,
 } from "../lib/family-memory-store";
+import { groundFamilyMemory } from "../lib/memory-pipeline";
 
 type Answers = {
   who: string;
@@ -22,6 +23,10 @@ type Photo = {
   a: Answers;
   saved: boolean;
   input?: FamilyPhotoInput;
+  /** True while groundFamilyMemory() is restoring/grounding this photo. */
+  generating?: boolean;
+  /** Set when groundFamilyMemory() throws; cleared on the next save attempt. */
+  error?: string;
 };
 
 const EMPTY_ANSWERS: Answers = {
@@ -69,12 +74,16 @@ function plural(n: number, word: string) {
 // A fuller, standalone alternative to the single-photo "Add someone" tile
 // on the front page (FamilyGallery.tsx): drop one or several family
 // photographs, answer who/where/when plus two optional context questions
-// per photo, and save each one into a "Ready to enter" list. "Enter their
-// world" links to /session?memoryId=... — saving stashes the structured
-// FamilyPhotoInput in sessionStorage (family-memory-store.ts) keyed by that
-// id, and /session's MemoryAutostart reads it back to run the same
-// restore -> ground -> start Orbis pipeline the internal upload-test page
-// exercises by hand.
+// per photo, and save each one into a "Ready to enter" list.
+//
+// Saving runs groundFamilyMemory() (memory-pipeline.ts) right here — Nano
+// Banana restores/reframes the photo, Gemini grounds an Orbis prompt in it —
+// so the presenter sees the actual grounded prompt on this page before ever
+// visiting /session. The result (photo + prompt) is stashed in sessionStorage
+// (family-memory-store.ts) keyed by photo id; "Enter their world" links to
+// /session?memoryId=..., where MemoryAutostart reads it back and just starts
+// the stream (no Gemini calls left to make there). This page is gated the
+// same way /session is (proxy.ts) since saving now burns GEMINI_API_KEY.
 export function AddFamily() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -116,9 +125,10 @@ export function AddFamily() {
     setActiveId(rest[0] ? rest[0].id : null);
   }
 
-  function onSave(e: React.FormEvent) {
+  async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!active || !complete) return;
+    if (!active || !complete || active.generating) return;
+    const id = active.id;
     const input = toInput(active);
     // Deviation from the design, deliberate (T-KEG-03): the design logs the
     // full FamilyPhotoInput including the base64 image inline. Redact the
@@ -127,10 +137,40 @@ export function AddFamily() {
       ...input,
       image: `[data URL, ${input.image.length} chars]`,
     });
-    saveFamilyMemory(input);
     setPhotos((prev) =>
-      prev.map((p) => (p.id === active.id ? { ...p, saved: true, input } : p)),
+      prev.map((p) =>
+        p.id === id ? { ...p, generating: true, error: undefined } : p,
+      ),
     );
+    try {
+      const grounded = await groundFamilyMemory({
+        id,
+        photoDataUrl: input.image,
+        relationship: input.person?.nameOrRelationship || "a family member",
+        place: input.place,
+        year: input.time?.userText,
+        memory: [input.sceneDescription, input.familyContext]
+          .filter((v): v is string => !!v?.trim())
+          .join(" "),
+      });
+      const savedInput: FamilyPhotoInput = { ...input, ...grounded };
+      saveFamilyMemory(savedInput);
+      setPhotos((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? { ...p, saved: true, generating: false, input: savedInput }
+            : p,
+        ),
+      );
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : String(caught);
+      setPhotos((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, generating: false, error: message } : p,
+        ),
+      );
+    }
   }
 
   const active = photos.find((p) => p.id === activeId) ?? null;
@@ -145,11 +185,13 @@ export function AddFamily() {
 
   const gateNote = !active
     ? "Add a photograph on the left to begin."
-    : active.saved
-      ? "Their world is ready."
-      : complete
-        ? "Everything else is optional."
-        : "Just tell us who this is to begin.";
+    : active.generating
+      ? "Restoring the photo and grounding their world in it…"
+      : active.saved
+        ? "Their world is ready."
+        : complete
+          ? "Everything else is optional."
+          : "Just tell us who this is to begin.";
 
   const dropBg = drag ? "var(--color-accent-100)" : "transparent";
   const dropBorder = drag ? "var(--color-accent)" : "var(--color-divider)";
@@ -508,7 +550,7 @@ export function AddFamily() {
                 <button
                   type="submit"
                   className="fw-btn fw-btn-primary"
-                  disabled={!complete}
+                  disabled={!complete || active.generating}
                   style={{
                     justifyContent: "flex-start",
                     whiteSpace: "nowrap",
@@ -516,7 +558,9 @@ export function AddFamily() {
                     fontSize: 15,
                   }}
                 >
-                  Reconstruct their world
+                  {active.generating
+                    ? "Reconstructing their world…"
+                    : "Reconstruct their world"}
                 </button>
               )}
               {active && active.saved && (
@@ -535,6 +579,34 @@ export function AddFamily() {
               )}
               <span style={{ fontSize: 13, color: "var(--color-neutral-700)" }}>{gateNote}</span>
             </div>
+            {active?.error && (
+              <p
+                style={{
+                  gridColumn: "1 / -1",
+                  fontSize: 13,
+                  lineHeight: "20px",
+                  margin: 0,
+                  color: "var(--color-accent-700)",
+                }}
+              >
+                {active.error}
+              </p>
+            )}
+            {active?.input?.groundedPrompt && (
+              <div className="fw-field" style={{ gridColumn: "1 / -1" }}>
+                <label>Their world</label>
+                <p
+                  style={{
+                    fontSize: 14,
+                    lineHeight: "22px",
+                    margin: 0,
+                    color: "var(--color-neutral-700)",
+                  }}
+                >
+                  {active.input.groundedPrompt}
+                </p>
+              </div>
+            )}
           </form>
         </section>
       </div>
@@ -584,6 +656,7 @@ export function AddFamily() {
                   [p.a.place, p.a.year].filter((x) => x.trim()).join(" · ") ||
                   "Place and time to be reconstructed";
                 const summary =
+                  p.input?.groundedPrompt ||
                   p.a.scene.trim() ||
                   p.a.context.trim() ||
                   "A little information was enough to begin.";

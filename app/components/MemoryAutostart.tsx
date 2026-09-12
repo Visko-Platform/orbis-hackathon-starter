@@ -16,20 +16,21 @@ import {
   type FamilyPhotoInput,
 } from "../lib/family-memory-store";
 
-type Stage = "editing" | "grounding" | "starting" | "done" | "error";
+type Stage = "starting" | "done" | "error";
 
 // Looked up once the searchParams/sessionStorage read resolves client-side:
 // "pending" keeps the first render identical to the server's (no memoryId
-// lookup happens during SSR), "missing" means sessionStorage didn't have it
-// (different tab, or it expired) — see loadFamilyMemory in family-memory-store.ts.
+// lookup happens during SSR), "missing" means sessionStorage didn't have a
+// fully-grounded memory for this id (different tab, expired, or /add-family's
+// groundFamilyMemory() step never finished) — see loadFamilyMemory in
+// family-memory-store.ts.
 type MemoryLookup = "pending" | "missing" | FamilyPhotoInput;
 
-// /add-family stores a FamilyPhotoInput (photo + who/where/when/context)
-// keyed by id; this component reads it back via `?memoryId=` and runs the
-// same restore -> ground -> start pipeline app/internal/upload-test/UploadTestApp.tsx
-// (spike 016) exercises by hand: Nano Banana repairs + reframes the photo to
-// 16:9, Gemini grounds a Person+Place+Year+Memory prompt in that anchor, then
-// the anchor + prompt start the live Orbis stream.
+// /add-family already restores the photo and grounds an Orbis prompt in it
+// (groundFamilyMemory(), run there so the presenter sees the prompt before
+// leaving that page) and stores the result — anchor image + prompt — keyed
+// by id. This component reads it back via `?memoryId=` and runs only the
+// remaining steps: upload the anchor, setImage, setPrompt, start.
 //
 // Follows the same self-organizing pattern as ImageStarter/StatusBadge: reads
 // connection state itself, renders null once there is nothing left to do.
@@ -53,7 +54,10 @@ export function MemoryAutostart() {
 
   useEffect(() => {
     if (!memoryId) return;
-    setLookup(loadFamilyMemory(memoryId) ?? "missing");
+    const found = loadFamilyMemory(memoryId);
+    setLookup(
+      found?.anchorImage && found?.groundedPrompt ? found : "missing",
+    );
   }, [memoryId]);
 
   const ready = status === "ready";
@@ -63,63 +67,15 @@ export function MemoryAutostart() {
   async function run(current: FamilyPhotoInput) {
     runningRef.current = true;
     setError("");
+    setStage("starting");
     try {
-      setStage("editing");
-      const source = await dataUrlToFile(current.image, `${current.id}.jpg`);
-      const editForm = new FormData();
-      editForm.append("image", source);
-      const editResponse = await fetch("/api/nano-banana", {
-        method: "POST",
-        body: editForm,
-      });
-      if (!editResponse.ok) {
-        const result = (await editResponse.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        throw new Error(result.error || "Photo restoration failed");
-      }
-      const editedBlob = await editResponse.blob();
-      const extension = editedBlob.type === "image/jpeg" ? "jpg" : "png";
-      const anchor = new File(
-        [editedBlob],
-        `${current.id}-anchor.${extension}`,
-        { type: editedBlob.type || "image/png" },
+      const anchor = await dataUrlToFile(
+        current.anchorImage!,
+        `${current.id}-anchor.jpg`,
       );
-
-      setStage("grounding");
-      const groundForm = new FormData();
-      groundForm.append("image", anchor);
-      groundForm.append(
-        "relationship",
-        current.person?.nameOrRelationship || "a family member",
-      );
-      groundForm.append(
-        "place",
-        current.place?.trim() || "a place remembered by the family",
-      );
-      groundForm.append("year", current.time?.userText || "an earlier era");
-      groundForm.append(
-        "memory",
-        [current.sceneDescription, current.familyContext]
-          .filter((v): v is string => !!v?.trim())
-          .join(" ") || "A quiet family moment, remembered fondly.",
-      );
-      const groundResponse = await fetch("/api/orbis-prompt", {
-        method: "POST",
-        body: groundForm,
-      });
-      const ground = (await groundResponse.json().catch(() => ({}))) as {
-        prompt?: string;
-        error?: string;
-      };
-      if (!groundResponse.ok || !ground.prompt?.trim()) {
-        throw new Error(ground.error || "Gemini returned no grounded prompt");
-      }
-
-      setStage("starting");
       const ref = await uploadFile(anchor, { name: anchor.name });
       await sendSetImage(s, ref);
-      await sendSetPrompt(s, ground.prompt.trim());
+      await sendSetPrompt(s, current.groundedPrompt!);
       await sendStart(s);
       setStage("done");
     } catch (caught) {
@@ -145,7 +101,8 @@ export function MemoryAutostart() {
           Family memory
         </p>
         <p className="mt-1 leading-relaxed">
-          This memory link has expired in this browser tab.{" "}
+          This memory isn&apos;t ready in this browser tab (it may have
+          expired, or wasn&apos;t fully generated).{" "}
           <a href="/add-family" className="text-brand underline">
             Add the family member again
           </a>
@@ -164,15 +121,9 @@ export function MemoryAutostart() {
       </p>
       {!ready && (
         <p className="mt-1 leading-relaxed">
-          {who}&apos;s photo is ready. Click Connect above to bring their
-          world to life.
+          {who}&apos;s world is ready. Click Connect above to bring it to
+          life.
         </p>
-      )}
-      {ready && stage === "editing" && (
-        <p className="mt-1">Restoring {who}&apos;s photo…</p>
-      )}
-      {ready && stage === "grounding" && (
-        <p className="mt-1">Grounding {who}&apos;s memory…</p>
       )}
       {ready && stage === "starting" && (
         <p className="mt-1">Starting {who}&apos;s world…</p>

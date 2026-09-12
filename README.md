@@ -47,6 +47,9 @@ Keep all keys server-side. Never prefix any of them `NEXT_PUBLIC_`.
   cannot cover a project's assigned production domain.
 - `/internal/*` plus `/api/nano-banana` and `/api/orbis-prompt` are developer-only test surfaces
   and are also gated, since they burn `GEMINI_API_KEY` with no login otherwise.
+- `/add-family` is gated the same way: saving a photo there calls `/api/nano-banana` and
+  `/api/orbis-prompt` directly to restore the photo and ground an Orbis prompt in it, so only the
+  signed-in presenter can add a family member.
 
 ## Keyless deploy
 
