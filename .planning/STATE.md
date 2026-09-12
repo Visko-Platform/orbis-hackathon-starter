@@ -51,7 +51,7 @@ is still "not started" as the stale fields below still say.
 Phase: 1 of 3 (Auth + Seed-Contract Spike) — **stale, predates pivot; needs reconciliation**
 Plan: 0 of TBD in current phase
 Status: Needs reconciliation (see Repo Migration note above)
-Last activity: 2026-09-12 — Completed quick task 260912-keg: Add the "Add Family" page (Claude Design import)
+Last activity: 2026-09-12 — Completed quick task 260912-orb: Wire Add Family into the Orbis world model
 
 Progress: [░░░░░░░░░░] 0% (stale — see Repo Migration note)
 
@@ -103,6 +103,7 @@ None yet.
 | 260912-g80 | Redesign front page to match Family World modernist Claude Design import, add Google login button top right | 2026-09-12 | 6c92d17 | [260912-g80-redesign-front-page-to-match-family-worl](./quick/260912-g80-redesign-front-page-to-match-family-worl/) |
 | 260912-keg | Add the "Add Family" page (Claude Design import: multi-photo intake + saved-list flow) | 2026-09-12 | 12c8ca1 | [260912-keg-add-the-family-page-import-claude-design](./quick/260912-keg-add-the-family-page-import-claude-design/) |
 | 5 | add these files to the working feature branch romy-ilano-family-video-memories | 2026-09-12 | bcf85ff | — |
+| 260912-orb | Wire Add Family into the Orbis world model (restore -> ground -> start pipeline via `?memoryId=`) | 2026-09-12 | a1d654d | [260912-orb-wire-add-family-orbis-model](./quick/260912-orb-wire-add-family-orbis-model/) |
 
 ## Deferred Items
 

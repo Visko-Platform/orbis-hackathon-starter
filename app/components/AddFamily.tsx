@@ -1,6 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
+import {
+  saveFamilyMemory,
+  type FamilyPhotoInput,
+  type ParsedTime,
+} from "../lib/family-memory-store";
 
 type Answers = {
   who: string;
@@ -8,22 +13,6 @@ type Answers = {
   year: string;
   scene: string;
   context: string;
-};
-
-type ParsedTime = {
-  userText: string;
-  approximateYear?: number;
-  decade?: string;
-};
-
-type FamilyPhotoInput = {
-  id: string;
-  image: string;
-  person?: { nameOrRelationship: string };
-  place?: string;
-  time?: ParsedTime;
-  sceneDescription?: string;
-  familyContext?: string;
 };
 
 type Photo = {
@@ -81,8 +70,11 @@ function plural(n: number, word: string) {
 // on the front page (FamilyGallery.tsx): drop one or several family
 // photographs, answer who/where/when plus two optional context questions
 // per photo, and save each one into a "Ready to enter" list. "Enter their
-// world" links to /session?memoryId=... — the query param isn't consumed
-// by the session app yet, matching the design's own scope.
+// world" links to /session?memoryId=... — saving stashes the structured
+// FamilyPhotoInput in sessionStorage (family-memory-store.ts) keyed by that
+// id, and /session's MemoryAutostart reads it back to run the same
+// restore -> ground -> start Orbis pipeline the internal upload-test page
+// exercises by hand.
 export function AddFamily() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -135,6 +127,7 @@ export function AddFamily() {
       ...input,
       image: `[data URL, ${input.image.length} chars]`,
     });
+    saveFamilyMemory(input);
     setPhotos((prev) =>
       prev.map((p) => (p.id === active.id ? { ...p, saved: true, input } : p)),
     );
