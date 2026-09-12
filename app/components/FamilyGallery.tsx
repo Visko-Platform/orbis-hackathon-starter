@@ -30,8 +30,12 @@ const EMPTY_FORM: FormState = {
 // Ported from the "Family World" Claude Design import (Front Page.dc.html).
 // Three example relatives seed the gallery; a presenter can drop in one
 // more family photo and answer four questions to add it to the grid.
-// "Enter their world" links to /session?memoryId=... — the query param
-// isn't consumed by the session app yet, matching the design's own scope.
+// Seed cards' "Enter their world" links to /live-world?memoryId=<seed id>,
+// a working steerable panorama demo for each of the three examples (see
+// LiveWorld.tsx). Added (non-seed) members still link to
+// /session?memoryId=... — that query param isn't consumed by the session
+// app yet, matching the design's own scope, and there's no seeded panorama
+// for a freshly uploaded photo.
 const SEEDS: Member[] = [
   {
     id: "seed-lola",
@@ -252,7 +256,11 @@ export function FamilyGallery() {
                   }}
                 >
                   <a
-                    href={`/session?memoryId=${encodeURIComponent(m.id)}`}
+                    href={
+                      m.seed
+                        ? `/live-world?memoryId=${encodeURIComponent(m.id)}`
+                        : `/session?memoryId=${encodeURIComponent(m.id)}`
+                    }
                     className="fw-btn fw-btn-primary"
                     style={{ justifyContent: "flex-start", whiteSpace: "nowrap" }}
                   >
