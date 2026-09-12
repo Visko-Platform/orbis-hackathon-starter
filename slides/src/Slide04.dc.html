@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18)); }
+    .bubble-white { color:#FFFFFF; }
+    .bubble-green { background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px 120px; background:linear-gradient(165deg, #2B9BE0 0%, #164FA8 100%); text-align:center; font-family:'Baloo 2', system-ui, sans-serif;">
+
+  <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.12;"></div>
+
+  <svg width="150" height="120" viewBox="0 0 200 160" style="position:relative; margin-bottom:24px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18));">
+    <defs>
+      <linearGradient id="globe" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C8F09A"/>
+        <stop offset="1" stop-color="#3FA036"/>
+      </linearGradient>
+    </defs>
+    <circle cx="100" cy="80" r="58" fill="url(#globe)"/>
+    <ellipse cx="100" cy="80" rx="58" ry="22" fill="none" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <ellipse cx="100" cy="80" rx="26" ry="58" fill="none" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <path d="M 42 80 L 158 80" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <polygon points="100,14 118,44 100,74 82,44" fill="#FFFFFF" transform="translate(58,-18) scale(.62)"/>
+    <polygon points="100,14 118,44 100,44" fill="#E4F4FF" transform="translate(58,-18) scale(.62)"/>
+  </svg>
+
+  <h1 style="position:relative; font-size:50px; font-weight:800; line-height:1.22; margin:0 0 20px; max-width:920px;">
+    <span class="bubble bubble-white">What if we could <span class="bubble bubble-green" style="filter:none;">simulate the world</span> instead?</span>
+  </h1>
+  <p style="position:relative; font-size:21px; font-weight:600; color:#FFFFFF; opacity:.8; margin:0; max-width:720px; line-height:1.5;">Train models inside the simulation — thousands of lives, lived at machine speed, no camera required — then bring what they learn back out to help us.</p>
+
+</section>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:34px 48px 30px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:42px; font-weight:800; line-height:1.15; margin:0 0 18px; text-align:center;">
+    <span class="bubble bubble-blue">We can watch our policy decide what to do!</span>
+  </h1>
+
+  <img src="app.jpg" alt="The live simulation running, with the agent brain narrating its state estimate and chosen action" style="flex:1; min-height:0; max-width:100%; object-fit:contain; border-radius:16px; box-shadow:0 10px 0 rgba(0,0,0,.08), 0 18px 40px rgba(29,111,209,.16);"/>
+
+</section>
+</x-dc>
+</body>
+</html>

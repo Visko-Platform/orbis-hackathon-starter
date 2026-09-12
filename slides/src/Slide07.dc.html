@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .chip { display:flex; align-items:center; gap:9px; background:#fff; border-radius:22px; padding:9px 16px; font-size:16px; font-weight:700; box-shadow:0 3px 0 rgba(0,0,0,.08); }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; padding:46px 64px 40px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:40px; font-weight:800; line-height:1.2; margin:0 0 26px;">
+    <span class="bubble bubble-blue">So how do you train a model to live?</span>
+  </h1>
+
+  <div style="flex:1; display:flex; gap:26px; min-height:0;">
+
+    <div style="flex:1; display:flex; flex-direction:column; background:#EAF7FE; border-radius:22px; padding:26px 28px;">
+      <span style="font-size:14px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#1D6FD1; margin-bottom:6px;">The real thing</span>
+      <h2 style="font-size:27px; font-weight:800; margin:0 0 18px; line-height:1.25;">Reinforcement learning against broad life goals.</h2>
+
+      <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:22px;">
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><rect x="1" y="4" width="18" height="12" rx="3" fill="#8FD13F"/><circle cx="10" cy="10" r="3.4" fill="#fff"/></svg>
+          Make money
+        </span>
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#FFB347"/><circle cx="7" cy="8" r="1.5" fill="#fff"/><circle cx="13" cy="8" r="1.5" fill="#fff"/><path d="M6 12 Q10 15.5 14 12" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          Be happy
+        </span>
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="7" cy="7" r="3.2" fill="#3FC1F5"/><path d="M1.5 17 C1.5 12.5, 12.5 12.5, 12.5 17 Z" fill="#3FC1F5"/><circle cx="14" cy="8" r="2.6" fill="#1D6FD1"/><path d="M9.5 17 C9.5 13.5, 18.5 13.5, 18.5 17 Z" fill="#1D6FD1"/></svg>
+          Have friends
+        </span>
+      </div>
+
+      <svg viewBox="0 0 500 210" style="width:100%; margin-top:auto;">
+        <defs>
+          <linearGradient id="bx" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3FC1F5"/><stop offset="1" stop-color="#1D6FD1"/>
+          </linearGradient>
+        </defs>
+
+        <rect x="6" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="78" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">VLM</text>
+        <text x="78" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">perceives</text>
+
+        <rect x="177" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="249" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">Reward</text>
+        <text x="249" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">arrives</text>
+
+        <rect x="348" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="420" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">Policy</text>
+        <text x="420" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">updates</text>
+
+        <path d="M155 60 L170 60" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="177,60 166,54 166,66" fill="#1D6FD1"/>
+        <path d="M326 60 L341 60" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="348,60 337,54 337,66" fill="#1D6FD1"/>
+
+        <path d="M420 90 L420 140 Q420 152 408 152 L90 152 Q78 152 78 140 L78 104" fill="none" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="78,90 70,103 86,103" fill="#8FD13F"/>
+        <text x="249" y="181" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="15" font-weight="700" fill="#3FA036">…and around again, millions of lives</text>
+      </svg>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; background:#FFF4E9; border-radius:22px; padding:26px 28px;">
+      <span style="font-size:14px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#F0762B; margin-bottom:6px;">What we built this weekend</span>
+      <h2 style="font-size:27px; font-weight:800; margin:0 0 20px; line-height:1.25;">A shortcut that still learns.</h2>
+
+      <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">1</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">Generate a <span style="color:#F0762B;">synthetic symbolic dataset</span> — thousands of episodes rolled out offline, no rendering needed.</p>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">2</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">Train a simple policy on it with <span style="color:#F0762B;">Bellman updates</span> — cheap, deterministic, runs on a laptop.</p>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">3</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">At inference, the policy drives — but a <span style="color:#F0762B;">VLM infers the state</span> from what it sees, turning it into a POMDP.</p>
+        </div>
+
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-top:16px; border-top:2px dashed #F7C99B; padding-top:14px;">
+        <svg width="26" height="26" viewBox="0 0 20 20" style="flex-shrink:0;"><polygon points="10,1 18,9.5 10,19 2,9.5" fill="#8FD13F"/><polygon points="10,1 18,9.5 10,9.5" fill="#B6E37A"/></svg>
+        <p style="margin:0; font-size:15px; font-weight:700; line-height:1.4; opacity:.75;">The model never sees the symbols at run time — only the world, the same way we do.</p>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>

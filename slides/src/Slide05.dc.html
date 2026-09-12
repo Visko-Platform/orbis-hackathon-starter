@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-green { background:linear-gradient(180deg, #A6E066 0%, #3FA036 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1.35; display:flex; flex-direction:column; padding:64px 110px 30px;">
+    <h1 style="font-size:44px; font-weight:800; line-height:1.2; margin:0 0 36px;">
+      <span class="bubble bubble-blue">How does a generative simulator work?</span>
+    </h1>
+
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:24px; max-width:980px;">
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <path d="M 13 23 C 13 16, 21 16, 23 23 C 25 30, 33 30, 33 23 C 33 16, 25 16, 23 23 C 21 30, 13 30, 13 23 Z" fill="none" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">The world is infinite — <span class="bubble bubble-blue">our simulator must be too.</span></p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <circle cx="23" cy="23" r="5" fill="#3FA036"/>
+          <path d="M 23 23 L 38 12" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 40 26" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 32 39" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 8 34" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 6 18" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">So is the action space — <span class="bubble bubble-green">anything you could do in a life, your Sim can try.</span></p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <path d="M 6 36 L 14 26 L 22 30 L 40 10" fill="none" stroke="#F0762B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 32 10 L 40 10 L 40 18" fill="none" stroke="#F0762B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">The real test: <span class="bubble bubble-orange">can models understand the world and plan on the long horizon?</span></p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="flex:1.1; position:relative; display:flex; align-items:center; justify-content:center; gap:26px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%); padding:20px 50px; text-align:center;">
+    <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.14;"></div>
+    <svg width="96" height="74" viewBox="0 0 120 90" style="position:relative; flex-shrink:0; filter: drop-shadow(0 4px 0 rgba(0,0,0,.15));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M110 30 L98 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+    <p style="position:relative; font-size:58px; font-weight:800; color:#FFFFFF; margin:0; line-height:1.14; max-width:940px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18));">Live world models like <span style="background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">Orbis</span> are perfect for this.</p>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>

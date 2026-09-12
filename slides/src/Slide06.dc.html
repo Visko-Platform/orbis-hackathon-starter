@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .lane-label { font-size:15px; font-weight:800; letter-spacing:.02em; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; padding:56px 100px 48px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:40px; font-weight:800; line-height:1.2; margin:0 0 34px;">
+    <span class="bubble bubble-blue">One loop:</span> <span style="font-weight:800;">the world streams, the model lives in it,</span> <span class="bubble bubble-orange">the harness keeps score.</span>
+  </h1>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px;">
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#F0762B;">Symbolic<br/>harness</span>
+      <div style="flex:1; background:linear-gradient(180deg,#FFB347,#F0762B); border-radius:14px; padding:14px 22px; color:#fff; font-weight:700; font-size:16px; box-shadow:0 5px 0 rgba(0,0,0,.10);">
+        Controls the action space · decides what the world state is allowed to be · releases reward
+      </div>
+    </div>
+
+    <div style="display:flex; gap:16px;">
+      <span style="width:150px;"></span>
+      <div style="flex:1; display:flex; justify-content:space-around;">
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#1D6FD1;">Generated<br/>video</span>
+      <div style="flex:1; display:flex; align-items:center; gap:5px;">
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.94; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.88; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.82; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.76; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.70; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.62; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <span style="font-size:30px; font-weight:800; color:#1D6FD1; padding-left:6px;">∞</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:16px;">
+      <span style="width:150px;"></span>
+      <div style="flex:1; display:flex; justify-content:space-between; align-items:center; padding:0 40px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="18" height="34" viewBox="0 0 18 34"><path d="M9 2 L9 26 M3 21 L9 28 L15 21" stroke="#1D6FD1" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="font-size:15px; font-weight:700; color:#1D6FD1;">the VLM watches the world…</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:15px; font-weight:700; color:#3FA036;">…and acts back into it</span>
+          <svg width="18" height="34" viewBox="0 0 18 34"><path d="M9 32 L9 8 M3 13 L9 6 L15 13" stroke="#3FA036" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#3FA036;">VLM<br/>inference</span>
+      <div style="flex:1; display:flex; align-items:center; gap:0;">
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex; align-items:center; gap:14px; margin-top:26px; background:#FFF6EC; border:2px solid #F0762B; border-radius:14px; padding:14px 22px;">
+    <svg width="30" height="30" viewBox="0 0 30 30" style="flex-shrink:0;">
+      <circle cx="15" cy="15" r="13" fill="#FFB347"/>
+      <text x="15" y="21" text-anchor="middle" font-size="17" font-weight="800" fill="#fff" font-family="'Baloo 2', sans-serif">§</text>
+    </svg>
+    <p style="font-size:16px; font-weight:700; margin:0; line-height:1.45;"><span style="color:#F0762B;">Harness rule, in plain English:</span> "Don't spend more money than you have." The simulator's goal can be many things — one of them is simply <span style="color:#F0762B;">don't go bankrupt</span> — and when the model pulls it off, the harness releases reward.</p>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>

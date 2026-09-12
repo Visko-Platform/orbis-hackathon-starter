@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:44px 90px 30px;">
+    <h1 style="font-size:38px; font-weight:800; line-height:1.15; margin:0 0 26px;">
+      <span class="bubble bubble-blue">Future work</span>
+    </h1>
+
+    <div style="display:flex; flex-direction:column; gap:18px; max-width:1000px;">
+
+      <div style="display:flex; align-items:center; gap:18px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="flex-shrink:0;">
+          <rect x="3" y="8" width="15" height="15" rx="3" fill="#3FC1F5"/>
+          <rect x="7" y="12" width="7" height="7" rx="1.5" fill="#1D6FD1"/>
+          <path d="M22 16 L32 16" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <polygon points="37,16 29,11 29,21" fill="#8FD13F"/>
+        </svg>
+        <p style="margin:0; font-size:23px; font-weight:700; line-height:1.4;">Move from a simple RL formulation to more sophisticated learning that goes straight from <span style="color:#1D6FD1;">pixels → action</span>.</p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:18px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="6" fill="#FFB347"/>
+          <circle cx="28" cy="14" r="4.5" fill="#F0762B"/>
+          <circle cx="18" cy="27" r="5" fill="#8FD13F"/>
+          <circle cx="31" cy="29" r="3.5" fill="#3FC1F5"/>
+          <path d="M4 34 L36 34" stroke="#F0762B" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 6"/>
+        </svg>
+        <p style="margin:0; font-size:23px; font-weight:700; line-height:1.4;">Introduce far more variation in the environment, and <span style="color:#F0762B;">relax the symbolic harness</span> as the model gets stronger.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; gap:30px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%);">
+    <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.14;"></div>
+
+    <svg width="80" height="62" viewBox="0 0 120 90" style="position:relative; filter: drop-shadow(0 5px 0 rgba(0,0,0,.16));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M6 48 L20 50" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+
+    <h2 style="position:relative; font-size:132px; font-weight:800; margin:0; line-height:1; background:linear-gradient(180deg, #FFFFFF 0%, #C8F09A 55%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter: drop-shadow(0 7px 0 rgba(0,0,0,.18));">Thanks!</h2>
+
+    <svg width="80" height="62" viewBox="0 0 120 90" style="position:relative; transform:scaleX(-1); filter: drop-shadow(0 5px 0 rgba(0,0,0,.16));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M6 48 L20 50" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>

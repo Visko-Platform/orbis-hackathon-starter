@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    .bubble { font-weight:800; filter: drop-shadow(0 5px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-green { background:linear-gradient(180deg, #A6E066 0%, #3FA036 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  </style>
+</helmet>
+<section style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; align-items:center; gap:60px; padding:70px 100px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1.2; display:flex; flex-direction:column;">
+    <h1 style="font-size:48px; font-weight:800; line-height:1.2; margin:0 0 20px;">
+      <span class="bubble bubble-blue">One way: strap on a camera and show it your whole life.</span>
+    </h1>
+    <p style="font-size:20px; font-weight:600; opacity:.65; margin:0 0 14px; line-height:1.5;">That's imitation learning — the model copies what it watches you do.</p>
+    <p style="font-size:20px; font-weight:600; opacity:.65; margin:0; line-height:1.5;">But almost nobody wants to live on camera. The data never scales past a handful of volunteers.</p>
+  </div>
+
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <svg width="360" height="360" viewBox="0 0 360 360">
+      <ellipse cx="180" cy="330" rx="110" ry="14" fill="#2B3A4A" opacity=".08"/>
+      <rect x="140" y="150" width="80" height="120" rx="34" fill="url(#shirt)"/>
+      <defs>
+        <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3FC1F5"/>
+          <stop offset="1" stop-color="#1D6FD1"/>
+        </linearGradient>
+        <linearGradient id="cam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#A6E066"/>
+          <stop offset="1" stop-color="#3FA036"/>
+        </linearGradient>
+      </defs>
+      <circle cx="180" cy="112" r="42" fill="#FFDCC2"/>
+      <circle cx="166" cy="108" r="5" fill="#2B3A4A"/>
+      <circle cx="194" cy="108" r="5" fill="#2B3A4A"/>
+      <path d="M 164 128 Q 180 122 196 128" stroke="#2B3A4A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <g transform="translate(214, 150) rotate(12)">
+        <rect x="0" y="0" width="66" height="44" rx="10" fill="url(#cam)"/>
+        <circle cx="22" cy="22" r="13" fill="#fff"/>
+        <circle cx="22" cy="22" r="8" fill="#2B3A4A"/>
+        <rect x="42" y="8" width="16" height="8" rx="4" fill="#fff" opacity=".7"/>
+        <circle cx="58" cy="34" r="4" fill="#E8472B"/>
+      </g>
+      <path d="M 248 132 Q 262 118 258 100" stroke="#8FD13F" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+      <path d="M 262 140 Q 282 132 290 114" stroke="#8FD13F" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+    </svg>
+  </div>
+
+</section>
+</x-dc>
+</body>
+</html>
