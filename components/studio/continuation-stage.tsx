@@ -3,6 +3,7 @@
 import { ReactorView } from "@reactor-team/js-sdk";
 import { useEffect, useRef, useState } from "react";
 import type { LiveContinuationSession } from "@/hooks/use-live-continuation";
+import type { ContractKind, ContractLine, SceneContract } from "@/lib/knowledge/contract";
 import type { Engineered } from "@/lib/knowledge/engineer";
 import type { Campaign } from "@/lib/studio-data";
 import type { DirectionMode } from "@/lib/live-direction";
@@ -24,6 +25,10 @@ type Props = {
   brandRetained: boolean;
   overlay: FactOverlay | null;
   knowledgeVersion: number;
+  contract: SceneContract | null;
+  onContractChange: (next: SceneContract) => void;
+  onReadContract: (video: HTMLVideoElement | null) => Promise<void>;
+  canReadContract: boolean;
   onStart: () => void;
   onPivot: (direction: string, mode: DirectionMode, preserveBrand: boolean) => Promise<PivotResult>;
   onAction: (action: () => Promise<void>, label: string) => void;
@@ -33,7 +38,10 @@ type Props = {
 // Mirrors the server's question check: a trailing "?" is answered on screen, not sent to Orbis.
 const QUESTION = /\?\s*$/;
 
-export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, onStart, onPivot, onAction, onAddProduct }: Props) {
+const KIND_LABELS: Record<ContractKind, string> = { product: "Product", person: "Person", setting: "Setting", custom: "Custom" };
+const MAX_CONTRACT_LINES = 12;
+
+export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, contract, onContractChange, onReadContract, canReadContract, onStart, onPivot, onAction, onAddProduct }: Props) {
   const player = useRef<HTMLDivElement>(null);
   const [compare, setCompare] = useState(false);
   const [direction, setDirection] = useState("");
@@ -43,6 +51,8 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [fullscreenError, setFullscreenError] = useState("");
+  const [newLine, setNewLine] = useState("");
+  const [readingContract, setReadingContract] = useState(false);
   const live = session.connected && session.runStarted;
   const busy = preparing || session.busy;
   const isQuestion = QUESTION.test(direction.trim());
@@ -67,6 +77,26 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
       const result = await onPivot(source, mode, preserveBrand);
       if (result.ok) { setReceipt({ source, engineered: result.engineered ?? null, answered: result.answer !== undefined }); setDirection(""); }
     } finally { setSubmitting(false); }
+  }
+
+  function updateLine(id: string, patch: Partial<ContractLine>) {
+    if (!contract) return;
+    onContractChange({ lines: contract.lines.map((line) => line.id === id ? { ...line, ...patch } : line) });
+  }
+  function removeLine(id: string) {
+    if (!contract) return;
+    onContractChange({ lines: contract.lines.filter((line) => line.id !== id) });
+  }
+  function addLine() {
+    const text = newLine.trim();
+    if (!text || (contract?.lines.length ?? 0) >= MAX_CONTRACT_LINES) return;
+    onContractChange({ lines: [...(contract?.lines ?? []), { id: `custom-${Date.now().toString(36)}`, kind: "custom", text, pinned: true, source: "operator" }] });
+    setNewLine("");
+  }
+  async function readContract() {
+    if (readingContract) return;
+    setReadingContract(true);
+    try { await onReadContract(player.current?.querySelector("video") ?? null); } finally { setReadingContract(false); }
   }
 
   const footCopy = !live ? (isQuestion ? "Product questions are answered on screen from approved facts. No live take needed." : "Start a take to send directions, or ask a product question ending in “?”.")
@@ -122,6 +152,14 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
         <strong>{receipt.answered ? "Answered on screen" : session.pendingPrompt ? "Direction accepted by Orbis" : "Model reports this direction active"}</strong>
         {receipt.answered || !receipt.engineered ? <p>{receipt.source}</p> : <div className="receipt-compare"><p>You: {receipt.source}</p><p>Sent: {receipt.engineered.text}</p><span>{receipt.engineered.model === "gemini" ? "engineered by Gemini" : "sent as written"}{receipt.engineered.notes.length > 0 && ` · using ${receipt.engineered.notes.length} product ${receipt.engineered.notes.length === 1 ? "note" : "notes"}`}</span></div>}
       </div></div>}
+    </section>
+
+    <section className="contract-panel" aria-labelledby="contract-heading">
+      <div className="director-heading"><div><span className="eyebrow">STAYS TRUE</span><h2 id="contract-heading">Scene contract</h2></div><button className="button secondary" type="button" disabled={readingContract || busy || !(live || canReadContract)} onClick={readContract}>{readingContract ? <span className="spinner" /> : <Icon name="image" size={15} />}{readingContract ? "Reading…" : live ? "Read from live frame" : "Read from preview"}</button></div>
+      <p className="contract-hint">Restated in every direction so the same person, product and place carry across chunks. Pinned lines also survive a full pivot; a pivot drops the other setting lines.</p>
+      {contract?.lines.length ? <ul className="contract-lines">{contract.lines.map((line) => <li key={line.id} className={line.pinned ? "pinned" : ""}><span className={`contract-kind ${line.kind}`}>{KIND_LABELS[line.kind]}</span><span className="contract-text">{line.text}</span><span className="contract-source">{line.source}</span><button type="button" className={`contract-pin ${line.pinned ? "on" : ""}`} aria-pressed={line.pinned} aria-label={line.pinned ? "Unpin line" : "Pin line"} title={line.pinned ? "Pinned: survives a pivot" : "Pin: survive a pivot"} onClick={() => updateLine(line.id, { pinned: !line.pinned })}>{line.pinned ? "Pinned" : "Pin"}</button><button type="button" className="icon-button" aria-label="Remove line" onClick={() => removeLine(line.id)}><Icon name="close" size={13} /></button></li>)}</ul>
+        : <p className="contract-empty">{contract ? "No lines. Add one below or read the frame." : "Set when you generate: the product from its info, the person and place from your brief."}</p>}
+      <div className="contract-add"><input type="text" value={newLine} maxLength={200} placeholder="Add a line that must stay true, e.g. the man keeps his grey hoodie" disabled={!contract || busy} onChange={(event) => setNewLine(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addLine(); } }} /><button className="button secondary" type="button" disabled={!contract || !newLine.trim() || busy} onClick={addLine}>Add</button></div>
     </section>
   </div>;
 }

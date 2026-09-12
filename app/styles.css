@@ -289,3 +289,21 @@ input[type=range] { accent-color:#d9d4c7; width:100%; cursor:pointer; height:15p
 .draft-note { display:flex; align-items:center; gap:7px; font-size:11px; color:#a8c7a9; }
 .library-paused { display:flex; align-items:center; gap:12px; margin:0 0 23px; padding:15px 18px; font-size:13px; color:#c9b98f; border:1px solid #4a4230; border-radius:8px; background:#25221a; }
 .optional-tag { margin-left:8px; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--quiet); font-weight:400; }
+
+/* Scene contract */
+.contract-panel { border:1px solid var(--line); border-radius:12px; padding:22px; background:#181a1d; }
+.contract-panel .director-heading { margin-bottom:10px; }
+.contract-hint { font-size:11px; line-height:1.55; color:var(--muted); margin-bottom:14px; }
+.contract-lines { list-style:none; display:grid; gap:6px; }
+.contract-lines li { display:grid; grid-template-columns:auto minmax(0,1fr) auto auto auto; align-items:center; gap:10px; padding:9px 11px; border:1px solid #2c2f34; border-radius:7px; background:#1d1f23; }
+.contract-lines li.pinned { border-color:#4a4a3e; }
+.contract-kind { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:#8f959e; padding:3px 6px; border-radius:4px; background:#25292d; }
+.contract-kind.product { color:var(--accent); }
+.contract-text { font-size:12px; line-height:1.45; color:#dde0e3; overflow-wrap:anywhere; }
+.contract-source { font-size:9px; color:var(--quiet); }
+.contract-pin { font-size:10px; padding:4px 8px; border:1px solid #3b3e44; border-radius:4px; background:transparent; color:#aaaeb8; }
+.contract-pin.on { background:#34352e; border-color:#ded8c8; color:#f8f7ed; }
+.contract-empty { font-size:12px; color:var(--quiet); padding:12px; border:1px dashed #34383f; border-radius:7px; }
+.contract-add { display:flex; gap:8px; margin-top:12px; }
+.contract-add input { flex:1; min-width:0; padding:10px; border:1px solid #43464b; border-radius:6px; color:#dde0e3; background:#141618; font-size:12px; }
+@media (max-width:720px) { .contract-lines li { grid-template-columns:auto minmax(0,1fr); } .contract-source { display:none; } .contract-add input { font-size:16px; } }

@@ -11,11 +11,13 @@ import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 import { audienceProfiles, campaigns, filmTitles, selectEligibleCampaign, type Campaign, type PlacementZone } from "@/lib/studio-data";
 import { composePlacementFrame, composeProductFrame } from "@/lib/placement-frame";
+import { captureVideoFrame } from "@/lib/frame-capture";
+import type { SceneContract } from "@/lib/knowledge/contract";
 import type { DirectionMode } from "@/lib/live-direction";
 import type { Engineered } from "@/lib/knowledge/engineer";
 
 type Section = "studio" | "campaigns" | "library" | "activity";
-type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign };
+type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign; contract?: SceneContract | null };
 type Activity = { id: string; label: string; detail: string; time: string };
 type Upload = { file: File; url: string };
 
@@ -57,6 +59,8 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [knowledgeVersion, setKnowledgeVersion] = useState(0);
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
+  // What must stay true for the take; restated in every direction. Set by prepare, advanced by each pivot.
+  const [contract, setContract] = useState<SceneContract | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const [loadingSceneId, setLoadingSceneId] = useState("");
   const sourceDetails = useRef<HTMLDetailsElement>(null);
@@ -190,7 +194,9 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       const result = await response.json();
       if (!response.ok || !result.prompt || !result.runId) throw new Error(result.error || "Could not prepare this scene.");
       setPreparedRun(result); setBrandRetained(true);
+      setContract(result.contract ?? null);
       if (result.engineered?.model === "gemini") addActivity("Scene brief engineered", result.engineered.text);
+      if (result.contract?.lines?.length) addActivity("Scene contract set", result.contract.lines.map((line: { text: string }) => line.text).join(" · "));
       await session.startContinuation({ image: composite.file, prompt: result.prompt });
       addActivity("Live take started", `${campaign.brand} · ${assetId === "upload" ? upload?.file.name : asset.label} · ${result.runId.slice(0, 8)}`);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Generation failed."); addActivity("Take could not start", caught instanceof Error ? caught.message : "Unknown error"); }
@@ -201,7 +207,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     const target = session.runStarted && preparedRun ? preparedRun.campaign : campaign;
     setError("");
     try {
-      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: target.id, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "" }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: target.id, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "", contract: session.runStarted ? contract : null }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not prepare this direction.");
       if (result.outcome === "overlay") {
@@ -213,10 +219,31 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       if (!session.runStarted) throw new Error("Start a live take before sending a direction.");
       await session.steer(result.prompt);
       setBrandRetained(preserveBrand);
+      if (result.contract !== undefined) setContract(result.contract);
       const engineered = result.engineered as Engineered | undefined;
       addActivity(mode === "pivot" ? "New direction accepted" : "Scene refinement accepted", engineered?.model === "gemini" ? `${direction} → ${engineered.text}` : direction);
       return { ok: true, engineered };
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not send this direction. Your prompt is saved below."); return { ok: false }; }
+  }
+  // Re-reads person and setting lines from what is actually on screen: the live video when a take runs, otherwise the preview frame.
+  async function readContractFromFrame(video: HTMLVideoElement | null) {
+    setError("");
+    try {
+      const image = session.runStarted && video ? await captureVideoFrame(video) : composite?.file;
+      if (!image) throw new Error("Add a product or reference frame first.");
+      const target = session.runStarted && preparedRun ? preparedRun.campaign : campaign;
+      const form = new FormData();
+      form.set("campaignId", target.id);
+      form.set("brief", sceneBrief.trim() || "The product in the scene.");
+      form.set("keepProduct", String(brandRetained));
+      form.set("contract", JSON.stringify(contract ?? { lines: [] }));
+      form.set("image", image);
+      const response = await fetch("/api/continuations/contract", { method: "POST", body: form, signal: AbortSignal.timeout(30_000) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not read the scene.");
+      setContract(result.contract);
+      addActivity("Scene contract read from frame", result.contract.lines.map((line: { text: string }) => line.text).join(" · "));
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not read the scene."); }
   }
   async function runAction(action: () => Promise<void>, label: string) {
     setError("");
@@ -240,7 +267,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
 
       <div hidden={section !== "studio"} className="studio-screen">
         <div className="studio-grid">
-          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} onStart={startContinuation} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} contract={contract} onContractChange={setContract} onReadContract={readContractFromFrame} canReadContract={Boolean(composite)} onStart={startContinuation} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
           <aside className="inspector" aria-label="Product setup">
             {locked && <div className="locked-notice"><Icon name="check" size={14} />Product and frame are held for this take. Use the director to steer live.</div>}
             <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />

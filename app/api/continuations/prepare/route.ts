@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { buildContinuationPrompt } from "@/lib/continuation-prompt";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
+import { draftContractWithGemini, draftFromBrief, mergeDraft, productLines } from "@/lib/knowledge/contract";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { loadKnowledge } from "@/lib/knowledge/store";
@@ -65,12 +66,24 @@ export async function POST(request: Request) {
     throw caught;
   }
 
+  // Scene contract: product lines from the knowledge base, person and setting
+  // lines drafted from the engineered brief. Restated in every direction.
+  let draft = draftFromBrief(engineered.text);
+  if (hasGemini()) {
+    try {
+      draft = await draftContractWithGemini(knowledge, engineered.text);
+    } catch (caught: unknown) {
+      console.error("prepare: contract draft failed, using the brief", caught);
+    }
+  }
+  const contract = mergeDraft({ lines: productLines(knowledge, true) }, draft, "brief", knowledge);
+
   const runId = crypto.randomUUID();
   const prompt = buildContinuationPrompt({ title, campaign, profile, sceneBrief: engineered.text, assetId: body?.assetId, knowledge });
-  const version = await recordPromptVersion({ campaignId: campaign.id, runId, role: "opening", engineered, prompt, outcome: "start" });
+  const version = await recordPromptVersion({ campaignId: campaign.id, runId, role: "opening", engineered, prompt, outcome: "start", contract });
 
   return NextResponse.json(
-    { runId, prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id },
+    { runId, prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id, contract },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

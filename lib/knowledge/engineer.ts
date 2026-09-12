@@ -11,6 +11,8 @@ export type EngineerContext = {
   role: EngineerRole;
   notes: string[];
   keepProduct: boolean;
+  // Scene-contract lines the rewrite must keep true.
+  contract: string[];
 };
 
 export interface Engine {
@@ -38,7 +40,7 @@ export async function engineerPrompt(
   knowledge: CampaignKnowledge,
   text: string,
   role: EngineerRole,
-  { engine, keepProduct = true }: { engine?: Engine; keepProduct?: boolean } = {},
+  { engine, keepProduct = true, contract = [] }: { engine?: Engine; keepProduct?: boolean; contract?: string[] } = {},
 ): Promise<Engineered> {
   const source = text.trim().replace(/\s+/g, " ");
   const guard = guardInput(knowledge, source);
@@ -46,7 +48,7 @@ export async function engineerPrompt(
 
   const notes = retrieveNotes(knowledge, source);
   const rejected: string[] = [];
-  const ctx: EngineerContext = { knowledge, text: source, role, notes, keepProduct };
+  const ctx: EngineerContext = { knowledge, text: source, role, notes, keepProduct, contract };
 
   if (engine) {
     let rewritten = "";

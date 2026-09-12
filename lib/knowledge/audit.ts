@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { SceneContract } from "@/lib/knowledge/contract";
 import type { Engineered, EngineerRole } from "@/lib/knowledge/engineer";
 
 // One record per prompt the server produced, written before the response
@@ -17,6 +18,8 @@ export type PromptVersion = {
   engineered: Engineered | null;
   prompt: string | null;
   outcome: "start" | "steer" | "overlay";
+  // The scene contract in force when the prompt was made.
+  contract?: SceneContract | null;
 };
 
 export type PromptVersionInput = Omit<PromptVersion, "id" | "at">;

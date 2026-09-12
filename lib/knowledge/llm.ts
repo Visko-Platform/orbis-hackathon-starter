@@ -49,7 +49,7 @@ ${SHARED_RULES}`,
 export class GeminiEngine implements Engine {
   private readonly client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  async rewrite({ knowledge, text, role, notes, keepProduct }: EngineerContext): Promise<string> {
+  async rewrite({ knowledge, text, role, notes, keepProduct, contract }: EngineerContext): Promise<string> {
     const product = knowledge.product;
     const response = await this.client.models.generateContent({
       model: ENGINEER_MODEL,
@@ -59,6 +59,7 @@ export class GeminiEngine implements Engine {
             `Product: ${product.name}`,
             product.appearance ? `Approved appearance: ${product.appearance}` : "",
             notes.length ? `Product notes:\n${notes.map((note) => `- ${note}`).join("\n")}` : "",
+            contract.length ? `Scene contract, keep every line true:\n${contract.map((line) => `- ${line}`).join("\n")}` : "",
             keepProduct ? "The product stays in the scene." : "This direction drops the brand: do not mention the product.",
             `${role === "opening" ? "Operator's scene brief" : "Director's direction"}: ${text}`,
           ]
