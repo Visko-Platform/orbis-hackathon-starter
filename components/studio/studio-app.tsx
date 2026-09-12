@@ -9,6 +9,7 @@ import { KnowledgePanel } from "./knowledge-panel";
 import { SourceClipPanel } from "./source-clip-panel";
 import { Icon } from "./icon";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
+import { useVoiceover, type VoiceoverRole } from "@/hooks/use-voiceover";
 import { useReleaseOnUnload } from "@/hooks/use-release-on-unload";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 import { audienceProfiles, campaigns, DEFAULT_CAMPAIGN_ID, filmTitles, selectEligibleCampaign, type Campaign, type PlacementZone } from "@/lib/studio-data";
@@ -71,35 +72,22 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [knowledgeVersion, setKnowledgeVersion] = useState(0);
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
   const [voiceover, setVoiceover] = useState(true);
-  const narrator = useRef<HTMLAudioElement | null>(null);
-  const voiceoverTake = useRef(0);
+  const { speak } = useVoiceover(voiceover);
 
-  // Narrator lines for the scene now on screen: written from the knowledge base,
-  // spoken by Gemini, shown as a caption. Never blocks the take; failures are logged.
-  async function speakScene(campaignId: string, scene: string, role: "opening" | "pivot" | "refine", direction?: string) {
-    if (!voiceover) return;
-    const ticket = ++voiceoverTake.current;
-    try {
-      const post = (payload: Record<string, unknown>, timeoutMs: number) => fetch("/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId, ...payload }), signal: AbortSignal.timeout(timeoutMs) });
-      // Phase one: the lines, shown as a caption right away.
-      const written = await post({ scene, role, direction, contractLines: contract?.lines.map((line) => line.text) ?? [] }, 45_000);
-      const result = await written.json();
-      if (!written.ok || ticket !== voiceoverTake.current) return;
-      const lines: string[] = Array.isArray(result.lines) ? result.lines : [];
-      if (!lines.length) return;
-      setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
-      addActivity("Voiceover", lines.join(" "));
-      // Phase two: the speech for those lines.
-      const spoken = await post({ lines, scene, role }, 60_000);
-      const speech = await spoken.json();
-      if (!spoken.ok || ticket !== voiceoverTake.current || !speech.audio) return;
-      narrator.current?.pause();
-      const audio = new Audio(`data:${speech.mimeType || "audio/wav"};base64,${speech.audio}`);
-      narrator.current = audio;
-      audio.play().catch((caught) => console.warn("voiceover playback blocked", caught));
-    } catch (caught) {
-      console.warn("voiceover unavailable", caught);
-    }
+  // Narrator lines for the scene now on screen, shown as a caption and logged.
+  // The two-phase write-then-speak lives in the hook, shared with the ad break.
+  function speakScene(campaignId: string, scene: string, role: VoiceoverRole, direction?: string) {
+    void speak({
+      campaignId,
+      scene,
+      role,
+      direction,
+      contractLines: contract?.lines.map((line) => line.text) ?? [],
+      onLines: (lines) => {
+        setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
+        addActivity("Voiceover", lines.join(" "));
+      },
+    });
   }
   // What must stay true for the take; restated in every direction. Set by prepare, advanced by each pivot.
   const [contract, setContract] = useState<SceneContract | null>(null);
