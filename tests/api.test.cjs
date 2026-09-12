@@ -252,3 +252,11 @@ test("a product image can be described into draft product info", async () => {
   const bad = await fetch(baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge/describe", { method: "POST", body: new FormData() });
   assert.ok([400, 503].includes(bad.status));
 });
+
+test("a page can release its live session by id; bad ids are refused, unknown ones are already gone", async () => {
+  assert.equal((await post("/api/sessions/release", { sessionId: "not a session id!" })).status, 400);
+  assert.equal((await post("/api/sessions/release", {})).status, 400);
+  const unknown = await post("/api/sessions/release", { sessionId: "00000000-0000-4000-8000-000000000000" });
+  assert.equal(unknown.status, 200);
+  assert.deepEqual(await unknown.json(), { released: false, alreadyGone: true });
+});

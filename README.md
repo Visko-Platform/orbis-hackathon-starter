@@ -171,8 +171,15 @@ the knowledge base, person and setting lines drafted from the brief or a real fr
 operator's own. Every direction restates the contract, and pinned lines survive even a full
 pivot ([`lib/knowledge/contract.ts`](lib/knowledge/contract.ts)).
 
-**Fixed demo path** — an authored six-beat Rolex walk offered as three bubbles, with free
-text resolved to beats by longest-cue match ([`lib/demo/flows.ts`](lib/demo/flows.ts)).
+**Fixed demo path** — an authored six-beat Rolex walk (street, boutique, swap, inspect,
+wear, exit) that drives the interactive ad in the user demo: three bubbles plus free text,
+where "show the back" jumps to that beat. The studio itself stays a free-form director.
+
+**User demo** — a "User demo" button next to "Generate live" opens `/watch`, a fictional
+video site playing an open-movie trailer. Go fullscreen, and at 8 seconds the player pauses
+under an interactive Rolex ad: the live Orbis take on the demo path with its bubbles, a
+free-text field, and "Skip Ad" after 5 seconds. `?adAt=<seconds>` moves the break;
+`?live=0` shows the ad with a still instead of connecting.
 
 **Real brand assets** — 19 original assets across six campaigns: **Pepsi, McDonald's,
 Nike, Rolex, BMW and Ray-Ban**, covering beverage, food, apparel, luxury, automotive and

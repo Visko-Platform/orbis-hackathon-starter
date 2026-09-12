@@ -40,3 +40,9 @@ video host during a live presentation.
 
 The included poster images and video excerpts are used as source footage and
 starting frames; Adtractive does not imply sponsorship or endorsement by Blender.
+
+## Thumbnails
+
+`thumbs/*.jpg` are single frames cut from the clips above with AVFoundation
+(no other source). They are the "Up next" thumbnails on the `/watch` demo page
+and carry the same credits and license as the clips.

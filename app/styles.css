@@ -309,16 +309,6 @@ input[type=range] { accent-color:#d9d4c7; width:100%; cursor:pointer; height:15p
 @media (max-width:720px) { .contract-lines li { grid-template-columns:auto minmax(0,1fr); } .contract-source { display:none; } .contract-add input { font-size:16px; } }
 
 /* Fixed demo path bubbles */
-.demo-path { margin:0 0 14px; padding:12px 14px; border:1px solid #2f4a3c; border-radius:10px; background:linear-gradient(120deg,#16241d,#141a17); }
-.demo-path-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; font-size:10px; color:#9fb8a8; }
-.demo-path-head .eyebrow { color:#c9a53e; }
-.demo-chips { display:flex; flex-wrap:wrap; gap:8px; }
-.demo-chip { display:inline-flex; align-items:center; gap:7px; border:1px solid #3d6b52; border-radius:999px; padding:8px 14px; font-size:12px; color:#e8efe9; background:#1d3328; cursor:pointer; transition:background .15s ease,transform .15s ease; }
-.demo-chip:hover:not(:disabled) { background:#27503a; transform:translateY(-1px); }
-.demo-chip:disabled { opacity:.45; cursor:not-allowed; }
-.demo-chip.start { border-color:#c9a53e; background:#3a2f12; }
-.demo-hint { margin-top:9px; font-size:10px; color:var(--quiet); }
-@media (max-width:720px) { .demo-path-head { flex-wrap:wrap; } .demo-chip { font-size:13px; } }
 
 /* Architecture tab — presentation-first system diagram. */
 .architecture { display:flex; flex-direction:column; gap:8px; padding-bottom:40px; }

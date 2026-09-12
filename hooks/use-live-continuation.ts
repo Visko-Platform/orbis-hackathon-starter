@@ -3,7 +3,7 @@
 import { useReactor, useReactorMessage } from "@reactor-team/js-sdk";
 import { useEffect, useRef, useState } from "react";
 
-import { TRANSITION_BEAT_MS } from "@/lib/live-direction";
+import { MAX_CURRENT_PROMPT_CHARS, TRANSITION_BEAT_MS } from "@/lib/live-direction";
 import { type OrbisMessage, unwrapOrbisMessage } from "@/lib/orbis";
 
 type StartInput = { image: File; prompt: string };
@@ -37,8 +37,8 @@ export function friendlyStartError(error: unknown): Error {
 function validatePrompt(prompt: string) {
   const trimmed = prompt.trim();
   if (!trimmed) throw new Error("Describe what should happen in the scene.");
-  if (trimmed.length > 4_000) {
-    throw new Error("Keep the complete scene direction under 4,000 characters.");
+  if (trimmed.length > MAX_CURRENT_PROMPT_CHARS) {
+    throw new Error(`Keep the complete scene direction under ${MAX_CURRENT_PROMPT_CHARS.toLocaleString()} characters.`);
   }
   return trimmed;
 }
