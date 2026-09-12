@@ -1,0 +1,590 @@
+<title>Teaching AI how to live</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0d1117;
+    font-family: 'Baloo 2', system-ui, sans-serif;
+    scroll-snap-type: y mandatory;
+    overflow-x: hidden;
+  }
+  .slide {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: 100vh;
+    width: 100vw;
+  }
+  .nav {
+    position: fixed; right: 18px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 9px; z-index: 50;
+  }
+  .nav a {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(43,58,74,.25); transition: background .2s, transform .2s;
+  }
+  .nav a.on { background: #1D6FD1; transform: scale(1.45); }
+  @media print {
+    body { scroll-snap-type: none; }
+    .slide { page-break-after: always; height: 100vh; }
+    .nav { display: none; }
+  }
+
+  
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18)); }
+    .bubble-white { color:#FFFFFF; }
+    .bubble-green { background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 5px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-green { background:linear-gradient(180deg, #A6E066 0%, #3FA036 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18)); }
+    .bubble-white { color:#FFFFFF; }
+    .bubble-green { background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-green { background:linear-gradient(180deg, #A6E066 0%, #3FA036 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .lane-label { font-size:15px; font-weight:800; letter-spacing:.02em; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .bubble-orange { background:linear-gradient(180deg, #FFB347 0%, #F0762B 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .chip { display:flex; align-items:center; gap:9px; background:#fff; border-radius:22px; padding:9px 16px; font-size:16px; font-weight:700; box-shadow:0 3px 0 rgba(0,0,0,.08); }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .tile { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:10px; display:block; }
+    .legend { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; }
+    .dot { width:12px; height:12px; border-radius:50%; display:inline-block; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+
+  
+    .bubble { font-weight:800; filter: drop-shadow(0 4px 0 rgba(0,0,0,.10)); }
+    .bubble-blue { background:linear-gradient(180deg, #3FC1F5 0%, #1D6FD1 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  
+
+</style>
+
+
+<section id="1" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; align-items:center; justify-content:center; padding:80px; background:#FFFFFF;">
+  <img src="assets/logo.jpg" style="max-width:78%; max-height:78%; object-fit:contain;" alt="Teaching AI how to live"/>
+</section>
+
+<section id="2" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px 120px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%); text-align:center; font-family:'Baloo 2', system-ui, sans-serif;">
+
+  <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.14;"></div>
+
+  <svg width="96" height="72" viewBox="0 0 120 90" style="position:relative; margin-bottom:26px; filter: drop-shadow(0 4px 0 rgba(0,0,0,.15));">
+    <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M6 46 L20 48" stroke="#C8F09A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M110 30 L98 38" stroke="#C8F09A" stroke-width="5" stroke-linecap="round"/>
+    <path d="M114 46 L100 48" stroke="#C8F09A" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+    <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+    <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+  </svg>
+
+  <h1 style="position:relative; font-size:52px; font-weight:800; line-height:1.22; margin:0 0 22px; max-width:900px;">
+    <span class="bubble bubble-white">We want AI to follow us around and help us.</span>
+  </h1>
+  <h1 style="position:relative; font-size:52px; font-weight:800; line-height:1.22; margin:0; max-width:820px;">
+    <span class="bubble bubble-green">But what if it did? Does AI actually know how to live?</span>
+  </h1>
+
+</section>
+
+<section id="3" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; align-items:center; gap:60px; padding:70px 100px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1.2; display:flex; flex-direction:column;">
+    <h1 style="font-size:48px; font-weight:800; line-height:1.2; margin:0 0 20px;">
+      <span class="bubble bubble-blue">One way: strap on a camera and show it your whole life.</span>
+    </h1>
+    <p style="font-size:20px; font-weight:600; opacity:.65; margin:0 0 14px; line-height:1.5;">That's imitation learning — the model copies what it watches you do.</p>
+    <p style="font-size:20px; font-weight:600; opacity:.65; margin:0; line-height:1.5;">But almost nobody wants to live on camera. The data never scales past a handful of volunteers.</p>
+  </div>
+
+  <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <svg width="360" height="360" viewBox="0 0 360 360">
+      <ellipse cx="180" cy="330" rx="110" ry="14" fill="#2B3A4A" opacity=".08"/>
+      <rect x="140" y="150" width="80" height="120" rx="34" fill="url(#shirt)"/>
+      <defs>
+        <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3FC1F5"/>
+          <stop offset="1" stop-color="#1D6FD1"/>
+        </linearGradient>
+        <linearGradient id="cam" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#A6E066"/>
+          <stop offset="1" stop-color="#3FA036"/>
+        </linearGradient>
+      </defs>
+      <circle cx="180" cy="112" r="42" fill="#FFDCC2"/>
+      <circle cx="166" cy="108" r="5" fill="#2B3A4A"/>
+      <circle cx="194" cy="108" r="5" fill="#2B3A4A"/>
+      <path d="M 164 128 Q 180 122 196 128" stroke="#2B3A4A" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <g transform="translate(214, 150) rotate(12)">
+        <rect x="0" y="0" width="66" height="44" rx="10" fill="url(#cam)"/>
+        <circle cx="22" cy="22" r="13" fill="#fff"/>
+        <circle cx="22" cy="22" r="8" fill="#2B3A4A"/>
+        <rect x="42" y="8" width="16" height="8" rx="4" fill="#fff" opacity=".7"/>
+        <circle cx="58" cy="34" r="4" fill="#E8472B"/>
+      </g>
+      <path d="M 248 132 Q 262 118 258 100" stroke="#8FD13F" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+      <path d="M 262 140 Q 282 132 290 114" stroke="#8FD13F" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="2 8"/>
+    </svg>
+  </div>
+
+</section>
+
+<section id="4" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:70px 120px; background:linear-gradient(165deg, #2B9BE0 0%, #164FA8 100%); text-align:center; font-family:'Baloo 2', system-ui, sans-serif;">
+
+  <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.12;"></div>
+
+  <svg width="150" height="120" viewBox="0 0 200 160" style="position:relative; margin-bottom:24px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18));">
+    <defs>
+      <linearGradient id="globe" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C8F09A"/>
+        <stop offset="1" stop-color="#3FA036"/>
+      </linearGradient>
+    </defs>
+    <circle cx="100" cy="80" r="58" fill="url(#globe)"/>
+    <ellipse cx="100" cy="80" rx="58" ry="22" fill="none" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <ellipse cx="100" cy="80" rx="26" ry="58" fill="none" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <path d="M 42 80 L 158 80" stroke="#fff" stroke-width="2.5" opacity=".65"/>
+    <polygon points="100,14 118,44 100,74 82,44" fill="#FFFFFF" transform="translate(58,-18) scale(.62)"/>
+    <polygon points="100,14 118,44 100,44" fill="#E4F4FF" transform="translate(58,-18) scale(.62)"/>
+  </svg>
+
+  <h1 style="position:relative; font-size:50px; font-weight:800; line-height:1.22; margin:0 0 20px; max-width:920px;">
+    <span class="bubble bubble-white">What if we could <span class="bubble bubble-green" style="filter:none;">simulate the world</span> instead?</span>
+  </h1>
+  <p style="position:relative; font-size:21px; font-weight:600; color:#FFFFFF; opacity:.8; margin:0; max-width:720px; line-height:1.5;">Train models inside the simulation — thousands of lives, lived at machine speed, no camera required — then bring what they learn back out to help us.</p>
+
+</section>
+
+<section id="5" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1.35; display:flex; flex-direction:column; padding:64px 110px 30px;">
+    <h1 style="font-size:44px; font-weight:800; line-height:1.2; margin:0 0 36px;">
+      <span class="bubble bubble-blue">How does a generative simulator work?</span>
+    </h1>
+
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:24px; max-width:980px;">
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <path d="M 13 23 C 13 16, 21 16, 23 23 C 25 30, 33 30, 33 23 C 33 16, 25 16, 23 23 C 21 30, 13 30, 13 23 Z" fill="none" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">The world is infinite — <span class="bubble bubble-blue">our simulator must be too.</span></p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <circle cx="23" cy="23" r="5" fill="#3FA036"/>
+          <path d="M 23 23 L 38 12" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 40 26" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 32 39" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 8 34" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 23 23 L 6 18" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">So is the action space — <span class="bubble bubble-green">anything you could do in a life, your Sim can try.</span></p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:20px;">
+        <svg width="44" height="44" viewBox="0 0 46 46" style="flex-shrink:0;">
+          <path d="M 6 36 L 14 26 L 22 30 L 40 10" fill="none" stroke="#F0762B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 32 10 L 40 10 L 40 18" fill="none" stroke="#F0762B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p style="font-size:24px; font-weight:700; margin:0; line-height:1.35;">The real test: <span class="bubble bubble-orange">can models understand the world and plan on the long horizon?</span></p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="flex:1.1; position:relative; display:flex; align-items:center; justify-content:center; gap:26px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%); padding:20px 50px; text-align:center;">
+    <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.14;"></div>
+    <svg width="96" height="74" viewBox="0 0 120 90" style="position:relative; flex-shrink:0; filter: drop-shadow(0 4px 0 rgba(0,0,0,.15));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M110 30 L98 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+    <p style="position:relative; font-size:58px; font-weight:800; color:#FFFFFF; margin:0; line-height:1.14; max-width:940px; filter: drop-shadow(0 5px 0 rgba(0,0,0,.18));">Live world models like <span style="background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">Orbis</span> are perfect for this.</p>
+  </div>
+
+</section>
+
+<section id="6" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; padding:56px 100px 48px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:40px; font-weight:800; line-height:1.2; margin:0 0 34px;">
+    <span class="bubble bubble-blue">One loop:</span> <span style="font-weight:800;">the world streams, the model lives in it,</span> <span class="bubble bubble-orange">the harness keeps score.</span>
+  </h1>
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px;">
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#F0762B;">Symbolic<br/>harness</span>
+      <div style="flex:1; background:linear-gradient(180deg,#FFB347,#F0762B); border-radius:14px; padding:14px 22px; color:#fff; font-weight:700; font-size:16px; box-shadow:0 5px 0 rgba(0,0,0,.10);">
+        Controls the action space · decides what the world state is allowed to be · releases reward
+      </div>
+    </div>
+
+    <div style="display:flex; gap:16px;">
+      <span style="width:150px;"></span>
+      <div style="flex:1; display:flex; justify-content:space-around;">
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="18" height="30" viewBox="0 0 18 30"><path d="M9 2 L9 22 M3 17 L9 24 L15 17" stroke="#F0762B" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#1D6FD1;">Generated<br/>video</span>
+      <div style="flex:1; display:flex; align-items:center; gap:5px;">
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.94; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.88; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.82; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.76; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.70; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1; height:58px; border-radius:8px; background:linear-gradient(180deg,#3FC1F5,#1D6FD1); opacity:.62; box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <span style="font-size:30px; font-weight:800; color:#1D6FD1; padding-left:6px;">∞</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:16px;">
+      <span style="width:150px;"></span>
+      <div style="flex:1; display:flex; justify-content:space-between; align-items:center; padding:0 40px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="18" height="34" viewBox="0 0 18 34"><path d="M9 2 L9 26 M3 21 L9 28 L15 21" stroke="#1D6FD1" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="font-size:15px; font-weight:700; color:#1D6FD1;">the VLM watches the world…</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:15px; font-weight:700; color:#3FA036;">…and acts back into it</span>
+          <svg width="18" height="34" viewBox="0 0 18 34"><path d="M9 32 L9 8 M3 13 L9 6 L15 13" stroke="#3FA036" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="lane-label" style="width:150px; text-align:right; color:#3FA036;">VLM<br/>inference</span>
+      <div style="flex:1; display:flex; align-items:center; gap:0;">
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+        <div style="flex:1;"></div>
+        <div style="width:17%; height:58px; border-radius:8px; background:linear-gradient(180deg,#A6E066,#3FA036); box-shadow:0 4px 0 rgba(0,0,0,.10);"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex; align-items:center; gap:14px; margin-top:26px; background:#FFF6EC; border:2px solid #F0762B; border-radius:14px; padding:14px 22px;">
+    <svg width="30" height="30" viewBox="0 0 30 30" style="flex-shrink:0;">
+      <circle cx="15" cy="15" r="13" fill="#FFB347"/>
+      <text x="15" y="21" text-anchor="middle" font-size="17" font-weight="800" fill="#fff" font-family="'Baloo 2', sans-serif">§</text>
+    </svg>
+    <p style="font-size:16px; font-weight:700; margin:0; line-height:1.45;"><span style="color:#F0762B;">Harness rule, in plain English:</span> "Don't spend more money than you have." The simulator's goal can be many things — one of them is simply <span style="color:#F0762B;">don't go bankrupt</span> — and when the model pulls it off, the harness releases reward.</p>
+  </div>
+
+</section>
+
+<section id="7" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; padding:46px 64px 40px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:40px; font-weight:800; line-height:1.2; margin:0 0 26px;">
+    <span class="bubble bubble-blue">So how do you train a model to live?</span>
+  </h1>
+
+  <div style="flex:1; display:flex; gap:26px; min-height:0;">
+
+    <div style="flex:1; display:flex; flex-direction:column; background:#EAF7FE; border-radius:22px; padding:26px 28px;">
+      <span style="font-size:14px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#1D6FD1; margin-bottom:6px;">The real thing</span>
+      <h2 style="font-size:27px; font-weight:800; margin:0 0 18px; line-height:1.25;">Reinforcement learning against broad life goals.</h2>
+
+      <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:22px;">
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><rect x="1" y="4" width="18" height="12" rx="3" fill="#8FD13F"/><circle cx="10" cy="10" r="3.4" fill="#fff"/></svg>
+          Make money
+        </span>
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9" fill="#FFB347"/><circle cx="7" cy="8" r="1.5" fill="#fff"/><circle cx="13" cy="8" r="1.5" fill="#fff"/><path d="M6 12 Q10 15.5 14 12" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          Be happy
+        </span>
+        <span class="chip">
+          <svg width="19" height="19" viewBox="0 0 20 20"><circle cx="7" cy="7" r="3.2" fill="#3FC1F5"/><path d="M1.5 17 C1.5 12.5, 12.5 12.5, 12.5 17 Z" fill="#3FC1F5"/><circle cx="14" cy="8" r="2.6" fill="#1D6FD1"/><path d="M9.5 17 C9.5 13.5, 18.5 13.5, 18.5 17 Z" fill="#1D6FD1"/></svg>
+          Have friends
+        </span>
+      </div>
+
+      <svg viewBox="0 0 500 210" style="width:100%; margin-top:auto;">
+        <defs>
+          <linearGradient id="bx" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3FC1F5"/><stop offset="1" stop-color="#1D6FD1"/>
+          </linearGradient>
+        </defs>
+
+        <rect x="6" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="78" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">VLM</text>
+        <text x="78" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">perceives</text>
+
+        <rect x="177" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="249" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">Reward</text>
+        <text x="249" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">arrives</text>
+
+        <rect x="348" y="30" width="145" height="60" rx="14" fill="url(#bx)"/>
+        <text x="420" y="58" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">Policy</text>
+        <text x="420" y="77" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="16" font-weight="700" fill="#fff">updates</text>
+
+        <path d="M155 60 L170 60" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="177,60 166,54 166,66" fill="#1D6FD1"/>
+        <path d="M326 60 L341 60" stroke="#1D6FD1" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="348,60 337,54 337,66" fill="#1D6FD1"/>
+
+        <path d="M420 90 L420 140 Q420 152 408 152 L90 152 Q78 152 78 140 L78 104" fill="none" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+        <polygon points="78,90 70,103 86,103" fill="#8FD13F"/>
+        <text x="249" y="181" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-size="15" font-weight="700" fill="#3FA036">…and around again, millions of lives</text>
+      </svg>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; background:#FFF4E9; border-radius:22px; padding:26px 28px;">
+      <span style="font-size:14px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#F0762B; margin-bottom:6px;">What we built this weekend</span>
+      <h2 style="font-size:27px; font-weight:800; margin:0 0 20px; line-height:1.25;">A shortcut that still learns.</h2>
+
+      <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">1</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">Generate a <span style="color:#F0762B;">synthetic symbolic dataset</span> — thousands of episodes rolled out offline, no rendering needed.</p>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">2</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">Train a simple policy on it with <span style="color:#F0762B;">Bellman updates</span> — cheap, deterministic, runs on a laptop.</p>
+        </div>
+
+        <div style="display:flex; gap:14px; align-items:flex-start; background:#fff; border-radius:16px; padding:15px 18px; box-shadow:0 3px 0 rgba(0,0,0,.07);">
+          <span style="flex-shrink:0; width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#FFB347,#F0762B); color:#fff; font-weight:800; font-size:17px; display:flex; align-items:center; justify-content:center;">3</span>
+          <p style="margin:0; font-size:17px; font-weight:700; line-height:1.4;">At inference, the policy drives — but a <span style="color:#F0762B;">VLM infers the state</span> from what it sees, turning it into a POMDP.</p>
+        </div>
+
+      </div>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-top:16px; border-top:2px dashed #F7C99B; padding-top:14px;">
+        <svg width="26" height="26" viewBox="0 0 20 20" style="flex-shrink:0;"><polygon points="10,1 18,9.5 10,19 2,9.5" fill="#8FD13F"/><polygon points="10,1 18,9.5 10,9.5" fill="#B6E37A"/></svg>
+        <p style="margin:0; font-size:15px; font-weight:700; line-height:1.4; opacity:.75;">The model never sees the symbols at run time — only the world, the same way we do.</p>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section id="8" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; padding:40px 48px 34px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:36px; font-weight:800; line-height:1.15; margin:0 0 16px;">
+    <span class="bubble bubble-blue">Every episode, every frame, generated.</span>
+  </h1>
+
+  <div style="flex:1; display:grid; grid-template-columns:repeat(6, minmax(0, 1fr)); grid-auto-rows:min-content; gap:9px; align-content:start;">
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_0.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_1.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_2.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_3.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_4.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_5.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_6.jpg" alt="Episode A frame"/></div>
+    <div style="border:3px solid #1D6FD1; border-radius:13px; padding:2px;"><img class="tile" src="assets/epA_7.jpg" alt="Episode A frame"/></div>
+
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_0.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_1.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_2.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_3.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_4.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_5.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_6.jpg" alt="Episode B frame"/></div>
+    <div style="border:3px solid #3FA036; border-radius:13px; padding:2px;"><img class="tile" src="assets/epB_7.jpg" alt="Episode B frame"/></div>
+
+    <div style="border:3px solid #F0762B; border-radius:13px; padding:2px;"><img class="tile" src="assets/epC_0.jpg" alt="Episode C frame"/></div>
+    <div style="border:3px solid #F0762B; border-radius:13px; padding:2px;"><img class="tile" src="assets/epC_1.jpg" alt="Episode C frame"/></div>
+    <div style="border:3px solid #F0762B; border-radius:13px; padding:2px;"><img class="tile" src="assets/epC_2.jpg" alt="Episode C frame"/></div>
+
+    <div style="border:3px solid #3FC1F5; border-radius:13px; padding:2px;"><img class="tile" src="assets/epD_0.jpg" alt="Episode D frame"/></div>
+    <div style="border:3px solid #3FC1F5; border-radius:13px; padding:2px;"><img class="tile" src="assets/epD_1.jpg" alt="Episode D frame"/></div>
+    <div style="border:3px solid #3FC1F5; border-radius:13px; padding:2px;"><img class="tile" src="assets/epD_2.jpg" alt="Episode D frame"/></div>
+    <div style="border:3px solid #3FC1F5; border-radius:13px; padding:2px;"><img class="tile" src="assets/epD_3.jpg" alt="Episode D frame"/></div>
+    <div style="border:3px solid #3FC1F5; border-radius:13px; padding:2px;"><img class="tile" src="assets/epD_4.jpg" alt="Episode D frame"/></div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-top:16px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%); border-radius:16px; padding:16px 28px;">
+    <p style="margin:0; font-size:22px; font-weight:800; color:#FFFFFF; line-height:1.25; text-align:center; filter: drop-shadow(0 3px 0 rgba(0,0,0,.16));">
+      We want super fast realtime video models for simulation. <span style="background:linear-gradient(180deg, #C8F09A 0%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent;">Orbis FTW!</span>
+    </p>
+    <svg width="34" height="34" viewBox="0 0 40 40" style="flex-shrink:0; filter: drop-shadow(0 3px 0 rgba(0,0,0,.16));">
+      <path d="M20 3 C26 9, 28 17, 28 23 L12 23 C12 17, 14 9, 20 3 Z" fill="#FFFFFF"/>
+      <circle cx="20" cy="15" r="4" fill="#1D6FD1"/>
+      <path d="M12 20 L6 27 L12 26 Z" fill="#8FD13F"/>
+      <path d="M28 20 L34 27 L28 26 Z" fill="#8FD13F"/>
+      <path d="M16 24 L20 34 L24 24 Z" fill="#FFB347"/>
+    </svg>
+  </div>
+
+</section>
+
+<section id="9" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; padding:34px 48px 30px; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <h1 style="font-size:42px; font-weight:800; line-height:1.15; margin:0 0 18px; text-align:center;">
+    <span class="bubble bubble-blue">We can watch our policy decide what to do!</span>
+  </h1>
+
+  <img src="assets/app.jpg" alt="The live simulation running, with the agent brain narrating its state estimate and chosen action" style="flex:1; min-height:0; max-width:100%; object-fit:contain; border-radius:16px; box-shadow:0 10px 0 rgba(0,0,0,.08), 0 18px 40px rgba(29,111,209,.16);"/>
+
+</section>
+
+<section id="10" class="slide" style="position:relative; width:100%; height:100vh; overflow:hidden; display:flex; flex-direction:column; background:#FFFFFF; font-family:'Baloo 2', system-ui, sans-serif; color:#2B3A4A;">
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:44px 90px 30px;">
+    <h1 style="font-size:38px; font-weight:800; line-height:1.15; margin:0 0 26px;">
+      <span class="bubble bubble-blue">Future work</span>
+    </h1>
+
+    <div style="display:flex; flex-direction:column; gap:18px; max-width:1000px;">
+
+      <div style="display:flex; align-items:center; gap:18px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="flex-shrink:0;">
+          <rect x="3" y="8" width="15" height="15" rx="3" fill="#3FC1F5"/>
+          <rect x="7" y="12" width="7" height="7" rx="1.5" fill="#1D6FD1"/>
+          <path d="M22 16 L32 16" stroke="#8FD13F" stroke-width="4" stroke-linecap="round"/>
+          <polygon points="37,16 29,11 29,21" fill="#8FD13F"/>
+        </svg>
+        <p style="margin:0; font-size:23px; font-weight:700; line-height:1.4;">Move from a simple RL formulation to more sophisticated learning that goes straight from <span style="color:#1D6FD1;">pixels → action</span>.</p>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:18px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="6" fill="#FFB347"/>
+          <circle cx="28" cy="14" r="4.5" fill="#F0762B"/>
+          <circle cx="18" cy="27" r="5" fill="#8FD13F"/>
+          <circle cx="31" cy="29" r="3.5" fill="#3FC1F5"/>
+          <path d="M4 34 L36 34" stroke="#F0762B" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 6"/>
+        </svg>
+        <p style="margin:0; font-size:23px; font-weight:700; line-height:1.4;">Introduce far more variation in the environment, and <span style="color:#F0762B;">relax the symbolic harness</span> as the model gets stronger.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="flex:1; position:relative; display:flex; align-items:center; justify-content:center; gap:30px; background:linear-gradient(165deg, #3FC1F5 0%, #1D6FD1 100%);">
+    <div style="position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,.6) 2px, transparent 2px); background-size: 38px 38px; opacity:.14;"></div>
+
+    <svg width="80" height="62" viewBox="0 0 120 90" style="position:relative; filter: drop-shadow(0 5px 0 rgba(0,0,0,.16));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M6 48 L20 50" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+
+    <h2 style="position:relative; font-size:132px; font-weight:800; margin:0; line-height:1; background:linear-gradient(180deg, #FFFFFF 0%, #C8F09A 55%, #8FD13F 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter: drop-shadow(0 7px 0 rgba(0,0,0,.18));">Thanks!</h2>
+
+    <svg width="80" height="62" viewBox="0 0 120 90" style="position:relative; transform:scaleX(-1); filter: drop-shadow(0 5px 0 rgba(0,0,0,.16));">
+      <path d="M10 30 L22 38" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M6 48 L20 50" stroke="#C8F09A" stroke-width="6" stroke-linecap="round"/>
+      <polygon points="60,10 78,45 60,80 42,45" fill="#8FD13F"/>
+      <polygon points="60,10 78,45 60,45" fill="#B6E37A"/>
+      <polygon points="42,45 60,45 60,80" fill="#3FA036"/>
+    </svg>
+  </div>
+
+</section>
+
+<nav class="nav">
+  <a href="#1" aria-label="Slide 1"></a>
+  <a href="#2" aria-label="Slide 2"></a>
+  <a href="#3" aria-label="Slide 3"></a>
+  <a href="#4" aria-label="Slide 4"></a>
+  <a href="#5" aria-label="Slide 5"></a>
+  <a href="#6" aria-label="Slide 6"></a>
+  <a href="#7" aria-label="Slide 7"></a>
+  <a href="#8" aria-label="Slide 8"></a>
+  <a href="#9" aria-label="Slide 9"></a>
+  <a href="#10" aria-label="Slide 10"></a>
+</nav>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dots = Array.from(document.querySelectorAll('.nav a'));
+
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        const i = slides.indexOf(e.target);
+        dots.forEach((d, j) => d.classList.toggle('on', i === j));
+        history.replaceState(null, '', '#' + (i + 1));
+      }
+    }
+  }, { threshold: 0.5 });
+  slides.forEach((s) => io.observe(s));
+
+  function current() {
+    return slides.findIndex((s) => {
+      const r = s.getBoundingClientRect();
+      return r.top >= -window.innerHeight / 2 && r.top < window.innerHeight / 2;
+    });
+  }
+  function go(delta) {
+    const i = current();
+    const next = Math.min(slides.length - 1, Math.max(0, (i < 0 ? 0 : i) + delta));
+    slides[next].scrollIntoView({ behavior: 'smooth' });
+  }
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(-1); }
+    if (e.key === 'Home') { e.preventDefault(); slides[0].scrollIntoView({ behavior: 'smooth' }); }
+    if (e.key === 'End') { e.preventDefault(); slides[slides.length - 1].scrollIntoView({ behavior: 'smooth' }); }
+  });
+
+  if (location.hash) {
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) requestAnimationFrame(() => el.scrollIntoView());
+  }
+</script>
+
