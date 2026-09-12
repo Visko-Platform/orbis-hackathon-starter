@@ -49,6 +49,21 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
   const live = session.connected && session.runStarted && !session.paused;
   bpmRef.current = bpm;
 
+  // Connecting is the only intent: as soon as the session is ready, the
+  // world for the current BPM starts on its own. Stopping stays manual.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!session.connected) {
+      autoStarted.current = false;
+      return;
+    }
+    if (autoStarted.current || session.runStarted || session.controlsBusy) {
+      return;
+    }
+    autoStarted.current = true;
+    void session.startWith(buildWorldPrompt(bpmRef.current, "flat"));
+  }, [session]);
+
   // The whole product: the body moves, the world follows. The prompt is
   // rebuilt from the exact BPM and its direction, not from five fixed states.
   useEffect(() => {
