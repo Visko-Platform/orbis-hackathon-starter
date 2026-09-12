@@ -103,10 +103,21 @@ called "the same watch as before". Every view note is two-faced: a dial on one
 side, the plain steel back on the other, one face visible at a time. Each beat
 declares the state it needs (`requires`: place, watch on the wrist or in his
 hands); bubbles offer only beats that fit, and the route answers 409 with what
-the beat needs when a typed cue asks for one that does not. `POST
-/api/continuations/demo` runs one beat,
+the beat needs when a typed cue asks for one that does not. The flow also has
+`moments`: small continuity-safe refinements (a push-in to the watch, a
+highlight across the crystal, checking the time, showing the dial or turning
+the watch in his hands, a tilt up to the wall crown, warmer light) that keep
+the story exactly where it is. They are the easiest directions for the live
+model, so `demoChips` fills every set of bubbles to three with the moments
+that fit the current state (`fits`), beats first, skipping the moment just
+run. A moment runs as a refinement (no action beat) from the beat named in
+`fromStepId`, keeps that beat's ledger, setting and product, and keeps the
+face of the watch the take shows (`assetId`), so "Turn it in the light" after
+"Show the dial" keeps the dial up; the response's `step.kind` is "moment" and
+`step.beatId` is the beat the take stays on. `POST /api/continuations/demo`
+runs one beat or moment,
 validated against the product knowledge but never rewritten, and returns the
-scene contract the beat leaves the take under. The path is presented to viewers
+scene contract the take is left under and the next three bubbles. The path is presented to viewers
 in the user demo's interactive ad (below); the studio's director panel has no
 bubbles and sends every direction as written.
 
@@ -206,8 +217,8 @@ page is a fictional video site ("ViewTube", `components/watch/`) playing the
 Sintel trailer from `public/scenes` (CC BY 3.0, credited). Go fullscreen,
 watch, and at `adAt` (default 8 s, `?adAt=<seconds>`) the player pauses
 under an interactive Rolex ad: the Orbis take on the Rolex demo path, warmed
-up 6 s earlier (`lib/watch/schedule.ts`), with the next bubbles from
-`demoChips`, a free-text field (a cue runs that beat, a question is answered
+up 6 s earlier (`lib/watch/schedule.ts`), with the next three bubbles the
+route returns (beats that fit, then moments), a free-text field (a cue runs that beat or moment, a question is answered
 on screen, anything else is a pivot carrying the scene contract) and
 "Skip Ad" after 5 s, which releases the session and resumes the video.
 `?live=0` shows the ad with the campaign still instead of connecting. The

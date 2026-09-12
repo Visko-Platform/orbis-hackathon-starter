@@ -7,7 +7,7 @@ import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { useReleaseOnUnload } from "@/hooks/use-release-on-unload";
 import { useVoiceover } from "@/hooks/use-voiceover";
 import { requestDemoBeat, requestPivot } from "@/lib/demo/client";
-import { demoChips, demoFlowFor, resolveDemoStep, type DemoStep } from "@/lib/demo/flows";
+import { demoChips, demoFlowFor, resolveDemoStep } from "@/lib/demo/flows";
 import type { SceneContract } from "@/lib/knowledge/contract";
 import { composeProductFrame } from "@/lib/placement-frame";
 import { campaigns } from "@/lib/studio-data";
@@ -40,6 +40,8 @@ export function AdBreak({ phase, live, onFinished }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
   const [stepId, setStepId] = useState<string | null>(null);
+  const [chips, setChips] = useState<{ id: string; chip: string }[]>([]);
+  const [playing, setPlaying] = useState("");
   const [assetId, setAssetId] = useState(flow?.steps[0]?.assetId ?? "");
   const [prompt, setPrompt] = useState("");
   const [contract, setContract] = useState<SceneContract | null>(null);
@@ -62,7 +64,8 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     if (phase === "idle" || began.current || !campaign || !flow) return;
     began.current = true;
     const first = flow.steps[0];
-    if (!live) { setStatus("offline"); setStepId(first.id); return; }
+    const offer = (id: string) => setChips(demoChips(flow, id).map((item) => ({ id: item.id, chip: item.chip })));
+    if (!live) { setStatus("offline"); setStepId(first.id); offer(first.id); return; }
     const begin = async () => {
       setStatus("preparing");
       try {
@@ -76,6 +79,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
         setContract(prepared.contract ?? null);
         await session.startContinuation({ image, prompt: prepared.prompt });
         setStepId(first.id);
+        offer(first.id);
         setAssetId(first.assetId);
         setStatus("live");
         void speak({ campaignId: CAMPAIGN_ID, scene: first.brief, role: "opening", contractLines: contractLines(prepared.contract ?? null), onLines: showCaption });
@@ -104,19 +108,20 @@ export function AdBreak({ phase, live, onFinished }: Props) {
   useEffect(() => () => { if (connected.current) void release.current(); }, []);
 
   if (!campaign || !flow) return null;
-  const chips = demoChips(flow, stepId);
   const current = stepId ? flow.steps.find((step) => step.id === stepId) : null;
   const canSteer = status === "live" && !sending && !session.busy;
   const currentPrompt = () => session.pendingPrompt || session.activePrompt || prompt;
 
-  async function runStep(step: DemoStep, source = "") {
+  async function runStep(step: { id: string }, source = "") {
     if (!canSteer) return;
     setSending(true); setAnswer(""); setError("");
     try {
-      const result = await requestDemoBeat({ campaignId: CAMPAIGN_ID, stepId: step.id, fromStepId: stepId ?? undefined, direction: source, currentPrompt: currentPrompt(), contract });
+      const result = await requestDemoBeat({ campaignId: CAMPAIGN_ID, stepId: step.id, fromStepId: stepId ?? undefined, assetId, direction: source, currentPrompt: currentPrompt(), contract });
       await session.steer(result.prompt, result.actionPrompt);
-      setStepId(step.id); setAssetId(step.assetId); setContract(result.contract); setPrompt(result.prompt);
-      void speak({ campaignId: CAMPAIGN_ID, scene: step.brief, role: "pivot", direction: source || undefined, contractLines: contractLines(result.contract), onLines: showCaption });
+      // A moment keeps the take on its beat; the route says which, and what to offer next.
+      setStepId(result.step.beatId); setAssetId(result.step.assetId); setChips(result.nextChips); setPlaying(result.step.title); setContract(result.contract); setPrompt(result.prompt);
+      // The narrator speaks to the brief that ran (a beat's, or a moment's), which the route returns as engineered text.
+      void speak({ campaignId: CAMPAIGN_ID, scene: result.engineered.text, role: result.step.kind === "moment" ? "refine" : "pivot", direction: source || undefined, contractLines: contractLines(result.contract), onLines: showCaption });
     } catch (caught) { setError(caught instanceof Error ? caught.message : "That direction did not go through."); }
     finally { setSending(false); }
   }
@@ -170,7 +175,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
           <input type="text" aria-label="Direct the ad" value={text} placeholder="Or say it your way: “show the back”, “make it rain”" disabled={!canSteer} maxLength={400} onChange={(event) => setText(event.target.value)} />
           <button type="submit" disabled={!canSteer || !text.trim()}>Send</button>
         </form>
-        {status === "live" && (error ? <p className="yt-ad-error">{error}</p> : <p className="yt-ad-phase">{session.phase}{current ? ` · ${current.title}` : ""}</p>)}
+        {status === "live" && (error ? <p className="yt-ad-error">{error}</p> : <p className="yt-ad-phase">{session.phase}{playing || current ? ` · ${playing || current?.title}` : ""}</p>)}
       </div>
       <div className="yt-ad-bar">
         <span className="yt-ad-badge">Ad</span>

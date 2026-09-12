@@ -6,6 +6,26 @@ import type { Campaign } from "@/lib/studio-data";
 export type Place = "street" | "boutique";
 /** Where the story is and which watch (by product id) is where after the beat; every prompt restates the watches so nothing swaps on its own. */
 export type BeatState = { place: Place; onWrist?: string; inHands?: string; onTray?: string };
+/** What a beat or moment needs: an exact watch, or `true` for "any watch there". */
+export type Requirement = { place?: Place; onWrist?: string | true; inHands?: string | true; onTray?: string | true };
+
+/**
+ * A small, continuity-safe moment (a camera move, a wrist turn, a light
+ * change) that keeps the story exactly where it is. Moments are the easiest
+ * directions for the live model, so they fill the bubbles to three at every
+ * step. They run as refinements: no action beat, the scene held.
+ */
+export type DemoMoment = {
+  id: string;
+  chip: string;
+  title: string;
+  scene: Pick<BeatScene, "camera" | "sequence" | "light" | "never">;
+  /** Where it fits. */
+  requires: Requirement;
+  /** Show the dial face of the watch in his hands (or on his wrist) instead of the current view. */
+  showsDial?: boolean;
+  cues: string[];
+};
 
 export type DemoStep = {
   id: string;
@@ -22,7 +42,7 @@ export type DemoStep = {
   stateAssetIds: string[];
   state: BeatState;
   /** What must already be true for this beat to follow; bubbles and the route only allow beats that fit. */
-  requires: Partial<BeatState>;
+  requires: Requirement;
   /** For beats that handle the product: the physical motion for the action beat. */
   action?: string;
   /** Lower-case phrases in free text that resolve to this beat; the longest match wins. */
@@ -40,6 +60,7 @@ export type DemoFlow = {
   /** How brand marks behave: fixed printed graphics, never animated. */
   marks: string;
   steps: DemoStep[];
+  moments: DemoMoment[];
 };
 
 export const CHIP_COUNT = 3;
@@ -256,6 +277,100 @@ const rolexWalk: DemoFlow = {
       replayable: false,
     }),
   ],
+  moments: [
+    {
+      id: "closer",
+      chip: "Closer on the watch",
+      title: "Close-up on the watch",
+      scene: {
+        camera: "The camera pushes in smoothly to a close-up of his left wrist until the watch fills a third of the frame, dial sharp, then holds.",
+        sequence: ["The same man lifts his left forearm a little so the watch faces the lens.", "The camera pushes in to a close-up of the dial: its markers and hands, the crown and the word ROLEX at twelve.", "It holds there for a moment; nothing else changes."],
+        light: "The existing light, with a soft highlight along the bezel.",
+        never: ["the watch changing model, colour or size", "the dial blurring or going blank", "a cut"],
+      },
+      requires: { onWrist: true },
+      cues: ["closer", "close up", "close-up", "zoom in", "push in", "closer on the watch"],
+    },
+    {
+      id: "glint",
+      chip: "Catch the light",
+      title: "A highlight across the watch",
+      scene: {
+        camera: "Framing unchanged, with a slight drift toward the wrist.",
+        sequence: ["The same man turns his left wrist a few degrees toward the light.", "One bright highlight sweeps across the crystal and the polished bezel, then settles.", "The dial stays sharp and legible; the wrist lowers back."],
+        light: "The existing light, with one clean highlight travelling across the bezel and crystal.",
+        never: ["the watch changing model or colour", "the dial washing out", "a cut"],
+      },
+      requires: { onWrist: true },
+      cues: ["catch the light", "glint", "in the light", "the light on the watch"],
+    },
+    {
+      id: "time",
+      chip: "Check the time",
+      title: "He checks the time",
+      scene: {
+        camera: "Framing unchanged; the camera favours his left wrist as it rises.",
+        sequence: ["The same man raises his left wrist and glances at the dial for a beat.", "The dial faces him, its hands and markers clear, the crown and the word ROLEX at twelve.", "He lowers the wrist and carries on as before."],
+        light: "Unchanged.",
+        never: ["a second watch", "the dial blank or plain steel", "a cut"],
+      },
+      requires: { onWrist: true },
+      cues: ["check the time", "the time", "look at the watch", "glance at the watch", "look at his watch"],
+    },
+    {
+      id: "dial",
+      chip: "Show the dial",
+      title: "The dial toward the camera",
+      scene: {
+        camera: "Close on his hands, the watch filling a third of the frame, holding steady.",
+        sequence: ["The same man turns the watch in his hands so its dial faces the camera.", "The dial is sharp: markers, hands, the date window, the crown and the word ROLEX at twelve.", "He holds it there; the plain steel back is now on the far side, hidden."],
+        light: "Unchanged, a soft highlight along the bezel.",
+        never: ["both faces plain steel", "the dial blank", "the watch merging with his fingers", "a cut"],
+      },
+      requires: { inHands: true },
+      showsDial: true,
+      cues: ["show the dial", "the dial", "the front", "turn it back", "dial side"],
+    },
+    {
+      id: "turn",
+      chip: "Turn it in the light",
+      title: "Turning the watch in the light",
+      scene: {
+        camera: "Close on his hands, holding.",
+        sequence: ["The same man tilts the watch slowly in his hands.", "Highlights sweep across the polished steel and the bracelet links as it turns.", "It stays one solid piece; the face toward the camera stays the same face."],
+        light: "Unchanged, with highlights moving across the steel.",
+        never: ["the watch flipping to its other face", "both faces plain steel", "the watch bending or doubling", "a cut"],
+      },
+      requires: { inHands: true },
+      cues: ["turn it in the light", "tilt it", "rotate it", "turn it slowly"],
+    },
+    {
+      id: "wall",
+      chip: "Look at the wall crown",
+      title: "The crown on the wall",
+      scene: {
+        camera: "A slow tilt up from him to the back wall, a hold, then a tilt back down to him.",
+        sequence: ["The camera tilts up from the same man to the single gold five-point crown above the word ROLEX in green serif capitals on the back wall.", "It holds on the mark: flat, printed, correctly spelled, one crown and one word.", "The camera tilts back down to him; he and his watch are unchanged."],
+        light: "Unchanged, the wall softly lit.",
+        never: ["a second crown or a second ROLEX", "the lettering warping, moving or misspelling", "a cut"],
+      },
+      requires: { place: "boutique" },
+      cues: ["wall crown", "the wall", "look at the crown", "the crown on the wall", "the logo", "the sign"],
+    },
+    {
+      id: "glow",
+      chip: "Warm the light",
+      title: "Warmer, softer light",
+      scene: {
+        camera: "Framing unchanged.",
+        sequence: ["The light warms and softens across the whole scene; highlights gain a gentle glow.", "Faces, the watch, the walls and the clothes keep their colours; only the light changes.", "Everything else stays exactly as it is."],
+        light: "Warmer and softer, with a gentle bloom on the highlights and no colour cast on the dial or the bracelet.",
+        never: ["colours shifting on the dial or the bracelet", "the scene or the framing changing", "a cut"],
+      },
+      requires: {},
+      cues: ["warm the light", "warmer", "warmer light", "softer light", "warm light", "golden light"],
+    },
+  ],
 };
 
 export const demoFlows: DemoFlow[] = [rolexWalk];
@@ -266,19 +381,64 @@ export function stepAssetIds(step: DemoStep): string[] {
   return [...new Set([step.assetId, ...ledger, ...step.stateAssetIds])];
 }
 
+/** Whether a state satisfies a requirement: exact watch ids, or `true` for "any watch there". */
+export function fits(state: BeatState, requires: Requirement): boolean {
+  return (Object.keys(requires) as (keyof Requirement)[]).every((key) => {
+    const wanted = requires[key];
+    return wanted === true ? Boolean(state[key]) : wanted === state[key];
+  });
+}
+
 /** Whether a beat can follow the state the take is in; the opening beat never follows a running take. */
 export function canFollow(from: DemoStep | null, step: DemoStep): boolean {
   if (!from) return true;
   if (stepIndex(demoFlows.find((flow) => flow.steps.includes(step)) ?? demoFlows[0], step.id) === 0) return false;
-  return (Object.keys(step.requires) as (keyof BeatState)[]).every((key) => step.requires[key] === from.state[key]);
+  return fits(from.state, step.requires);
+}
+
+function renderMomentBrief(scene: DemoMoment["scene"]): string {
+  return [
+    `Camera: ${scene.camera}`,
+    `What happens, in order: ${scene.sequence.map((line, index) => `(${index + 1}) ${line}`).join(" ")}`,
+    `Light: ${scene.light}`,
+    `Never: ${scene.never.join("; ")}.`,
+  ].join(" ");
+}
+
+/**
+ * A moment as a runnable step: it keeps the beat's state, setting, product
+ * and marks, and only adds its own camera, movements and light. `shownAssetId`
+ * is the view the take shows right now (a moment may have turned the watch
+ * to its dial), so the next moment describes the face that is actually up.
+ */
+export function momentAsStep(moment: DemoMoment, from: DemoStep, shownAssetId?: string | null): DemoStep {
+  const dial = moment.showsDial ? from.state.inHands ?? from.state.onWrist : undefined;
+  return {
+    id: moment.id,
+    chip: moment.chip,
+    title: moment.title,
+    scene: { ...from.scene, camera: moment.scene.camera, sequence: moment.scene.sequence, light: moment.scene.light, never: moment.scene.never },
+    brief: renderMomentBrief(moment.scene),
+    assetId: dial ?? shownAssetId ?? from.assetId,
+    stateAssetIds: [],
+    state: from.state,
+    requires: moment.requires,
+    cues: moment.cues,
+    mode: "refine",
+    replayable: true,
+  };
+}
+
+export function findMoment(flow: DemoFlow, id: string): DemoMoment | null {
+  return flow.moments.find((moment) => moment.id === id) ?? null;
 }
 
 /** Why a beat cannot run now, in the presenter's terms: "needs the Datejust 41 on his wrist, inside the boutique". */
 export function followReason(step: DemoStep, campaign: Campaign): string {
-  const label = (id: string) => watchIdentity(campaign, id);
+  const label = (id: string | true) => (id === true ? "a watch" : `the ${watchIdentity(campaign, id)}`);
   const parts = [
-    step.requires.onWrist ? `the ${label(step.requires.onWrist)} on his wrist` : null,
-    step.requires.inHands ? `the ${label(step.requires.inHands)} in his hands` : null,
+    step.requires.onWrist ? `${label(step.requires.onWrist)} on his wrist` : null,
+    step.requires.inHands ? `${label(step.requires.inHands)} in his hands` : null,
     step.requires.place ? (step.requires.place === "boutique" ? "inside the boutique" : "out on the street") : null,
   ].filter(Boolean);
   return parts.length ? `“${step.chip}” needs ${parts.join(", ")}.` : `“${step.chip}” only starts the walk.`;
@@ -322,7 +482,9 @@ export function demoContinuity(flow: DemoFlow, step: DemoStep, campaign: Campaig
     : same(before.inHands, onWrist) ? `On his left wrist by the end of this shot: the ${identity(onWrist)} he was holding, now fastened on again; it is the same watch, and ${rule}.`
     : before.onWrist ? `On his left wrist by the end of this shot: the ${identity(onWrist)}, the watch just fastened on; the ${identity(before.onWrist)} he wore until now comes off first, so his wrist never carries two watches.`
     : `On his left wrist: the ${identity(onWrist)}; ${rule}.`;
-  const hands = inHands ? `In his hands: the ${identity(inHands)} he was just wearing, taken off and held${view(inHands) ? `, ${view(inHands)}` : ""}; it stays the same watch and the same model.` : null;
+  const hands = !inHands ? null
+    : same(before.inHands, inHands) ? `Still in his hands: the ${identity(inHands)}, held as in the previous shot${view(inHands) ? `, ${view(inHands)}` : ""}; it stays the same watch and the same model.`
+    : `In his hands: the ${identity(inHands)} he was just wearing, taken off and held${view(inHands) ? `, ${view(inHands)}` : ""}; it stays the same watch and the same model.`;
   const tray = onTray
     ? same(before.onTray, onTray) ? `On the green leather tray, lying still and unchanged: the ${identity(onTray)}.` : `Now lying on the green leather tray: the ${identity(onTray)}, just set down there.`
     : before.onTray ? `The ${identity(before.onTray)} stays behind on the tray in the boutique.` : null;
@@ -354,11 +516,11 @@ export function stepIndex(flow: DemoFlow, stepId: string): number {
   return flow.steps.findIndex((step) => step.id === stepId);
 }
 
-/** The beat a free-text direction asks for, or null when it is an open direction. */
-export function resolveDemoStep(flow: DemoFlow, text: string): DemoStep | null {
+/** The beat or moment a free-text direction asks for, or null when it is an open direction. */
+export function resolveDemoStep(flow: DemoFlow, text: string): DemoStep | DemoMoment | null {
   const haystack = ` ${text.toLowerCase().replace(/[^\p{L}\p{N}\s']/gu, " ").replace(/\s+/g, " ").trim()} `;
-  let best: { step: DemoStep; length: number } | null = null;
-  for (const step of flow.steps) {
+  let best: { step: DemoStep | DemoMoment; length: number } | null = null;
+  for (const step of [...flow.steps, ...flow.moments]) {
     for (const cue of step.cues) {
       if (haystack.includes(` ${cue} `) && (!best || cue.length > best.length)) best = { step, length: cue.length };
     }
@@ -367,16 +529,20 @@ export function resolveDemoStep(flow: DemoFlow, text: string): DemoStep | null {
 }
 
 /**
- * The bubbles to offer next: the beats after the current one, then replayable
- * earlier ones, keeping only those the current state allows, so nothing is
- * offered that the story cannot show (no "show the back" of a watch he is not
- * wearing). Before the path starts, only the first beat is offered.
+ * The bubbles to offer next, always `count` of them: the beats after the
+ * current one, then replayable earlier ones, keeping only those the current
+ * state allows (no "show the back" of a watch he is not wearing), then moments
+ * that fit, skipping the one just run when others remain. Before the path
+ * starts, only the first beat is offered.
  */
-export function demoChips(flow: DemoFlow, currentStepId: string | null, count = CHIP_COUNT): DemoStep[] {
+export function demoChips(flow: DemoFlow, currentStepId: string | null, count = CHIP_COUNT, lastMomentId: string | null = null): (DemoStep | DemoMoment)[] {
   if (!currentStepId) return flow.steps.slice(0, 1);
   const index = stepIndex(flow, currentStepId);
   const current = flow.steps[index] ?? null;
   const upcoming = flow.steps.slice(index + 1).filter((step) => canFollow(current, step));
   const replays = flow.steps.filter((step) => step.replayable && step.id !== currentStepId && !upcoming.includes(step) && canFollow(current, step));
-  return [...upcoming, ...replays].slice(0, count);
+  const fitting = current ? flow.moments.filter((moment) => fits(current.state, moment.requires)) : [];
+  const fresh = fitting.filter((moment) => moment.id !== lastMomentId);
+  const moments = fresh.length + upcoming.length + replays.length >= count ? fresh : fitting;
+  return [...upcoming, ...replays, ...moments].slice(0, count);
 }
