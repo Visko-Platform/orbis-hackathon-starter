@@ -16,8 +16,12 @@ export const MAX_SCALE_BPM = 220;
 
 // The protagonist is the thread across every world. The place changes with
 // effort, he does not, so the jump reads as the same story escalating.
-const HERO = `The same man in his thirties, grey t-shirt, black shorts, dark
-hair.`;
+// The body is the progress bar: same face, same clothes, and a physique that
+// transforms from heavy to bodybuilder as the effort climbs.
+function hero(build: string) {
+  return `The same man in his thirties, same face, dark hair, grey t-shirt,
+black shorts. ${build}.`;
+}
 
 const STYLE = `Cinematic, photorealistic, continuous shot, no cuts.`;
 
@@ -26,6 +30,7 @@ type World = {
   label: string;
   minBpm: number;
   color: string;
+  build: string;
   scene: string;
   rising: string;
   falling: string;
@@ -37,6 +42,7 @@ const WORLDS: World[] = [
     label: "Living room",
     minBpm: 0,
     color: "#6ee7b7",
+    build: `He is heavy and out of shape, a soft belly straining his t-shirt, round face, slouched posture`,
     scene: `He is sunk deep into a couch in a dim living room, a TV glowing
 blue on his face, a warm lamp in the corner, totally still`,
     rising: "He shifts forward, restless, about to get up.",
@@ -47,6 +53,7 @@ blue on his face, a warm lamp in the corner, totally still`,
     label: "Street",
     minBpm: 95,
     color: "#fcd34d",
+    build: `He is still thick and heavy set, but standing taller, the shirt looser on him`,
     scene: `He is walking fast down a crowded city sidewalk at golden hour,
 weaving between people, shop windows and traffic sliding past`,
     rising: "His pace quickens, he starts pushing through the crowd.",
@@ -57,6 +64,7 @@ weaving between people, shop windows and traffic sliding past`,
     label: "Court",
     minBpm: 125,
     color: "#fb923c",
+    build: `He has an average build now, the belly gone, shoulders starting to fill out`,
     scene: `He is in a fast outdoor pickup basketball game, driving hard to the
 hoop, defenders closing, the ball slapping the asphalt`,
     rising: "He accelerates past his defender, the game speeding up.",
@@ -67,6 +75,7 @@ hoop, defenders closing, the ball slapping the asphalt`,
     label: "Chase",
     minBpm: 150,
     color: "#f87171",
+    build: `He is lean and athletic, clearly defined arms and a flat stomach`,
     scene: `He is sprinting down a narrow alley at night, wet asphalt throwing
 back neon, fences and fire escapes flying past, something behind him`,
     rising: "He is gaining speed, running for his life.",
@@ -77,6 +86,7 @@ back neon, fences and fire escapes flying past, something behind him`,
     label: "Volcano",
     minBpm: 170,
     color: "#ef4444",
+    build: `He is heavily muscled and ripped, abs carved, veins standing out on his arms`,
     scene: `He is running across black volcanic rock, rivers of lava on both
 sides, embers storming through a blood-red sky, heat warping the air`,
     rising: "He drives forward into the fire, past his limit.",
@@ -89,6 +99,7 @@ sides, embers storming through a blood-red sky, heat warping the air`,
     label: "Orbit",
     minBpm: 190,
     color: "#a78bfa",
+    build: `He has a full bodybuilder physique, enormous shoulders and chest, shredded`,
     scene: `He is sprinting across the hull of a space station, Earth turning
 enormous and blue below him, stars streaking past, no air, no sound`,
     rising: "He pushes off the hull and launches into open space.",
@@ -99,6 +110,7 @@ enormous and blue below him, stars streaking past, no air, no sound`,
     label: "Supernova",
     minBpm: 205,
     color: "#f0abfc",
+    build: `He is a colossal bodybuilder at peak condition, every muscle enormous and impossibly defined`,
     scene: `He is running through a collapsing star, his body breaking apart
 into light and particles, space folding around him, reality tearing`,
     rising: "He dissolves completely into the blast.",
@@ -122,7 +134,7 @@ export function zonesFor(demo: boolean): HeartZone[] {
     label: world.label,
     minBpm: cuts[index],
     color: world.color,
-    prompt: `${HERO} ${world.scene}. ${STYLE}`,
+    prompt: `${hero(world.build)} ${world.scene}. ${STYLE}`,
   }));
 }
 
@@ -165,5 +177,5 @@ export function buildWorldPrompt(bpm: number, trend: Trend, demo = false) {
   const trendClause =
     trend === "up" ? world.rising : trend === "down" ? world.falling : "";
 
-  return `${HERO} ${world.scene}, ${body}. ${trendClause} ${STYLE}`;
+  return `${hero(world.build)} ${world.scene}, ${body}. ${trendClause} ${STYLE}`;
 }
