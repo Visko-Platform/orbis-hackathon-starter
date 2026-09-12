@@ -14,8 +14,53 @@
   <a href="docs/SPONSORS.md">Sponsor integrations</a>
 </p>
 
+<p align="center">
+  <a href="https://vnmoorthy.github.io/cutline/"><img alt="Website" src="https://img.shields.io/badge/website-vnmoorthy.github.io%2Fcutline-f2b134?style=for-the-badge"></a>
+  <a href="public/demo/cutline-live.mp4"><img alt="Demo video" src="https://img.shields.io/badge/demo-recorded%20Orbis%20take-3fd0c9?style=for-the-badge"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-see%20LICENSE-lightgrey?style=for-the-badge"></a>
+</p>
+<p align="center">
+  <img alt="Cloudflare Workers" src="https://img.shields.io/badge/Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white">
+  <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js%2016-000?logo=nextdotjs&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React%2019-20232a?logo=react&logoColor=61dafb">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white">
+  <img alt="Three.js" src="https://img.shields.io/badge/Three.js-000?logo=threedotjs&logoColor=white">
+  <img alt="D1" src="https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white">
+</p>
+
+> **🌐 Website:** [vnmoorthy.github.io/cutline](https://vnmoorthy.github.io/cutline/) — pitch, recorded live take, and how the loop works.
 > **Hackathon branch:** [`Cutline-vnmoorthy`](https://github.com/vnmoorthy/cutline/tree/Cutline-vnmoorthy) · [PowerPoint](presentation/CUTLINE-3-minute-pitch.pptx) · [Three-minute script](presentation/STORYBOARD.md) · [Claude review handoff](CLAUDE-REVIEW.md)
-> The complete app runs locally with a Worker/D1 backend. GitHub hosts the source and recorded demonstration; a hosted live-app URL will be added after deployment is verified.
+> The complete interactive app is a Cloudflare Worker with a D1 database. Run it locally in three commands, or publish your own public copy with `npm run deploy` (see [Quick start](#quick-start)).
+
+## Quick start
+
+```bash
+git clone https://github.com/vnmoorthy/cutline.git && cd cutline
+npm run install:ci && npm run build
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_magical_sway.sql
+npm run dev -- --port 3000   # open http://localhost:3000
+```
+
+Rehearsal mode needs no API keys: create stories, vote from a second browser, apply winners, branch, and export. Copy `.env.example` to `.env.local` and add `REACTOR_API_KEY` and `NEBIUS_API_KEY` for live Orbis video and AI scene planning.
+
+**Publish a public HTTPS copy** (audience phones need one; `localhost` on a phone points at the phone):
+
+```bash
+npx wrangler login   # one time, opens the browser
+npm run deploy       # builds, creates the D1 database, applies the schema, deploys, pushes secrets from .env.local
+```
+
+The deploy prints your `https://cutline.<account>.workers.dev` URL. Put it in GitHub About, the README, and the QR slide.
+
+## Record a product demo
+
+Follow the [demo runbook](docs/DEMO-RUNBOOK.md) for the scripted three-minute take, then:
+
+1. Open the deployed app on the presenter screen and create **The last train** from the story library.
+2. Open the room link or QR code on two phones; vote differently; watch the tallies move live.
+3. Close the vote, apply the winner, and let the room watch the next Orbis moment arrive.
+4. Use the in-app recorder to capture ten seconds of the actual live media, or screen-record the full session.
+5. Export the story as Markdown and JSON to show the preserved branches.
 
 ## See the loop
 
