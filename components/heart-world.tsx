@@ -28,6 +28,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
   const [bpm, setBpm] = useState(62);
   const [auto, setAuto] = useState(true);
   const [deviceName, setDeviceName] = useState("");
+  const watchDevice = useRef<any>(null);
   const [bleError, setBleError] = useState("");
   const [replay, setReplay] = useState<HeartSample[]>([]);
   const [replayName, setReplayName] = useState("");
@@ -115,6 +116,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
       const device = await bluetooth.requestDevice({
         filters: [{ services: ["heart_rate"] }],
       });
+      watchDevice.current = device;
       const server = await device.gatt.connect();
       const service = await server.getPrimaryService("heart_rate");
       const characteristic = await service.getCharacteristic(
@@ -207,6 +209,18 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
     else setBpmDraft(null);
   };
 
+  const disconnectWatch = () => {
+    const device = watchDevice.current;
+    try {
+      device?.gatt?.disconnect();
+    } catch {
+      // Already gone; clearing the UI below is all that is left to do.
+    }
+    watchDevice.current = null;
+    setDeviceName("");
+    setSource("manual");
+  };
+
   return (
     <section
       id="heart-world"
@@ -282,6 +296,11 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
               } else setSource("manual");
             }}
           />
+          {deviceName ? (
+            <Button variant="ghost" size="sm" onClick={disconnectWatch}>
+              Disconnect watch
+            </Button>
+          ) : null}
           <span className="caption muted" role="status">
             {sourceBusy
               ? "Connecting source…"
