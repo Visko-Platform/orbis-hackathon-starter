@@ -136,10 +136,10 @@ export function useOrbis(accessCode: string) {
       const scene = { full: prompt, change: visualChange };
       pending.current = scene;
       setPromptStatus(
-        visualChange
+        prompt
           ? connecting.current
-            ? "Your choice is queued while the live pictures connect…"
-            : "Sending your choice to Orbis…"
+            ? "Your picture is queued while the video connects…"
+            : "Sending your picture request…"
           : "",
       );
       if (connecting.current) return pictures.current.wait();
@@ -147,9 +147,9 @@ export function useOrbis(accessCode: string) {
       const currentSession = () => epoch.current === generation;
       const signal = controller.current.signal;
       const acknowledged = (applied: typeof scene) => {
-        if (currentSession() && pending.current === applied && applied.change)
+        if (currentSession() && pending.current === applied && applied.full)
           setPromptStatus(
-            "Orbis accepted your choice. The picture may take a moment to change.",
+            "Picture request delivered. If it still looks wrong, try Regenerate picture.",
           );
       };
       if (client.current && !prompt) return;
@@ -361,7 +361,7 @@ export function useOrbis(accessCode: string) {
         acknowledged(initialPrompt);
         // A second story page can arrive while the initial prompt is being prepared.
         // Startup can coalesce several turns, so use the latest complete scene here.
-        // Once connected, ordinary updates use only the visible transition.
+        // Every replacement retains the full scene and the current action.
         let applied = initialPrompt;
         while (currentSession() && pending.current !== applied) {
           applied = pending.current;
@@ -412,6 +412,9 @@ export function useOrbis(accessCode: string) {
           "generation_reset",
           controller.current.signal,
         );
+        // A state event from the previous run may have arrived while reset
+        // was in flight. The next queued scene must still execute start.
+        if (generation === epoch.current) started.current = false;
       })
       .catch((cause) => {
         if (generation === epoch.current) fail(cause);

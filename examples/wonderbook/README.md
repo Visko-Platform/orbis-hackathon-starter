@@ -6,7 +6,7 @@ GPT writes the story and Orbis steers a continuous video scene.
 
 - **Live demo:** https://live-models-hackathon-production.up.railway.app/
 - **Source repository:** https://github.com/denemlabs/live-models-hackathon
-- **Source snapshot:** [`b7d88b2`](https://github.com/denemlabs/live-models-hackathon/commit/b7d88b24eab990a94440526f5df4414b9563fc89)
+- **Source snapshot:** [`1a1da9c`](https://github.com/denemlabs/live-models-hackathon/commit/1a1da9ccdcf664db16b1cae7e356f9f2edbf4431)
 
 This directory is a standalone React / Vite / Express application with its own
 dependencies and commands. The repository root remains the Next.js starter.
@@ -66,9 +66,12 @@ scoped, short-lived session tokens. See `.env.example` for optional settings.
    model events, cancellation, and command deadlines.
 5. Selecting a prepared option immediately sends its moderated visual prompt
    through `set_prompt` on the existing stream while GPT writes the next page.
-   Freeform answers require GPT interpretation before video steering.
+   Freeform answers require GPT interpretation before video steering. Explicit
+   appearance changes reset generation so the new scene can take effect.
 6. Narration waits for a displayed video frame. A ready connection is retained
    briefly between stories and released when idle or when the page closes.
+7. Narration restores playback mode after microphone capture on supported
+   browsers; replay stops active recording before audio starts.
 
 The live stream is asynchronous. Orbis cold starts can take minutes; startup
 progress is shown, and failures are not silently presented as generated video.
