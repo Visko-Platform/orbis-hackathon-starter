@@ -14,7 +14,8 @@
   <a href="docs/SPONSORS.md">Sponsor integrations</a>
 </p>
 
-> **Publication status:** the public product URL, repository URL, and presentation links will be added after they exist and have been checked. This draft does not claim a deployment. Intended GitHub owner: `vnmoorthy`.
+> **Hackathon branch:** [`Cutline-vnmoorthy`](https://github.com/vnmoorthy/cutline/tree/Cutline-vnmoorthy) · [PowerPoint](presentation/CUTLINE-3-minute-pitch.pptx) · [Three-minute script](presentation/STORYBOARD.md) · [Claude review handoff](CLAUDE-REVIEW.md)
+> The complete app runs locally with a Worker/D1 backend. GitHub hosts the source and recorded demonstration; a hosted live-app URL will be added after deployment is verified.
 
 ## See the loop
 

@@ -2,18 +2,16 @@
 
 Review the final integrated product, identify material failures, and help the lead finish the release quickly. Prioritize reproducible functional/security issues and mismatches between the demo and the code. Avoid broad rewrites or repeating unchanged checks. This is a review handoff, not a claim that the release is complete.
 
-**Workspace:** `/Users/moorthy/Downloads/Projects/viska`  
+**Workspace:** repository root  
 **Product:** Cutline — live audience-directed cinema for the Visko × Reactor × Nebius Live Models Hackathon.  
-**Requested GitHub owner:** `vnmoorthy`. Repository creation and private preview publication remain pending.  
-**Handoff basis:** source/evidence inspected on 12 September 2026, including reports through 23:22 UTC. Active agents are changing the opening and film controls; inspect the current files before relying on line numbers or screenshots.
+**Requested GitHub owner:** `vnmoorthy`. Repository: https://github.com/vnmoorthy/cutline. Review branch: `Cutline-vnmoorthy`. Hosted live-app deployment is separate from the GitHub submission.  
+**Handoff basis:** source/evidence inspected on 12 September 2026, including the final API, voting and replay evidence in `docs/testing`. Inspect the current files before relying on line numbers or screenshots.
 
-## Current work that must land before final sign-off
+## Latest integrated work
 
-1. **Continuous interactive cosmic flight:** a Three.js renderer is being built to replace the previous sequence of NASA photographs with CSS camera motion. `three` and `@types/three` are in `package.json`; the renderer was not yet present under `components/cutline` at the last handoff read. Judge the new implementation, not the old chapter UI. Preserve source attribution and label interpretive/procedural visuals honestly; do not call the flight a physically exact scientific simulation.
-2. **Choices on the film:** the lead is integrating selectable choices on the live-video surface. Confirm these use real story/voting/direction handlers and remain synchronized with the sidebar and audience state. They were not present in the last inspected stage markup.
-3. **Combined sponsor rehearsal:** real Orbis video and a real Nebius completion have each passed separately. One complete audience vote → frozen winner → Nebius scene → Orbis prompt → observed film response remains pending.
-4. **Private publication and GitHub:** publish through the intended hosting flow, validate access and room participation, then create the authorized repository under `vnmoorthy`. Do not invent URLs or interpret a local build as a deployment. A private deployment may impose sign-in/access requirements beyond an unlisted room link; test the intended audience's actual access.
-5. **Presentation and docs:** ten-slide PPTX/PDF and a three-minute storyboard exist. The presentation agent is updating them. The README and slide-three narration still describe the old source-image chapter sequence at this handoff; reconcile them after the new flight lands.
+1. **Continuous interactive cosmic flight:** implemented in `components/cutline/cosmic-flight.tsx`: one Three.js canvas, nested geometry, a continuously animated camera and projected destination buttons. NASA Earth texture and the SF aerial are sourced; geometry and compressed scales are cinematic interpretation. Navigation through the theater was exercised in the browser.
+2. **On-video choices:** implemented in `studio.tsx`. During open voting they cast ballots; otherwise they send a new direction. Open polls cannot be discarded by manual direction. Paused winners remain unapplied until playback resumes.
+3. **Combined sponsor rehearsal:** passed. See `docs/testing/combined-live.json`: audience vote → frozen winner → Nebius scene/three choices → accepted Orbis instruction and subsequent live chunk. A single observed timing is not a guarantee.
 
 ## Architecture and key files
 
@@ -28,7 +26,7 @@ Creator live hook → scoped Reactor session → Visko Orbis → shared video/au
 | File / directory                                                  | What to review                                                                                              |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `components/cutline/studio.tsx`                                   | Opening/film state, on-video choices, action guards, modal/keyboard controls, recordings                    |
-| New Three.js flight component                                     | Discover its actual path after integration; renderer lifecycle, inputs, transition to film                  |
+| `components/cutline/cosmic-flight.tsx`                            | Renderer lifecycle, inputs, transition to film                                                              |
 | `components/cutline/use-live-video.ts`                            | Session creation, readiness gates, cancellation, media tracks, cue trace, pause/reset, ten-second recording |
 | `components/cutline/use-story.ts`                                 | Versioned mutations, active story selection, SSE reconnect, late-response protection                        |
 | `components/cutline/audience.tsx`                                 | Phone voting, current poll scene, connected state, safe room-only access                                    |

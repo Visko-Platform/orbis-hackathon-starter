@@ -509,13 +509,13 @@ export function CosmicFlight({
       const earthStars = randomStars(groups[5], 800, 65, 0.8);
       earthStars.position.z = -15;
       // 6. Aerial terrain with actual depth: source imagery on the ground, a restrained city above.
-      const groundMaterial = new THREE.MeshStandardMaterial({
-        color: 0x27333c,
-        roughness: 1,
-        metalness: 0,
+      const groundMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
       });
       const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(28, 21),
+        new THREE.PlaneGeometry(76, 57),
         groundMaterial,
       );
       ground.position.z = -0.2;
@@ -530,7 +530,7 @@ export function CosmicFlight({
           textures.add(texture);
           texture.colorSpace = THREE.SRGBColorSpace;
           groundMaterial.map = texture;
-          groundMaterial.color.set(0x85929e);
+          groundMaterial.color.set(0xffffff);
           groundMaterial.needsUpdate = true;
         },
         undefined,
@@ -698,6 +698,7 @@ export function CosmicFlight({
             (i !== 5 || current < 6.55) &&
             (i !== 6 || current < 6.75);
         }
+        groundMaterial.opacity = THREE.MathUtils.smoothstep(current, 5.68, 6);
         // Logarithmic world rebasing is equivalent to moving a camera through nested scales,
         // and keeps floating-point precision stable all the way from universes to a room.
         const drift = reduce ? 0 : Math.sin(now * 0.00008) * 0.28;

@@ -16,7 +16,7 @@ Cutline has local application tests, real Orbis media observations, and a verifi
 | Production build           | Passed locally after the Reactor runtime WASM import fix                                                    | `npm run build`                                                                |
 | GitHub Actions             | Workflow added; hosted execution not yet verified                                                           | [Verify workflow](../.github/workflows/verify.yml)                             |
 
-The reports are dated local observations. A final integration rerun is in progress at the time this release-document update was prepared; update the retained reports with that result before declaring the final commit verified. Do not aggregate these assertion counts into unique coverage, performance, or load-testing claims.
+The reports are dated local observations. The retained API and voting reports reflect the successful final rerun after the pause, stale-poll, and manual-direction fixes. Do not aggregate these assertion counts into unique coverage, performance, or load-testing claims.
 
 The API suite checks owner isolation, audience permissions, input boundaries, vote replacement, atomic closure, deterministic ties, empty ballots, concurrent updates, active-branch context, exports, event recovery, and deletion. The replay suite specifically checks that edited last-train prompts and memory survive the cosmic opening, that custom premises and choices remain intact, and that the initial cosmic template converts into the train film without discarding edited memory.
 
