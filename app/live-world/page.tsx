@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 import "../family-world.css";
-import { LiveWorld } from "../components/LiveWorld";
+import { LiveWorld, isSeedMemoryId } from "../components/LiveWorld";
+import { LiveWorldSession } from "../components/LiveWorldSession";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -16,15 +17,26 @@ export const metadata: Metadata = {
 // "Live World" design import (Claude Design project 868bef8e) — presenter-
 // facing live-generation viewer, sibling to /add-family and
 // /explore-grandmas-world from the same import. Public route: /live-world
-// is unmatched by proxy.ts, same as /, /add-family, and
-// /explore-grandmas-world. The grandmother example cards on / link here
-// with ?memoryId=<seed id> to steer that person's panorama scene.
+// is unmatched by proxy.ts (unlike /add-family and /session, which are
+// gated). The grandmother example cards on / link here with
+// ?memoryId=<seed id> to steer that person's panorama scene.
+//
+// `memoryId` picks which experience renders: one of LiveWorld.tsx's 3
+// curated seeds (or none at all) gets the local-timer simulation with its
+// hand-written historical narration; anything else — an AddFamily-created
+// memory — gets <LiveWorldSession>, a real Visko Orbis Stable session seeded
+// from that memory's restored photo + grounded prompt. No proxy.ts change
+// needed for the real path: it mints its Reactor token via the
+// already-gated /api/reactor/token, and sessionStorage's per-browser
+// locality means only the presenter's own browser (via the gated
+// /add-family) ever has a memory to autostart from.
 export default async function LiveWorldPage({
   searchParams,
 }: {
   searchParams: Promise<{ memoryId?: string }>;
 }) {
   const { memoryId } = await searchParams;
+  const useSimulatedSeed = !memoryId || isSeedMemoryId(memoryId);
   return (
     <div className={`family-world ${archivo.variable}`}>
       <nav className="fw-nav" style={{ paddingInline: "clamp(20px, 5vw, 72px)" }}>
@@ -57,7 +69,11 @@ export default async function LiveWorldPage({
           margin: "0 auto",
         }}
       >
-        <LiveWorld memoryId={memoryId} />
+        {useSimulatedSeed ? (
+          <LiveWorld memoryId={memoryId} />
+        ) : (
+          <LiveWorldSession />
+        )}
       </main>
 
       <footer

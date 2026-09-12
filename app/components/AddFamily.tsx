@@ -79,11 +79,13 @@ function plural(n: number, word: string) {
 // Saving runs groundFamilyMemory() (memory-pipeline.ts) right here — Nano
 // Banana restores/reframes the photo, Gemini grounds an Orbis prompt in it —
 // so the presenter sees the actual grounded prompt on this page before ever
-// visiting /session. The result (photo + prompt) is stashed in sessionStorage
+// leaving it. The result (photo + prompt) is stashed in sessionStorage
 // (family-memory-store.ts) keyed by photo id; "Enter their world" links to
-// /session?memoryId=..., where MemoryAutostart reads it back and just starts
-// the stream (no Gemini calls left to make there). This page is gated the
-// same way /session is (proxy.ts) since saving now burns GEMINI_API_KEY.
+// /live-world?memoryId=..., which (per LiveWorld.tsx's isSeedMemoryId check)
+// renders <LiveWorldSession> for this id — a real Visko Orbis Stable session
+// that just uploads the anchor and starts (no Gemini calls left to make
+// there). This page is gated behind Google sign-in (proxy.ts) since saving
+// now burns GEMINI_API_KEY.
 export function AddFamily() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -565,7 +567,7 @@ export function AddFamily() {
               )}
               {active && active.saved && (
                 <a
-                  href={`/session?memoryId=${encodeURIComponent(active.id)}`}
+                  href={`/live-world?memoryId=${encodeURIComponent(active.id)}`}
                   className="fw-btn fw-btn-primary"
                   style={{
                     justifyContent: "flex-start",
@@ -725,7 +727,7 @@ export function AddFamily() {
                         }}
                       >
                         <a
-                          href={`/session?memoryId=${encodeURIComponent(p.id)}`}
+                          href={`/live-world?memoryId=${encodeURIComponent(p.id)}`}
                           className="fw-btn fw-btn-primary"
                           style={{ justifyContent: "flex-start", whiteSpace: "nowrap" }}
                         >

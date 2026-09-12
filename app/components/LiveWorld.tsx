@@ -189,6 +189,14 @@ const SCENES: Record<string, Scene> = {
 
 const DEFAULT_SCENE_ID = "seed-lola";
 
+/** True for the 3 curated seed ids this component simulates locally. Used by
+ * app/live-world/page.tsx to route anything else (an AddFamily-created
+ * memory, or an unknown id) to <LiveWorldSession> — real Visko Orbis Stable
+ * generation — instead of falling through to the Lola default here. */
+export function isSeedMemoryId(id: string | undefined): boolean {
+  return !!id && id in SCENES;
+}
+
 const MAX_CHUNKS = 60;
 const TICK_MS = 1400;
 

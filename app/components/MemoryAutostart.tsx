@@ -32,6 +32,11 @@ type MemoryLookup = "pending" | "missing" | FamilyPhotoInput;
 // by id. This component reads it back via `?memoryId=` and runs only the
 // remaining steps: upload the anchor, setImage, setPrompt, start.
 //
+// Mounted in two places, both inside their own <ViskoOrbisStableProvider>:
+// LiveWorldSession.tsx (the presenter-facing path — /live-world routes any
+// non-seed memoryId there, see LiveWorld.tsx's isSeedMemoryId) and
+// ViskoOrbisStableApp.tsx (/session, kept for direct debugging).
+//
 // Follows the same self-organizing pattern as ImageStarter/StatusBadge: reads
 // connection state itself, renders null once there is nothing left to do.
 // Per ViskoOrbisStableApp.tsx's rule, this never calls connect() itself —
