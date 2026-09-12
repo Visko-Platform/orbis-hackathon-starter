@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cutline — Live cinema. A room full of directors.</title>
+<meta name="description" content="Cutline is live audience-directed cinema. The movie is happening now. Your audience decides what happens next — powered by Visko Orbis, Reactor, and Nebius.">
+<meta property="og:title" content="Cutline — Live cinema. A room full of directors.">
+<meta property="og:description" content="The movie is happening now. Your audience decides what happens next.">
+<meta property="og:image" content="https://raw.githubusercontent.com/vnmoorthy/cutline/Cutline-vnmoorthy/public/images/cutline-banner.png">
+<link rel="icon" href="https://raw.githubusercontent.com/vnmoorthy/cutline/Cutline-vnmoorthy/public/favicon.svg">
+<style>
+:root{--bg:#070b1a;--bg2:#0d1430;--ink:#f3efe6;--muted:#a9b0c7;--amber:#f2b134;--teal:#3fd0c9;--line:rgba(255,255,255,.08)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Inter,sans-serif}
+a{color:var(--amber);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header{position:sticky;top:0;background:rgba(7,11,26,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:5}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{font-weight:800;letter-spacing:.18em;font-size:14px}
+nav a{margin-left:20px;color:var(--muted);font-size:14px}nav a:hover{color:var(--ink)}
+.hero{padding:72px 0 40px;text-align:center;background:radial-gradient(ellipse at 50% -20%,rgba(242,177,52,.22),transparent 60%),radial-gradient(ellipse at 80% 120%,rgba(63,208,201,.15),transparent 55%)}
+.hero h1{font-size:clamp(40px,7vw,84px);margin:0;letter-spacing:.14em;font-weight:900}
+.hero .tag{font-size:clamp(18px,2.6vw,26px);margin:12px 0 6px;font-weight:600}
+.hero p.sub{color:var(--muted);max-width:640px;margin:0 auto 28px}
+.cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-block;padding:12px 22px;border-radius:999px;font-weight:700;border:1px solid var(--line)}
+.btn.primary{background:var(--amber);color:#1a1200}.btn.primary:hover{text-decoration:none;filter:brightness(1.08)}
+.btn.ghost{color:var(--ink)}.btn.ghost:hover{text-decoration:none;background:rgba(255,255,255,.06)}
+.banner{display:block;width:100%;max-width:1080px;margin:36px auto 0;border-radius:16px;border:1px solid var(--line)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:28px;margin:0 0 8px}.lead{color:var(--muted);margin:0 0 28px;max-width:720px}
+video{width:100%;border-radius:16px;border:1px solid var(--line);background:#000}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card .n{color:var(--amber);font-weight:800;font-size:13px;letter-spacing:.14em}
+.card h3{margin:6px 0 6px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:15px}
+.loop{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.loop .step{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;position:relative}
+.loop .step b{display:block;color:var(--teal);font-size:12px;letter-spacing:.14em;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:15px}td,th{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+pre{background:#040713;border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto}
+footer{padding:36px 0;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(63,208,201,.12);color:var(--teal);font-size:12px;font-weight:700;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">CUTLINE</div><nav><a href="#demo">Demo</a><a href="#loop">How it works</a><a href="#run">Run it</a><a href="https://github.com/vnmoorthy/cutline">GitHub</a></nav></div></header>
+
+<div class="hero"><div class="wrap">
+  <span class="pill">HACKATHON BUILD · VISKO ORBIS × REACTOR × NEBIUS</span>
+  <h1>CUTLINE</h1>
+  <div class="tag">Live cinema. A room full of directors.</div>
+  <p class="sub">The movie is happening now. Your audience votes on their phones, the director closes the vote, and the running Orbis world is steered into the next scene while everyone watches.</p>
+  <div class="cta">
+    <a class="btn primary" href="#demo">▶ Watch the live take</a>
+    <a class="btn ghost" href="https://github.com/vnmoorthy/cutline#readme">Read the README</a>
+    <a class="btn ghost" href="https://github.com/vnmoorthy/cutline/blob/Cutline-vnmoorthy/presentation/CUTLINE-3-minute-pitch.pptx">3‑minute pitch deck</a>
+  </div>
+  <img class="banner" src="https://raw.githubusercontent.com/vnmoorthy/cutline/Cutline-vnmoorthy/public/images/cutline-banner.png" alt="Cutline — The audience changes everything.">
+</div></div>
+
+<section id="demo"><div class="wrap">
+  <h2>The recorded Orbis take</h2>
+  <p class="lead">A real live session: Mara inside an empty midnight train, three choices on audience phones, the vote closes, and Orbis generates the next moment as the room watches.</p>
+  <video controls playsinline preload="metadata" poster="https://raw.githubusercontent.com/vnmoorthy/cutline/Cutline-vnmoorthy/public/images/cutline-banner.png">
+    <source src="https://raw.githubusercontent.com/vnmoorthy/cutline/Cutline-vnmoorthy/public/demo/cutline-live.mp4" type="video/mp4">
+    Your browser cannot play this video. <a href="https://github.com/vnmoorthy/cutline/blob/Cutline-vnmoorthy/public/demo/cutline-live.mp4">Download it here.</a>
+  </video>
+</div></section>
+
+<section id="loop"><div class="wrap">
+  <h2>See the loop</h2>
+  <p class="lead">The theater screen shows the video. Audience phones show the room, the choices, the vote totals, and the winning decision.</p>
+  <div class="loop">
+    <div class="step"><b>01 · SCENE</b>A live Orbis scene plays on the shared screen.</div>
+    <div class="step"><b>02 · CHOOSE</b>Audience phones get three choices. Votes can change until the director closes.</div>
+    <div class="step"><b>03 · DECIDE</b>The vote closes; tallies and the winner are frozen atomically.</div>
+    <div class="step"><b>04 · PLAN</b>Nebius turns the winning choice into a coherent scene direction with story memory.</div>
+    <div class="step"><b>05 · STEER</b>The direction is sent to the running Orbis world through Reactor. The next moment is generated live.</div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What you can do</h2>
+  <div class="grid">
+    <div class="card"><div class="n">LIVE</div><h3>Start live cinema</h3><p>A creator-only endpoint mints a scoped Reactor session; the browser receives Orbis video and audio over WebRTC.</p></div>
+    <div class="card"><div class="n">DIRECT</div><h3>Direct a visible change</h3><p>Send a short instruction or use four live cues. The UI distinguishes sending, provider acceptance, and the next received chunk.</p></div>
+    <div class="card"><div class="n">ROOM</div><h3>Invite the room</h3><p>Share a link or QR code. Separate browsers vote; a vote can be changed until voting closes.</p></div>
+    <div class="card"><div class="n">DECIDE</div><h3>Make a collective decision</h3><p>Close voting, freeze the result, apply the winning action exactly once. Ties follow displayed order.</p></div>
+    <div class="card"><div class="n">MEMORY</div><h3>Preserve continuity</h3><p>Character, clothing, setting, and style live in editable story memory that the Nebius director receives.</p></div>
+    <div class="card"><div class="n">BRANCH</div><h3>Explore another ending</h3><p>Return to any saved scene and continue along a new branch. Every branch stays in the exported story graph.</p></div>
+    <div class="card"><div class="n">COSMOS</div><h3>Cosmic opening</h3><p>Fly through a continuous 3D scene built from NASA imagery, from the Webb deep field to Earth to San Francisco to the film.</p></div>
+    <div class="card"><div class="n">EXPORT</div><h3>Keep the result</h3><p>Export Markdown and JSON story data, and record clips of the actual live media in the browser.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Built for live models</h2>
+  <table><tr><th>Sponsor</th><th>Product role</th><th>Implementation</th></tr>
+  <tr><td><b>Visko Orbis</b></td><td>Generates a world that can be steered as it runs</td><td><code>reactor/visko-orbis-dynamic</code>; prompt, image, generation, pause, resume, reset controls</td></tr>
+  <tr><td><b>Reactor</b></td><td>Session authorization and live media transport</td><td>Server-issued scoped JWT, <code>@reactor-team/js-sdk</code>, WebRTC tracks, command replies</td></tr>
+  <tr><td><b>Nebius Token Factory</b></td><td>Plans a coherent next beat with three visible choices</td><td>Server-side structured chat completion, schema validation, active-branch context</td></tr>
+  </table>
+</div></section>
+
+<section id="run"><div class="wrap">
+  <h2>Run it yourself</h2>
+  <p class="lead">The full interactive app (voting, live Orbis video, story branching) is a Cloudflare Worker with a D1 database. Run it locally in three commands, or deploy your own copy to Cloudflare.</p>
+  <pre>git clone https://github.com/vnmoorthy/cutline.git && cd cutline
+npm run install:ci && npm run build
+npm run dev -- --port 3000     # open http://localhost:3000</pre>
+  <pre>npx wrangler login && npm run deploy     # your own public HTTPS copy on Cloudflare Workers</pre>
+  <p class="lead">Rehearsal mode works with no API keys. Add <code>REACTOR_API_KEY</code> and <code>NEBIUS_API_KEY</code> for live Orbis video and AI scene planning. See the <a href="https://github.com/vnmoorthy/cutline/blob/Cutline-vnmoorthy/docs/DEMO-RUNBOOK.md">demo runbook</a> for a scripted product demo.</p>
+</div></section>
+
+<footer><div class="wrap">Cutline · built on the official Orbis hackathon starter · <a href="https://github.com/vnmoorthy/cutline">github.com/vnmoorthy/cutline</a> · <a href="https://github.com/vnmoorthy/cutline/blob/Cutline-vnmoorthy/ARCHITECTURE.md">Architecture</a> · <a href="https://github.com/vnmoorthy/cutline/blob/Cutline-vnmoorthy/docs/provenance/NASA.md">NASA image credits</a></div></footer>
+</body>
+</html>
