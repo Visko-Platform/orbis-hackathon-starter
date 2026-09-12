@@ -15,7 +15,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return !!profile?.email && ALLOWED_EMAILS.has(profile.email);
     },
   },
-  pages: {
-    error: "/api/auth/error",
-  },
 });
