@@ -23,7 +23,9 @@ function hero(build: string) {
 black shorts. ${build}.`;
 }
 
-const STYLE = `Cinematic, photorealistic, continuous shot, no cuts.`;
+const STYLE = `He is the only person in the frame: no other people anywhere,
+no crowds, no bystanders, completely alone. Cinematic, photorealistic,
+continuous shot, no cuts.`;
 
 type World = {
   id: string;
@@ -56,11 +58,11 @@ blue on his face, a warm lamp in the corner, totally still`,
     minBpm: 95,
     color: "#fcd34d",
     build: `He is still thick and heavy set, but standing taller, the shirt looser on him`,
-    place: "crowded city street",
-    scene: `He is walking fast down a crowded city sidewalk at golden hour,
-weaving between people, shop windows and traffic sliding past`,
-    rising: "His pace quickens, he starts pushing through the crowd.",
-    falling: "He slows to an easy walk, letting the crowd close around him.",
+    place: "empty city street",
+    scene: `He is walking fast down a deserted city sidewalk at golden hour,
+empty shop windows and still traffic sliding past, the street his alone`,
+    rising: "His pace quickens, the empty street blurring past him.",
+    falling: "He slows to an easy walk down the empty street.",
   },
   {
     id: "z3",
@@ -69,10 +71,10 @@ weaving between people, shop windows and traffic sliding past`,
     color: "#fb923c",
     build: `He has an average build now, the belly gone, shoulders starting to fill out`,
     place: "outdoor basketball court",
-    scene: `He is in a fast outdoor pickup basketball game, driving hard to the
-hoop, defenders closing, the ball slapping the asphalt`,
-    rising: "He accelerates past his defender, the game speeding up.",
-    falling: "He pulls up, hands on his shorts, the play breaking down.",
+    scene: `He is alone on an empty outdoor basketball court, driving hard to
+the hoop, the ball slapping the asphalt, no one else on the court`,
+    rising: "He accelerates, the empty court blurring under him.",
+    falling: "He pulls up alone at the hoop, hands on his shorts.",
   },
   {
     id: "z4",
