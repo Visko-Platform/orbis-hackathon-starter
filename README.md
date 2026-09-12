@@ -19,6 +19,11 @@ scene as it unfolds.
 - A free-form director: **Change direction** replaces the old scene brief;
   **Refine this scene** retains recent context. **Keep brand in scene** is optional.
 - Local creative history with JSON export and model diagnostics.
+- A per-campaign **product knowledge base** (appearance, visual notes, facts, never-say,
+  protections) edited in the inspector, and **prompt engineering**: the scene brief and
+  every live direction are rewritten with that knowledge before they reach Orbis, with a
+  "You said → Sent" receipt. Product questions are answered on screen from approved facts.
+  See [docs/KNOWLEDGE_DIRECTOR.md](docs/KNOWLEDGE_DIRECTOR.md).
 
 This prototype generates a new continuation from a composed reference frame.
 It does **not** rewrite every encoded frame of an existing movie, guarantee
@@ -37,6 +42,7 @@ Create `.env.local`:
 
 ```dotenv
 REACTOR_API_KEY=your_reactor_api_key
+GEMINI_API_KEY=your_gemini_api_key   # optional: prompt engineering and suggested directions
 ```
 
 Then run:
@@ -78,6 +84,8 @@ subsequent generated chunks. See the
 - `lib/continuation-prompt.ts` builds the asset-aware opening prompt.
 - `lib/live-direction.ts` builds full-pivot and context-preserving refinement prompts.
 - `app/api/continuations/eligible` applies campaign selection rules.
+- `lib/knowledge/` holds the knowledge base, guard, retrieval, prompt engineer, audit log,
+  and suggestions; `app/api/campaigns/[id]/{knowledge,suggestions}` expose them.
 - `app/api/continuations/prepare` validates the campaign/asset selection and creates a
   run identifier and prompt.
 - `app/api/continuations/pivot` validates and composes a new live direction.

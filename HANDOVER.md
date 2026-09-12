@@ -12,7 +12,11 @@ current build supports:
 - manual campaign selection or deterministic sample-audience matching;
 - live Visko Orbis video and picture-driven audio through Reactor;
 - free-form full-scene pivots and context-preserving refinements;
-- pause, resume, reset, disconnect, local activity history, and JSON export.
+- pause, resume, reset, disconnect, local activity history, and JSON export;
+- a per-campaign product knowledge base edited in the studio, prompt engineering
+  of the scene brief and every direction against it (Gemini, optional), on-screen
+  answers to product questions, knowledge-derived suggested directions, and a
+  server-side prompt-version log (`docs/KNOWLEDGE_DIRECTOR.md`).
 
 The production build and automated tests pass. A live test has also covered
 image upload, Orbis start, a complete scene pivot, pause, resume, end, and
@@ -32,6 +36,7 @@ Create `.env.local` from `.env.example` and set:
 
 ```dotenv
 REACTOR_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here   # optional; without it prompts are used as written
 ```
 
 Then run:
@@ -104,6 +109,9 @@ and prepared prompt are sent to Reactor when generation starts.
 | Frame composition | `lib/placement-frame.ts` | Places the actual selected image onto the starting frame |
 | Demo data | `lib/studio-data.ts` | Scene briefs, audience profiles, campaigns, source URLs |
 | Token exchange | `app/api/token/route.ts` | Mints a one-hour, one-session, model-scoped JWT |
+| Knowledge base | `lib/knowledge/` | Per-campaign knowledge (seeds, store, guard, retrieval, prompt engineer, audit, suggestions) |
+| Knowledge UI | `components/studio/knowledge-panel.tsx` | 04 / KNOWLEDGE inspector section |
+| Knowledge API | `app/api/campaigns/[id]/knowledge`, `…/suggestions` | Read/write knowledge; suggested directions |
 | Product design | `docs/DYNAMIC_AD_PLATFORM_PLAN.md` | Production roadmap, APIs, ERD, viewer-director design |
 
 Brand files and their original download URLs are documented in
@@ -135,7 +143,18 @@ enforces the deterministic audience match.
 Validates a direction of 1–1,200 characters, campaign, mode, context, and brand
 preservation flag. A pivot intentionally drops the previous scene description.
 A refinement carries the most recent context forward. The completed Orbis
-prompt remains below the hook's 4,000-character limit.
+prompt remains below the hook's 4,000-character limit. The direction is first
+engineered against the campaign knowledge (see `docs/KNOWLEDGE_DIRECTOR.md`);
+the response carries `outcome` ("steer" or "overlay" for a product question),
+`engineered` (source, text, model, notes, rejected) and `promptVersionId`.
+Refused directions (competitor, injection, forbidden claim) return 400; a
+question with no approved answer returns 422.
+
+### `GET` / `PUT /api/campaigns/:id/knowledge`, `GET /api/campaigns/:id/suggestions`
+
+Operator-editable product knowledge (validated field by field; seeded for the
+three demo campaigns; saved per machine under `data/knowledge/`) and up to six
+suggested directions built from it.
 
 ## 7. State and persistence
 
@@ -186,8 +205,9 @@ session is released.
 - Activity history is useful for a demo but is not a tamper-proof audit log.
 - There is no authentication or rate limiting around the local token endpoint.
 - One JWT is scoped to one live session. Provider capacity can return `429`.
-- The long-term viewer-request guardrail and campaign knowledge base described
-  in the platform plan are design work, not implemented runtime features.
+- The knowledge base and prompt engineering are file-backed and lexical
+  (no database, embeddings, or approval states). The product-state grid and
+  anchor-frame parts of the platform plan are not in this build.
 
 ## 10. Recommended next work
 
@@ -198,9 +218,8 @@ session is released.
    frames, and continuity review.
 4. Add brand approval states and enforce rights windows, territory, title,
    placement surface, frequency, and campaign budgets server-side.
-5. Implement the viewer-director layer from the platform plan so public viewer
-   text is resolved against an approved campaign knowledge base before model
-   steering.
+5. Extend the knowledge layer: embeddings for retrieval, approval states, a
+   database for knowledge and prompt versions, and the product-state grid.
 6. Add placement tracking or a video inpainting/compositing provider for
    frame-level integration into existing clips.
 7. Replace browser-local history with append-only server events and exportable
