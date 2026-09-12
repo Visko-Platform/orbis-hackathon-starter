@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-09-12T23:16:45.769Z",
+  "endpoint": "http://localhost:3000/api/stories/:id/action",
+  "upstreamEndpoint": "https://api.tokenfactory.nebius.com/v1/chat/completions",
+  "authentication": "Personal x-nebius-key read in-process from ignored .env.local; credential omitted",
+  "providerRequests": 1,
+  "passed": true,
+  "fixtureRemoved": true,
+  "configuredModel": "openai/gpt-oss-120b",
+  "sharedNebiusConfigured": true,
+  "requestedAction": "Mara slowly opens the amber-lit train door halfway with her right hand, revealing warm golden light, while continuing to hold her brass compass in her left hand.",
+  "httpStatus": 200,
+  "latencyMs": 3630,
+  "response": {
+    "source": "nebius",
+    "title": "Half‑Opened Door, Golden Glow",
+    "narration": "Mara stands alone in the midnight Tokyo train, burnt‑orange coat bright against teal windows. She holds a brass compass in her left hand and, with her right, pushes the amber‑lit door until it is half‑open, spilling warm golden light into the carriage.",
+    "prompt": "Mara, in her burnt‑orange coat, holds the brass compass in her left hand. She gently pushes the amber‑lit train door with her right hand until it is half‑open, revealing a wash of golden light that pools on the teal‑tinted floor. The camera glides slowly, keeping her centered in a single continuous shot.",
+    "choices": [
+      {
+        "label": "Step into the golden light",
+        "detail": "Mara walks forward through the doorway into the illuminated space.",
+        "action": "Mara lifts her right foot and steps across the threshold, entering the golden light while still gripping the brass compass; the door remains half‑open.",
+        "id": "choice-0"
+      },
+      {
+        "label": "Close the door and stare",
+        "detail": "She pulls the door shut, returning the carriage to darkness.",
+        "action": "Mara pulls the amber‑lit door back to its closed position, the golden light fades, and she gazes at the compass as the teal‑lit interior resumes.",
+        "id": "choice-1"
+      },
+      {
+        "label": "Turn the compass toward the light",
+        "detail": "She rotates the compass, its needle pointing at the glow.",
+        "action": "Mara rotates the brass compass in her left hand, aligning its needle toward the golden light spilling from the half‑open doorway; the door stays half‑open.",
+        "id": "choice-2"
+      }
+    ],
+    "visualStatus": "draft"
+  },
+  "checks": {
+    "sourceIsNebius": true,
+    "memoryUnchanged": true,
+    "parentIsPreviousScene": true,
+    "sceneCountIncremented": true,
+    "versionIncremented": true,
+    "threeValidChoices": true,
+    "validSceneText": true,
+    "promptRetainsCharacter": true,
+    "promptRetainsCoat": true,
+    "promptRetainsTrain": true,
+    "promptRetainsCompass": true,
+    "visualRemainsDraft": true,
+    "persistedAcrossRead": true
+  }
+}

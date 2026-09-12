@@ -1,0 +1,73 @@
+name: Verify
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REACTOR_API_KEY: ""
+  NEBIUS_API_KEY: ""
+  LIVE_ACCESS_CODE: ""
+  CUTLINE_TEST_BASE: http://127.0.0.1:3000
+  WRANGLER_SEND_METRICS: "false"
+  CLOUDFLARE_CF_FETCH_ENABLED: "false"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm run install:ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:live-lifecycle
+      - name: Initialize fresh local D1
+        run: |
+          for migration in drizzle/*.sql; do
+            node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file "$migration"
+          done
+      - name: Verify built app and API
+        shell: bash
+        run: |
+          mkdir -p test-results
+          npm start -- --port 3000 > test-results/server.log 2>&1 &
+          CUTLINE_SERVER_PID=$!
+          trap 'kill "$CUTLINE_SERVER_PID" 2>/dev/null || true' EXIT
+          CUTLINE_SERVER_READY=false
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent "$CUTLINE_TEST_BASE/api/bootstrap" > /dev/null; then
+              CUTLINE_SERVER_READY=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$CUTLINE_SERVER_READY" != true ]; then
+            cat test-results/server.log
+            exit 1
+          fi
+          npm run test:integration
+          npm run test:regressions
+          npm run test:cosmic
+          npm run test:choices
+      - name: Preserve test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-evidence
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14

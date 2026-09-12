@@ -1,0 +1,42 @@
+{
+  "completedAt": "2026-09-12T23:36:56.569Z",
+  "assertions": 62,
+  "passed": 8,
+  "failed": 0,
+  "providerCalls": 0,
+  "fixturesRemoved": 4,
+  "results": [
+    {
+      "name": "default and explicit rehearsal never resolve keys or call a provider",
+      "pass": true
+    },
+    {
+      "name": "Nebius requires credentials and reserves global budget before fetch",
+      "pass": true
+    },
+    {
+      "name": "shared budget is global across cookies, per-provider, and skips personal keys",
+      "pass": true
+    },
+    {
+      "name": "late story action retains selected room and sends expected version",
+      "pass": true
+    },
+    {
+      "name": "HTTP direct defaults to rehearsal and persists explicit rehearsal",
+      "pass": true
+    },
+    {
+      "name": "HTTP cosmic transition clears active poll and rejects stale votes",
+      "pass": true
+    },
+    {
+      "name": "HTTP stale close cannot close a replacement poll",
+      "pass": true
+    },
+    {
+      "name": "HTTP poll winner applies once in rehearsal and rejects post-close votes",
+      "pass": true
+    }
+  ]
+}

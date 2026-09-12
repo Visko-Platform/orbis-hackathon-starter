@@ -1,0 +1,69 @@
+{
+  "base": "http://localhost:3000",
+  "completedAt": "2026-09-12T23:36:45.476Z",
+  "assertions": 210,
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    {
+      "name": "create/list isolation and owner/audience snapshots",
+      "pass": true,
+      "ms": 1038
+    },
+    {
+      "name": "audience cannot direct, mint tokens, export, or delete; anonymous denied",
+      "pass": true,
+      "ms": 864
+    },
+    {
+      "name": "invalid input, cross-origin protection, stale versions",
+      "pass": true,
+      "ms": 1247
+    },
+    {
+      "name": "poll open, vote replace/idempotence, tie ordering, close gate, and apply once",
+      "pass": true,
+      "ms": 4244
+    },
+    {
+      "name": "no-vote closure has no winner and cannot apply",
+      "pass": true,
+      "ms": 628
+    },
+    {
+      "name": "vote/close and close/visual races preserve atomic frozen results",
+      "pass": true,
+      "ms": 3724
+    },
+    {
+      "name": "branch ancestry excludes abandoned future and preserves descendants",
+      "pass": true,
+      "ms": 888
+    },
+    {
+      "name": "memory, camera, session, and visual actions persist",
+      "pass": true,
+      "ms": 922
+    },
+    {
+      "name": "JSON and Markdown story exports contain full branch data",
+      "pass": true,
+      "ms": 370
+    },
+    {
+      "name": "cosmic opening gates voting then transitions into story",
+      "pass": true,
+      "ms": 254
+    },
+    {
+      "name": "SSE runs beyond 25 seconds, receives mutations, and reconnects",
+      "pass": true,
+      "ms": 15127
+    },
+    {
+      "name": "delete test stories and confirm list isolation/404",
+      "pass": true,
+      "ms": 2756
+    }
+  ]
+}

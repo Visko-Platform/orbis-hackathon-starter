@@ -1,0 +1,37 @@
+{
+  "base": "http://localhost:3000",
+  "completedAt": "2026-09-12T23:22:19.339Z",
+  "assertions": 233,
+  "passed": 5,
+  "failed": 0,
+  "providerCalls": 0,
+  "fixturesCreated": 6,
+  "fixturesRemoved": 6,
+  "results": [
+    {
+      "name": "last-train edited prompt and memory survive cosmic replay",
+      "pass": true,
+      "ms": 207
+    },
+    {
+      "name": "custom opening prompt, memory, and choices survive cosmic replay",
+      "pass": true,
+      "ms": 117
+    },
+    {
+      "name": "default custom cavern remains intact after entering film",
+      "pass": true,
+      "ms": 49
+    },
+    {
+      "name": "initial cosmic opening converts to train while preserving edited memory",
+      "pass": true,
+      "ms": 226
+    },
+    {
+      "name": "default cosmic memory survives initial train conversion",
+      "pass": true,
+      "ms": 27
+    }
+  ]
+}

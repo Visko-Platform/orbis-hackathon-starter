@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-09-12T23:36:57.343Z",
+  "providerCalls": 0,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Direct during voting returns409 and preserves open poll and ballots",
+      "passed": true
+    },
+    {
+      "name": "Paused live winner cannot apply; resume applies exactly once in rehearsal",
+      "passed": true
+    },
+    {
+      "name": "An old closed poll cannot apply after an unrelated new scene",
+      "passed": true
+    }
+  ],
+  "fixturesRemoved": 3
+}

@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible problem in the studio, audience room, or live video.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include what you expected and the steps to reproduce. Never include API keys or session credentials.
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Rehearsal
+        - Orbis Stable
+        - Orbis Dynamic
+        - Cosmic flight
+  - type: textarea
+    id: environment
+    attributes:
+      label: Browser and environment
+      description: Browser/version, operating system, local or hosted, and any redacted error message.

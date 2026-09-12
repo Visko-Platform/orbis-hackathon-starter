@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-09-12T23:30:48.972571+00:00",
+  "environment": "local production build, localhost:3001",
+  "model": "reactor/visko-orbis-stable",
+  "planningModel": "openai/gpt-oss-120b",
+  "flow": [
+    "host opens poll",
+    "audience page votes for Open the last door",
+    "host closes voting and applies winner",
+    "Nebius creates Mara Opens the Amber Door with three new choices",
+    "Orbis accepts scene direction",
+    "subsequent movie chunk received",
+    "host ends session"
+  ],
+  "observedFramesPerSecond": 18,
+  "imageConditioningConfirmed": true,
+  "orbisPromptAcknowledgementMs": 93,
+  "nextChunkAfterCueMs": 1927,
+  "sourceLabel": "nebius",
+  "visualInspection": "Generated movie showed Mara near an amber train doorway. Command/chunk timing does not prove every semantic detail or guarantee future latency.",
+  "audienceIsolation": "Audience page used a separate tab; independent identities additionally tested by the API integration suite.",
+  "success": true
+}
