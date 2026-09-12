@@ -1,11 +1,15 @@
 # Adtractive
 
-**Product placement that is generated live, inside the scene — not cut in around it.**
+**An ad break the viewer can direct.**
 
-Adtractive is a studio for *dynamic in-scene brand placement*. You bring a product and a
-moment of footage; the app composes a starting frame, grounds a prompt in the brand's own
-approved knowledge, and hands it to a live video model that keeps generating — so the
-placement is part of the scene, and you can redirect that scene while it plays.
+The ad break is the last surface on the internet you cannot talk to. Everything else on a
+page responds — you click, you search, you ask. A pre-roll is a wall: a file rendered months
+before you arrived, and your only input is Skip.
+
+Adtractive replaces it with an ad that is generated while it plays. The viewer steers the
+scene, asks questions about the product, and gets real answers — inside a normal video
+player, with the Sponsored badge and the Skip button still there. The advertiser keeps
+control through an approved knowledge base that every prompt has to pass.
 
 | | |
 |---|---|
@@ -59,12 +63,17 @@ is simply unavailable.
 
 ## The idea
 
-A sponsor should not interrupt the story. It should be *in* the story — the storefront the
-character walks past, the watch on their wrist, the can on the table — and it should be
-able to differ by viewer, by moment, and by what the viewer asks to see.
+You cannot interact with something that has already been rendered. That single fact is why
+video advertising is a monologue: the clip was finished long before the viewer arrived, so
+the only interaction anyone could design was a Skip button.
 
-That needs video that is still being generated at the moment of delivery. Orbis makes that
-possible, so this build works through the whole chain:
+Orbis removes the constraint. It generates video live and responds while it runs, which
+makes the obvious thing possible for the first time — an ad the viewer can direct, and ask
+questions of, while it plays. Skip stays on screen; the bet is that they stop pressing it.
+
+The hard part is not the video. It is the leash: a generative model improvising a brand is
+every marketing director's nightmare, so nothing reaches the model that was not built
+server-side from approved records. This build works through the whole chain:
 
 ```
  product image ─┐

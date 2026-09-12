@@ -1,145 +1,148 @@
 # Demo script — run of show
 
-A presenter-facing script for the Adtractive demo. The beats are authored in
-[`lib/demo/flows.ts`](../lib/demo/flows.ts); this document is how to *drive* them.
+Presenter's script for Adtractive. Target: **3 minutes** of demo in a 5-minute slot.
 
-Target: **3 minutes** of demo inside a 5-minute slot, leaving room for the pitch and
-questions. Lead with `/watch` — the viewer demo is the moment that lands. The studio is the
-answer to "how", not the opening act. The **Architecture** tab doubles as your architecture
-slide, so you never have to leave the product.
+**The one line:** the ad break is the last surface on the internet you cannot talk to. We
+made it answer back.
+
+Everything else on a page responds to you — you click, you search, you ask. The pre-roll is
+a wall. Thirty seconds of a file that was finished months before you arrived, and your only
+input is a Skip button. That is not a design choice, it is a constraint: you cannot interact
+with something that has already been rendered.
+
+Orbis removes the constraint. The ad is generated at the moment it is watched, so it can
+react while it runs. The demo is one thing: **a viewer directing an ad, inside a normal
+video player.**
+
+> Do not pitch this as product placement inside movies. That was the earlier idea. The ad
+> here is clearly an ad — badged *Sponsored*, with a Skip button — it is just live and
+> interactive.
 
 ---
 
 ## Before you start
 
 - [ ] `REACTOR_API_KEY` set, with access to `reactor/visko-orbis-stable`.
-- [ ] `GEMINI_API_KEY` set. Without it there is no prompt-engineering receipt and **no
-      voiceover at all** — two of your three best moments.
-- [ ] One live take already run and **disconnected** today. The first session of the day is
-      the slowest; never let judges watch a cold start.
-- [ ] Only one session open anywhere. One JWT is one live session; a second tab takes the
+- [ ] `GEMINI_API_KEY` set — needed for on-screen answers and open-ended directions.
+- [ ] One live take run and **disconnected** today. Never let judges watch the day's first
+      cold start.
+- [ ] Exactly one session open anywhere. One JWT is one live session; a second tab takes the
       slot or gets a `429`.
-- [ ] `/watch` loaded in its own tab, fullscreen tested, **sound on and levels checked** —
-      the voiceover is audio-only and dies in a noisy room.
-- [ ] **Architecture** tab open in a third tab. It is your slide and your fallback.
-- [ ] Browser zoom 100%, notifications off, **Activity** opened once so it is populated.
-- [ ] Know the dry run: `/watch?live=0` renders the whole ad break from a still, with no
-      provider session. If capacity is gone, this still tells the story.
+- [ ] `/watch` loaded in its own tab and fullscreen tested. **The ad is muted by design** —
+      nothing to hear, so nothing to check on the sound desk.
+- [ ] `/watch?live=0` open in a spare tab. That is your parachute: the whole break plays from
+      a still, every control still works, no provider session needed.
+- [ ] **Architecture** tab open. It is your slide.
 
 ---
 
-## The pitch (30 seconds, before you touch anything)
+## The pitch (25 seconds, before you touch anything)
 
-> Every ad you have ever seen was finished before you saw it. That is why it interrupts —
-> the film stops, a clip plays, the film resumes. The ad cannot be part of the story,
-> because the story was rendered months ago.
+> Think about the last ad you were served. You could not ask it anything. You could not look
+> closer at the thing it was selling. You waited five seconds and pressed Skip.
 >
-> Orbis changes the constraint. It generates video live and reacts while it runs. So the
-> sponsor does not have to interrupt the scene. It can be *in* the scene — the storefront
-> the character passes, the watch on their wrist. And because it is made at the moment of
-> delivery, it can differ by viewer, and it can answer what the viewer asks.
+> That is not because advertisers like it that way. It is because video is a finished file.
+> A rendered clip cannot answer a question.
 >
-> Let me show you what that feels like from the couch.
+> Orbis generates video live and responds while it runs. So we built the obvious thing that
+> was never possible before: an ad break the viewer can actually direct.
 
 ---
 
-## Act 1 — the viewer demo (90s)
+## Act 1 — the demo (90 seconds)
 
-This is the demo. Do not skip it for the studio.
+**Open `/watch`. Fullscreen. Press play.**
 
-**Open `/watch`. Go fullscreen. Press play.**
+> Ordinary video site, ordinary trailer. Watch the timeline — there is the yellow ad marker.
 
-> This is a video site. Ordinary trailer, ordinary player.
+At **8 seconds** the break takes over.
 
-Let it run. At **8 seconds** the break arrives.
-
-> There is the ad break. Two things to notice.
+> There is the ad. Rolex, badged Sponsored, with a Skip button — everything you expect.
 >
-> First, it appeared instantly — no buffering. The session started warming six seconds ago,
-> while the video was still playing. The viewer never waits.
->
-> Second, this is not a clip. Nobody rendered this. Orbis is generating it right now.
+> Two things that are not what you expect. It appeared with no buffering, because the session
+> started warming six seconds ago while the trailer was still playing. And it says **"You
+> direct this ad."**
 
-**Click a bubble** — the Rolex walk: boutique → try the Datejust → show the back → back on
-the wrist → walk out.
+**Click a bubble.** The path: boutique → try the Datejust → show the back → back on the
+wrist → walk out.
 
-> And the viewer is *directing the ad*. Each beat lands as two prompts — an action, then the
-> settled scene about three and a half seconds later — which is why it reads as a move
-> rather than a cut.
+> I am steering an ad. Each beat arrives as two prompts — an action, then the settled scene
+> about three and a half seconds later — which is why it moves instead of cutting.
 
-**Type free text**, not a bubble:
+**Type instead of clicking**, to prove it is not a fixed rail:
 
 ```
 show me the back
 ```
 
-> I did not press a button. That matched a beat by its cues, and it pulled in Rolex's own
-> approved case-back reference, so the model knows what the back actually looks like.
+> I did not press that button. It matched the beat from my own words, and pulled in Rolex's
+> approved case-back reference so the model knows what the back really looks like.
 
-**Ask a question**, with the question mark:
+Then something off the path:
+
+```
+make it rain
+```
+
+> Not a beat, so it becomes an open direction. The path is a rail when you want one, not a
+> cage.
+
+**Ask it a question** — the moment to slow down on:
 
 ```
 how much is it?
 ```
 
-> Answered on screen, from approved facts — and never sent to the video model. A brand
-> cannot have a video model improvising its pricing.
+> It answered. An ad that answers a question about the product. Notice it came up as text on
+> screen and never went near the video model — a brand cannot have a video model improvising
+> its pricing.
 
-**Point at Skip Ad.**
+**Point at Skip, then don't press it.**
 
-> Skippable after five seconds, like any pre-roll. The viewer was never trapped. They just
-> had an ad worth staying in.
+> Skip has been available this whole time. That is the business case in one gesture: the
+> viewer had a reason to stay. And every one of those interactions is a signal the advertiser
+> has never had from a video ad — not an impression, an actual question about the product.
 
 ---
 
-## Act 2 — how it is made (60s)
+## Act 2 — why a brand would sign this (45 seconds)
 
-**Switch to the Studio tab.**
+The obvious objection is coming, so get there first.
 
-### The product and its knowledge
+> Letting a generative model improvise a brand is every marketing director's nightmare. So
+> the interesting engineering is not the video, it is the leash.
 
-**01 / PRODUCT → Rolex**, then **02 / PRODUCT INFO**.
+**Switch to the Studio tab. Open 02 / PRODUCT INFO.**
 
-> Real Rolex assets from rolex.com — eight reference views including case backs and open
-> clasps. No AI-generated brand artwork anywhere: a brand will never let you invent their
-> product.
+> Every campaign carries a knowledge base — approved appearance, portrayal rules, facts,
+> never-say lines, competitors. For Rolex it specifies the boutique shows ROLEX and the crown
+> on the back wall, the cases hold only Rolex, and the case back is plain steel.
 >
-> And every campaign carries a knowledge base — approved appearance, portrayal rules, facts,
-> never-say lines. For Rolex it says the boutique shows ROLEX and the crown on the back wall,
-> the cases hold only Rolex, and the case back is plain steel. Nothing reaches the model
-> without passing through this.
+> Four things sit between a viewer's words and the model. The scene contract pins what must
+> stay true for the whole take. Competitors and forbidden claims are refused before send and
+> rejected after rewrite. Every prompt is built server-side and logged before it goes — the
+> browser never writes one. And questions are answered from approved facts and never sent at
+> all.
 
-Six campaigns are loaded — Pepsi, McDonald's, Nike, Rolex, BMW and Ray-Ban — across
-beverage, food, apparel, luxury, automotive and eyewear. Mention it; do not tour it.
+**Point at the receipt.**
 
-### The receipt
+> You said, and what we sent. That is the audit trail a rights holder signs off on.
 
-Send a direction and point at the receipt.
+Mention in passing, do not tour: six campaigns are loaded — Pepsi, McDonald's, Nike, Rolex,
+BMW, Ray-Ban — with real assets from the brands' own libraries, and audience matching that
+picks the sponsor server-side.
 
-> You said, and what we sent. Gemini rewrote it against the approved knowledge, we validated
-> it for competitors and forbidden claims, and we logged it before it went. The browser never
-> authors a prompt.
+**Architecture tab** to close.
 
-### The voiceover
-
-> The narration you heard is not Orbis. Its audio is picture-driven and carries no reliable
-> speech, so we write the line from the same approved knowledge, speak it with Gemini's TTS
-> voice, and play it over the take. Words never go to the video model — not the answers, not
-> the narration.
-
-### The architecture
-
-**Architecture tab.**
-
-> Ten boxes. Everything on the left happens before the model sees anything. The centre box is
-> Visko's Orbis through Reactor — the only thing generating video. Everything on the right is
-> steering it, narrating it, and logging it, ending in the ad break you just watched.
+> Ten boxes. Everything left of centre happens before the model sees anything. The centre is
+> Visko's Orbis through Reactor — the only thing generating video. Everything right of it is
+> steering, narrating and logging, ending in the break you just watched.
 
 ---
 
 ## Free-text cheat sheet
 
-Phrases that resolve to a beat (longest match wins — `resolveDemoStep`):
+Cues that jump to a beat (longest match wins — `resolveDemoStep`):
 
 | Beat | Say any of |
 |---|---|
@@ -150,67 +153,77 @@ Phrases that resolve to a beat (longest match wins — `resolveDemoStep`):
 | `wear` | "put it back on", "wear it", "close the clasp", "on the wrist" |
 | `exit` | "walk out", "leave", "exit", "outside", "head out" |
 
-Anything else stays an open direction. Good off-path lines: "move to a rooftop at dusk",
-"make it rain and slow the camera", "switch to black and white".
+Anything else is an open direction. Safe off-path lines: "make it rain", "move to a rooftop
+at dusk", "slow the camera down". Anything ending in `?` becomes an on-screen answer.
 
 ---
 
 ## If something goes wrong
 
-**The break will not start / stuck warming.** Provider capacity. Do not retry twice on
-stage. Reload `/watch?live=0` — the whole break plays from a still, and every interaction
-still works. Say plainly that you are showing it without a live session, then finish on the
-Architecture tab and the receipt.
+**The break will not start.** Provider capacity. Do not retry twice on stage — switch to the
+`/watch?live=0` tab. The break plays from the campaign still and every control still works.
+Say plainly that the live session is unavailable and that what they are seeing is the same
+interaction path. You lose the moving picture, not the argument.
 
-**`429`.** Another session holds the slot. Close other tabs, hit `/api/sessions/release` by
-leaving the page, retry once.
+**`429`.** Another session holds the slot. Close other tabs, leave the page so the release
+beacon fires, retry once.
 
 **A direction was accepted but nothing changed.** Expected. Acknowledgement means accepted,
 not rendered; it lands over the next chunks. Say so — it is an honest property of live
-generation, not a bug to hide.
+generation.
 
-**The logo drifts after many chunks.** Also expected, and worth naming before a judge does:
-pixel-perfect logo lock over a long take is exactly the placement-tracking work in
+**The logo drifts after many chunks.** Also expected, and better named by you than by a
+judge: pixel-perfect logo lock over a long take is the placement-tracking work in
 [`DYNAMIC_AD_PLATFORM_PLAN.md`](DYNAMIC_AD_PLATFORM_PLAN.md).
-
-**No voiceover.** `GEMINI_API_KEY` is missing or TTS timed out. The take is unaffected;
-skip that line in Act 2.
 
 ---
 
 ## Questions judges will ask
 
-**"Is this editing the original movie?"**
-No. It generates a *continuation* from one composed frame. Frame-accurate modification of an
-existing encoded clip needs an inpainting or compositing provider — the handoff, continuity
-and placement records we already keep are what such a provider would consume.
+**"Isn't this just a longer ad people will skip anyway?"**
+Skip is on screen the entire time. The bet is that an ad you can interrogate earns the
+seconds a rendered clip never could — and unlike a clip, it reports what the viewer actually
+asked about.
 
-**"How do you stop it hallucinating the brand?"**
-Four layers: the approved appearance is restated in every prompt; the scene contract pins
-what must stay true and survives a pivot; competitors and forbidden claims are refused before
-send and rejected after rewrite; and answers and narration are written from approved facts
-and never sent to the model at all.
+**"How do you stop it saying something the brand would hate?"**
+Four layers: the scene contract pins what must stay true and survives a pivot; the approved
+appearance is restated in every prompt; competitors and forbidden claims are refused before
+send and rejected after rewrite; and answers are written from approved facts and never reach
+the model. Every prompt is logged before it is sent.
 
-**"Could this be personalised per viewer?"**
-That is the point. Campaign selection already runs server-side against an audience profile —
-affinity, then priority, then a deterministic tie-break, across six campaigns. Swap the
-synthetic profiles for consented real ones and the same break renders a different sponsor.
+**"Could the ad differ per viewer?"**
+Campaign selection already runs server-side against an audience profile — affinity, then
+priority, then a deterministic tie-break, across six campaigns. Swap the synthetic profiles
+for consented real ones and the same break renders a different sponsor. Today's break is
+pinned to Rolex so the demo is repeatable.
 
 **"What does it cost?"**
-One viewer is one Orbis session — roughly $0.58 per engaged minute at $0.0097/s, default 5
-concurrent sessions per account. Interactive ads at scale need a commercial agreement with
-Reactor. We are not pretending otherwise.
+One viewer is one Orbis session — roughly $0.58 per engaged minute at $0.0097/s, with 5
+concurrent sessions per account by default. That is real money per impression, so this is
+premium inventory, not a pre-roll replacement. Scale needs a commercial agreement with
+Reactor; we are not pretending otherwise.
 
 **"What is yours versus the platform?"**
 Reactor and Orbis give us live video and the command protocol. Ours is everything that makes
-it usable for a brand: frame composition, the knowledge base, the guard and validation
-pipeline, the scene contract, two-beat transitions, the cue-resolved path, the voiceover, the
-audit trail — and the viewer-side ad break that puts it all in a player.
+it sellable: the knowledge base and guard pipeline, the scene contract, two-beat transitions,
+cue-resolved beats, the audit trail — and the viewer-side break that puts it in a player with
+a Skip button.
+
+---
+
+## Known gaps, if asked directly
+
+- The viewer break is pinned to one campaign (Rolex) and one flow; the per-viewer selection
+  runs in the studio, not in the break.
+- The ad is muted. Orbis audio is picture-driven; the narrator voiceover exists in the studio
+  but is not wired into the viewer break.
+- The watch page is a presentation of the viewer experience — fictional channel, comments and
+  up-next. No ad auction, no real hosting.
 
 ---
 
 ## Credits to say out loud
 
-- **Visko** — Orbis, the live model doing all the generation.
+- **Visko** — Orbis, the live model generating every frame.
 - **Reactor** — the platform we reach it through: auth, WebRTC transport, command protocol.
 - **Nebius** — the event's AI cloud partner and Builder Program credits.
