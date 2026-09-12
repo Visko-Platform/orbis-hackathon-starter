@@ -335,3 +335,155 @@ aside code {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Terrain panel ------------------------------------------------------ */
+.terrain-panel {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.terrain-panel h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.terrain-panel .hint {
+  margin: 6px 0;
+  font-size: 13px;
+  opacity: 0.7;
+}
+.terrain-panel .stats-line {
+  margin: 8px 0;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  opacity: 0.85;
+}
+.terrain-panel .error {
+  margin: 8px 0;
+  color: #ff8a80;
+  font-size: 13px;
+}
+.terrain-canvas {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border-radius: 10px;
+  background: #0b0b0d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.terrain-panel .button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 8px 0;
+}
+.terrain-panel button.active {
+  outline: 2px solid #b7a56a;
+}
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #b7a56a;
+  color: #1a1a1a;
+  font-weight: 600;
+  cursor: pointer;
+}
+.terrain-panel textarea {
+  width: 100%;
+  max-width: 640px;
+  margin: 6px 0 10px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font: inherit;
+  resize: vertical;
+}
+.field-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.65;
+}
+.scene-presets {
+  margin-top: 14px;
+}
+.preset-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.scene-input {
+  flex: 1;
+  min-width: 240px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font: inherit;
+}
+
+/* --- Object placement map ----------------------------------------------- */
+.terrain-map {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.map-canvas {
+  cursor: crosshair;
+}
+.map-toolbar select,
+.object-edit select,
+.object-edit input {
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font: inherit;
+}
+.object-columns {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.object-list,
+.object-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  flex: 1;
+}
+.object-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  justify-content: flex-start;
+}
+.object-row.active {
+  outline: 2px solid #b7a56a;
+}
+.object-row .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.object-edit button.danger {
+  background: #7a2e2e;
+  color: #ffdede;
+}

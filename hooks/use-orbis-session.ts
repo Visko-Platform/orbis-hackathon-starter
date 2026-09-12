@@ -231,6 +231,12 @@ export function useOrbisSession(onDisconnected: () => void) {
 
   const startRun = () => runAction(() => startGeneration(image, prompt));
 
+  // Start a run from a text prompt only (no start image) — text-to-video.
+  const startTextToVideo = (promptText: string) => {
+    setPrompt(promptText);
+    return runAction(() => startGeneration(null, promptText));
+  };
+
   const startFromNanoOutput = async (
     editedImage: File,
     groundedPrompt: string,
@@ -244,6 +250,16 @@ export function useOrbisSession(onDisconnected: () => void) {
     runAction(async () => {
       if (!prompt.trim()) throw new Error("Enter a prompt before steering.");
       await sendCommand("set_prompt", { prompt: prompt.trim() });
+    });
+
+  // Steer with an explicit prompt (used by one-click scene buttons). Sends the
+  // given text directly so it doesn't depend on async prompt state updates.
+  const steerWith = (text: string) =>
+    runAction(async () => {
+      const value = text.trim();
+      if (!value) throw new Error("Empty steer prompt.");
+      setPrompt(value);
+      await sendCommand("set_prompt", { prompt: value });
     });
 
   const disconnectSession = async () => {
@@ -283,9 +299,11 @@ export function useOrbisSession(onDisconnected: () => void) {
     selectImage,
     setResolution,
     startRun,
+    startTextToVideo,
     startFromNanoOutput,
     setNanoBusy,
     steer,
+    steerWith,
     pause: () => runAction(() => sendCommand("pause", {})),
     resume: () => runAction(() => sendCommand("resume", {})),
     reset: () => runAction(() => sendCommand("reset", {})),

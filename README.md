@@ -1,9 +1,34 @@
-# Orbis hackathon starter!
+# Orbis hackathon starter — Terrain visualizer build
 
 A minimal Next.js example for the public Reactor-hosted Visko Orbis Stable API.
 It demonstrates server-side token minting, WebRTC video and audio, text-to-video,
 optional image-to-video, live prompt steering, delivery resolution, pause,
 resume, and a foldable Nano Banana-to-Orbis livestreaming example.
+
+## Terrain feature (added on top of the starter)
+
+Upload a CSV of surveyed points (`X, Y, Z`) and the app triangulates the surface
+locally in the browser (Delaunay) into a 16:9 relief image, then seeds Orbis with
+it and steers the live scene with one click (add a building, road, trees, winter,
+golden hour, dusk).
+
+- Parsing/triangulation/rendering is all client-side — **no credits are spent
+  until you press "Load terrain into Orbis"**, so you can prep offline.
+- Two render modes: **Oblique 3D** (reads as a landscape, best Orbis seed) and
+  **Top-down** shaded relief.
+- Robust CSV parsing: auto-detects delimiter (`, ; tab |`), header vs no header,
+  and the X/Y/Z columns by common names (`easting/northing/elevation`, `E/N/Z`,
+  `lon/lat/elev`, …). Falls back to the first three columns.
+- A `sample_survey.csv` (900 points, a hill + a valley) is included to test with.
+
+Try it: `npm run dev` → **Connect** → in **Terrain from survey** choose
+`sample_survey.csv` → **Load terrain into Orbis** → use the steer buttons.
+
+New/changed files for this feature: `lib/terrain.ts`, `components/terrain-panel.tsx`,
+`hooks/use-orbis-session.ts` (added `steerWith`), `components/orbis-demo.tsx`,
+`app/styles.css`, plus `delaunator` in `package.json`. An offline Python version of
+the same converter (also renders an oblique + hillshade PNG) is in
+`tools/terrain_prep.py`.
 
 ## Requirements
 

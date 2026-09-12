@@ -6,6 +6,7 @@ import { useCallback, useRef } from "react";
 import { NanoBananaExample } from "@/components/nano-banana-example";
 import { OrbisControls } from "@/components/orbis-controls";
 import { OrbisPlayer } from "@/components/orbis-player";
+import { TerrainPanel } from "@/components/terrain-panel";
 import { useOrbisSession } from "@/hooks/use-orbis-session";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 
@@ -48,6 +49,8 @@ function OrbisSession({ clearJwt }: { clearJwt: () => void }) {
         />
         <OrbisControls session={session} />
       </div>
+
+      <TerrainPanel session={session} />
 
       <NanoBananaExample
         disabled={
