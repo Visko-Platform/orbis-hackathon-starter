@@ -57,6 +57,18 @@
   frame, draft button fills the fields, library shows the paused note.
 - Not verified: a live take started from a product-only frame (no Orbis session this phase).
 
+## Scene contract (2026-09-12 ~15:20–15:50), branch feat/scene-contract
+- tay: implement only the scene contract from the consistency pitch (no watchdog, no repair).
+- Design: `lib/knowledge/contract.ts` owns the rules (product lines from knowledge, pinned; drafted
+  person/setting via Gemini or the brief's first sentence; parseContract validates client lines with the
+  same guard as directions; `contractClause` capped at 600 chars by whole lines; `afterPivot`: pivot drops
+  unpinned setting, !keepProduct drops product; `mergeDraft` replaces unpinned person/setting). The client
+  owns the contract state (no server run entity yet) and sends it with each pivot; the server returns
+  the advanced one. New multipart endpoint reads it from a frame (live video via canvas, or the preview).
+- Teammate's main (1541c3e) re-enabled the scene library with real Blender clips; left as is.
+- Verified: unit 43, API 29 (contract drafted by Gemini from a brief, pivot restates and advances),
+  typecheck, build, browser (Read from preview → lines; pin; add a custom line).
+
 ## Next
 - Live run; re-sample opening rewrites after the "no unasked product interaction" rule.
 - PR #2 opened 2026-09-12 on tay's "open it" (push + PR). Later doc commits stay local until asked.

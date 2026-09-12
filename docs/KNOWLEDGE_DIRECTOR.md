@@ -68,6 +68,33 @@ Questions (`isFactQuestion`: ends with "?" or asks how much/when/where/what…) 
 become prompts: the pivot route answers from `facts` (`{ outcome: "overlay", answer }`)
 or returns 422 when nothing approved matches.
 
+## Scene contract (`lib/knowledge/contract.ts`)
+
+What must stay true for the whole take, restated in every direction so the same person,
+product and place carry across chunks. Lines have a kind (`product`, `person`, `setting`,
+`custom`), a source (`knowledge`, `brief`, `frame`, `operator`) and a `pinned` flag.
+
+- **Built at prepare.** Product lines come from the knowledge base (appearance plus
+  keep-true statements, pinned); person and setting lines are drafted by Gemini from the
+  engineered brief (or, without a key, the brief's first sentence becomes the setting).
+  The contract is returned with the prepared run and logged with its prompt version.
+- **Carried by every direction.** The client sends the contract with each pivot; the
+  server validates every line like operator input (guard, forbidden claims, caps), gives
+  the lines to the engineer as "keep every line true", and appends
+  `Keep true: …` (capped at 600 characters, whole lines) to the live direction. The
+  response returns the advanced contract: a full pivot drops unpinned setting lines,
+  dropping the brand drops the product lines, a refinement keeps everything.
+- **Read from a frame.** `POST /api/continuations/contract` (multipart: campaignId, brief,
+  current contract, optional image) re-drafts person and setting lines from the brief and
+  the frame with Gemini vision, rebuilds the product lines, and keeps pinned and custom
+  lines. The studio captures the live video frame (`lib/frame-capture.ts`) or uses the
+  preview frame before a take.
+- **Operator control.** The "Scene contract" card under the director panel lists the
+  lines with pin, remove, and add; custom lines are pinned by default.
+
+Not included: watching the video for violations or repairing automatically. The contract
+is the record those would act on.
+
 ## Audit (`lib/knowledge/audit.ts`)
 
 Every prepared or engineered prompt, and every on-screen answer, is appended to
@@ -83,9 +110,11 @@ engineered, prompt, outcome). Disk failure logs and does not block. The response
   visualNotes, model }` drafted from a product image; 503 without a Gemini key.
 - `GET /api/campaigns/:id/suggestions` — `{ suggestions, source }`: up to six short
   directions built from the knowledge (Gemini, or defaults), cached per knowledge content.
-- `POST /api/continuations/prepare` — as before, plus `engineered`, `promptVersionId`.
-- `POST /api/continuations/pivot` — `{ outcome: "steer", prompt, mode, engineered,
-  promptVersionId }` or `{ outcome: "overlay", answer, mode }`; 400 refused; 422 no answer.
+- `POST /api/continuations/prepare` — as before, plus `engineered`, `promptVersionId`, `contract`.
+- `POST /api/continuations/pivot` — accepts `contract`; `{ outcome: "steer", prompt, mode, engineered,
+  promptVersionId, contract }` or `{ outcome: "overlay", answer, mode }`; 400 refused or invalid
+  contract; 422 no answer.
+- `POST /api/continuations/contract` — multipart; `{ contract, model, source }`.
 
 ## Studio UI (product-first)
 

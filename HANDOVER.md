@@ -117,6 +117,7 @@ and prepared prompt are sent to Reactor when generation starts.
 | Knowledge base | `lib/knowledge/` | Per-campaign knowledge (seeds, store, guard, retrieval, prompt engineer, audit, suggestions) |
 | Knowledge UI | `components/studio/knowledge-panel.tsx` | 04 / KNOWLEDGE inspector section |
 | Knowledge API | `app/api/campaigns/[id]/knowledge`, `…/knowledge/describe`, `…/suggestions` | Read/write knowledge; draft from an image; suggested directions |
+| Scene contract | `lib/knowledge/contract.ts`, `app/api/continuations/contract` | What stays true per take; restated in every direction |
 | Product design | `docs/DYNAMIC_AD_PLATFORM_PLAN.md` | Production roadmap, APIs, ERD, viewer-director design |
 
 Brand files and their original download URLs are documented in
@@ -154,6 +155,14 @@ the response carries `outcome` ("steer" or "overlay" for a product question),
 `engineered` (source, text, model, notes, rejected) and `promptVersionId`.
 Refused directions (competitor, injection, forbidden claim) return 400; a
 question with no approved answer returns 422.
+
+### `POST /api/continuations/contract`
+
+Multipart: `campaignId`, `brief`, the current `contract` as JSON, optional
+`image`. Returns the scene contract with person and setting lines re-drafted
+from the brief and the frame; product lines rebuilt from the knowledge base;
+pinned and custom lines kept. `prepare` returns the initial contract and
+`pivot` accepts, restates, and advances it (`docs/KNOWLEDGE_DIRECTOR.md`).
 
 ### `GET` / `PUT /api/campaigns/:id/knowledge`, `GET /api/campaigns/:id/suggestions`
 
