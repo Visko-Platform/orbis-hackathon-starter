@@ -251,7 +251,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       await session.steer(result.prompt, result.actionPrompt ?? null);
       setDemoStepId(step.id); setLiveAssetId(step.assetId); setBrandRetained(true);
       addActivity(`Demo step · ${step.chip}`, source ? `“${source}” → ${step.title}` : step.title);
-      return { ok: true, engineered: result.engineered as Engineered };
+      return { ok: true, engineered: result.engineered as Engineered, actionPrompt: result.actionPrompt ?? null };
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not run this demo step."); return { ok: false }; }
   }
   async function pivot(direction: string, mode: DirectionMode, preserveBrand: boolean): Promise<PivotResult> {
@@ -274,7 +274,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       if (result.contract !== undefined) setContract(result.contract);
       const engineered = result.engineered as Engineered | undefined;
       addActivity(mode === "pivot" ? "New direction accepted" : "Scene refinement accepted", engineered?.model === "gemini" ? `${direction} → ${engineered.text}` : direction);
-      return { ok: true, engineered };
+      return { ok: true, engineered, actionPrompt: result.actionPrompt ?? null };
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not send this direction. Your prompt is saved below."); return { ok: false }; }
   }
   // Re-reads person and setting lines from what is actually on screen: the live video when a take runs, otherwise the preview frame.

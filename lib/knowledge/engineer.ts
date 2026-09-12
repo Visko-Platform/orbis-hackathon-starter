@@ -59,7 +59,7 @@ export async function engineerPrompt(
       rejected.push(`engine failed: ${message.slice(0, 120)}`);
     }
     if (rewritten) {
-      const validation = validateEngineered(knowledge, rewritten, { keepProduct });
+      const validation = validateEngineered(knowledge, rewritten, { keepProduct, source });
       if (validation.ok) return { source, text: rewritten, model: "gemini", notes, rejected };
       rejected.push(...validation.reasons.map((reason) => `rewrite rejected: ${reason}`));
     }

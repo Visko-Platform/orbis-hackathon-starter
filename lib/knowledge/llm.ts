@@ -15,6 +15,9 @@ const SHARED_RULES = `Rules:
 - Keep to the actions the text asks for. Add no product interaction the
   operator did not ask for: the placement is production design, so nobody
   presents, praises or drinks/eats/wears the product unless the text says so.
+- The product keeps its real-world size and stays secondary to the scene and
+  the people in it. Never move it into the foreground, into a close-up, or
+  make it fill the frame unless the director's own words ask for that.
 - Write positively: avoid "no", "not", "without", "avoid".
 - Plain text only, no headings, quotes or lists.`;
 

@@ -12,9 +12,9 @@ import { Icon } from "./icon";
 
 // What the studio reports back for one submitted direction: a steer carries the
 // engineered prompt, a product question carries the on-screen answer instead.
-export type PivotResult = { ok: boolean; engineered?: Engineered; answer?: string };
+export type PivotResult = { ok: boolean; engineered?: Engineered; answer?: string; actionPrompt?: string | null };
 export type FactOverlay = { text: string; at: number };
-type Receipt = { source: string; engineered: Engineered | null; answered: boolean };
+type Receipt = { source: string; engineered: Engineered | null; answered: boolean; actionPrompt?: string | null };
 
 type Props = {
   session: LiveContinuationSession;
@@ -67,6 +67,8 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
   const stepNumber = flow && demoStepId ? stepIndex(flow, demoStepId) + 1 : 0;
 
   useEffect(() => { setReceipt(null); setPreserveBrand(true); }, [runId]);
+  // Before a take a direction sets the scene; during one, small adjustments are the usual case.
+  useEffect(() => { setMode(live ? "refine" : "pivot"); }, [live]);
   useEffect(() => {
     const controller = new AbortController();
     setSuggestions([]);
@@ -85,7 +87,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
       // Words that name a beat of the demo path take that beat; anything else is an open direction.
       const step = flow && live && !isQuestion ? resolveDemoStep(flow, source) : null;
       const result = step ? await onDemoStep(step, source) : await onPivot(source, mode, preserveBrand);
-      if (result.ok) { setReceipt({ source, engineered: result.engineered ?? null, answered: result.answer !== undefined }); setDirection(""); }
+      if (result.ok) { setReceipt({ source, engineered: result.engineered ?? null, answered: result.answer !== undefined, actionPrompt: result.actionPrompt ?? null }); setDirection(""); }
     } finally { setSubmitting(false); }
   }
   async function runChip(step: DemoStep) {
@@ -93,7 +95,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
     setSubmitting(true);
     try {
       const result = await onDemoStep(step);
-      if (result.ok && result.engineered) setReceipt({ source: step.chip, engineered: result.engineered, answered: false });
+      if (result.ok && result.engineered) setReceipt({ source: step.chip, engineered: result.engineered, answered: false, actionPrompt: result.actionPrompt ?? null });
     } finally { setSubmitting(false); }
   }
 
@@ -164,16 +166,16 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
         <div className="demo-chips">{chips.map((step) => <button key={step.id} type="button" className={`demo-chip ${!live ? "start" : ""}`} disabled={submitting || busy || demoPending} onClick={() => void runChip(step)}><Icon name={live ? "arrow" : "play"} size={12} />{step.chip}</button>)}</div>
         {live && <p className="demo-hint">Or type it your own way: “show the back” jumps to that beat.</p>}
       </div>}
-      <div className="prompt-box">
+      <form className="prompt-box" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
         <label className="sr-only" htmlFor="live-direction">Live direction prompt</label>
-        <textarea id="live-direction" value={direction} disabled={submitting} maxLength={1200} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void submit(); } }} placeholder={mode === "pivot" ? "A new setting for the product. A rooftop at night, neon rain, the camera circles it…" : "Warmer light, move closer to the product, slow the camera down…"} />
-        <div className="prompt-toolbar"><label className="switch-label"><input type="checkbox" disabled={submitting} checked={preserveBrand} onChange={(event) => setPreserveBrand(event.target.checked)} /><span className="switch-track" />Keep {campaign.brand} in scene</label><button className="button primary" type="button" disabled={!canSubmit} onClick={submit}>{submitting ? <span className="spinner" /> : <Icon name="arrow" size={17} />}{isQuestion ? "Ask" : mode === "pivot" ? "Pivot live" : "Apply direction"}</button></div>
-      </div>
+        <textarea id="live-direction" value={direction} disabled={submitting} maxLength={1200} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder={mode === "pivot" ? "A new setting for the product. A rooftop at night, neon rain, the camera circles it…" : "Warmer light, move closer to the product, slow the camera down…"} />
+        <div className="prompt-toolbar"><label className="switch-label"><input type="checkbox" disabled={submitting} checked={preserveBrand} onChange={(event) => setPreserveBrand(event.target.checked)} /><span className="switch-track" />Keep {campaign.brand} in scene</label><button className="button primary" type="submit" disabled={!canSubmit}>{submitting ? <span className="spinner" /> : <Icon name="arrow" size={17} />}{isQuestion ? "Ask" : mode === "pivot" ? "Pivot live" : "Apply direction"}</button></div>
+      </form>
       <div className="director-foot"><span>{footCopy}</span><span>{direction.length}/1200 · ⌘/Ctrl ↵</span></div>
       {suggestions.length > 0 && <div className="prompt-suggestions"><span>Try a direction</span>{suggestions.map((suggestion, index) => <button key={`${index}-${suggestion}`} type="button" disabled={submitting} onClick={() => setDirection(suggestion)}>{suggestion}<Icon name="arrow" size={12} /></button>)}</div>}
       {receipt && (live || receipt.answered) && <div className="direction-receipt" role="status"><Icon name="check" size={16} /><div>
         <strong>{receipt.answered ? "Answered on screen" : session.pendingPrompt ? "Direction accepted by Orbis" : "Model reports this direction active"}</strong>
-        {receipt.answered || !receipt.engineered ? <p>{receipt.source}</p> : <div className="receipt-compare"><p>You: {receipt.source}</p><p>Sent: {receipt.engineered.text}</p><span>{receipt.engineered.model === "gemini" ? "engineered by Gemini" : "sent as written"}{receipt.engineered.notes.length > 0 && ` · using ${receipt.engineered.notes.length} product ${receipt.engineered.notes.length === 1 ? "note" : "notes"}`}</span></div>}
+        {receipt.answered || !receipt.engineered ? <p>{receipt.source}</p> : <div className="receipt-compare"><p>You: {receipt.source}</p>{receipt.actionPrompt && <p>First: {receipt.actionPrompt.split("\n")[0]}</p>}<p>Sent: {receipt.engineered.text}</p><span>{receipt.engineered.model === "gemini" ? "engineered by Gemini" : "sent as written"}{receipt.engineered.notes.length > 0 && ` · using ${receipt.engineered.notes.length} product ${receipt.engineered.notes.length === 1 ? "note" : "notes"}`}</span></div>}
       </div></div>}
     </section>
 

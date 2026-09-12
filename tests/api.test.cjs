@@ -34,7 +34,13 @@ test("a direction restates the scene contract and the pivot advances it", async 
   const result = await response.json();
   assert.ok(result.prompt.includes("Keep true: One Pepsi stays in the scene"));
   assert.ok(result.prompt.includes("grey hoodie"));
-  assert.deepEqual(result.contract.lines.map((line) => line.id), ["prod", "who"]);
+  // The old unpinned setting is dropped; product and person lines survive; the
+  // new setting is re-read from the direction so refinements can hold onto it.
+  const ids = result.contract.lines.map((line) => line.id);
+  assert.deepEqual(ids.slice(0, 2), ["prod", "who"]);
+  assert.ok(!ids.includes("where"));
+  const settings = result.contract.lines.filter((line) => line.kind === "setting");
+  assert.ok(settings.length >= 1 && settings.every((line) => line.source === "brief" && !line.pinned));
 });
 
 test("a refinement keeps every contract line", async () => {

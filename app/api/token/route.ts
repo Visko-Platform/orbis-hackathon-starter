@@ -3,7 +3,15 @@ import { NextResponse } from "next/server";
 const REACTOR_API_URL = "https://api.reactor.inc";
 const MODEL_NAME = "reactor/visko-orbis-stable";
 
-export async function POST() {
+// Optional gate: when STUDIO_PASSWORD is set, a live session needs it in the
+// x-studio-password header. Keeps strangers with the link from starting paid takes.
+export const PASSWORD_HEADER = "x-studio-password";
+
+export async function POST(request: Request) {
+  const required = process.env.STUDIO_PASSWORD;
+  if (required && request.headers.get(PASSWORD_HEADER) !== required) {
+    return NextResponse.json({ error: "Studio password required.", passwordRequired: true }, { status: 401 });
+  }
   const apiKey = process.env.REACTOR_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

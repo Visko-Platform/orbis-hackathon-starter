@@ -283,3 +283,22 @@ test("hosted Blob storage is used only with a Blob token and the default directo
     else process.env.BLOB_READ_WRITE_TOKEN = previous;
   }
 });
+
+const { introducedFraming } = load("lib/knowledge/validate.ts");
+
+test("a rewrite may not add framing the director never asked for", () => {
+  assert.equal(introducedFraming("a beach at sunset", "A blue Pepsi can in the foreground on a beach"), "in the foreground");
+  assert.equal(introducedFraming("a close-up of the can", "A close-up of the blue Pepsi can"), null);
+  assert.equal(introducedFraming("a beach at sunset", "A blue Pepsi can rests in the sand at sunset"), null);
+  const bad = validateEngineered(pepsi, "The can fills the frame on the beach", { source: "a beach" });
+  assert.equal(bad.ok, false);
+  assert.ok(bad.reasons[0].includes("framing"));
+  assert.equal(validateEngineered(pepsi, "The can fills the frame on the beach").ok, true, "operator's own words are not checked for framing");
+});
+
+test("engineer falls back to the director's words when the rewrite adds framing", async () => {
+  const engine = { rewrite: async () => "A giant Pepsi can towering over the beach" };
+  const result = await engineerPrompt(pepsi, "a beach at sunset", "pivot", { engine });
+  assert.equal(result.model, "passthrough");
+  assert.ok(result.rejected[0].includes("framing"));
+});

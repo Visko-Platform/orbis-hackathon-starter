@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { recordPromptVersion } from "@/lib/knowledge/audit";
-import { afterPivot, contractClause, parseContract, type SceneContract } from "@/lib/knowledge/contract";
+import { afterPivot, contractClause, type ContractLine, draftContractWithGemini, draftFromBrief, lineId, MAX_CONTRACT_LINES, parseContract, type SceneContract, validateLine } from "@/lib/knowledge/contract";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { isFactQuestion, retrieveFacts } from "@/lib/knowledge/retrieve";
@@ -69,6 +69,23 @@ export async function POST(request: Request) {
     contractClause: contractClause(contract),
   });
   const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt: beats.settled, outcome: "steer", contract });
-  const nextContract = contract ? afterPivot(contract, { mode: body.mode, keepProduct: body.preserveBrand }) : null;
+  // A pivot drops the unpinned setting lines; re-read them from the new scene so
+  // later refinements have a setting to hold onto.
+  let nextContract = contract ? afterPivot(contract, { mode: body.mode, keepProduct: body.preserveBrand }) : null;
+  if (nextContract && body.mode === "pivot") {
+    let draft = draftFromBrief(engineered.text);
+    if (hasGemini()) {
+      try {
+        draft = await draftContractWithGemini(knowledge, engineered.text);
+      } catch (caught: unknown) {
+        console.error("pivot: contract draft failed, using the direction", caught);
+      }
+    }
+    // People and pinned lines survived afterPivot; only the setting is re-read.
+    const settings = draft.setting
+      .map((text): ContractLine => ({ id: lineId("setting"), kind: "setting", text: text.trim(), pinned: false, source: "brief" }))
+      .filter((line) => line.text && validateLine(knowledge, line.text) === null);
+    nextContract = { lines: [...nextContract.lines, ...settings].slice(0, MAX_CONTRACT_LINES) };
+  }
   return NextResponse.json({ outcome: "steer", prompt: beats.settled, actionPrompt: beats.action, productNotes, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
 }
