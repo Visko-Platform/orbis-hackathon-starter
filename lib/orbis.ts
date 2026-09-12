@@ -18,9 +18,12 @@ export type OrbisMessage = {
   image_conditioned?: boolean;
   started?: boolean;
   paused?: boolean;
+  session_chunk?: number;
+  active_prompt?: string;
 };
 
 export function unwrapOrbisMessage(raw: unknown): OrbisMessage {
+  if (!raw || typeof raw !== "object") return {};
   const envelope = raw as { type?: string; data?: Record<string, unknown> };
   if (envelope?.data && typeof envelope.data === "object") {
     return { ...envelope.data, type: envelope.type } as OrbisMessage;
