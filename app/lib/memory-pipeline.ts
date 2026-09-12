@@ -8,8 +8,10 @@ import { dataUrlToFile } from "./family-memory-store";
 export type GroundedMemory = {
   /** Nano-Banana-restored, 16:9 anchor image, as a data: URL. */
   anchorImage: string;
-  /** Gemini-grounded Orbis prompt. */
-  prompt: string;
+  /** Gemini-grounded Orbis prompt. Named to match FamilyPhotoInput.groundedPrompt
+   * (family-memory-store.ts) so AddFamily.tsx's `{ ...input, ...grounded }` spread
+   * actually populates it — MemoryAutostart gates on `groundedPrompt` being present. */
+  groundedPrompt: string;
 };
 
 export type MemoryPipelineInput = {
@@ -78,5 +80,5 @@ export async function groundFamilyMemory(
     throw new Error(ground.error || "Gemini returned no grounded prompt");
   }
 
-  return { anchorImage, prompt: ground.prompt.trim() };
+  return { anchorImage, groundedPrompt: ground.prompt.trim() };
 }
