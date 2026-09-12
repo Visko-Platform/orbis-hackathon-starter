@@ -13,11 +13,13 @@ import { audienceProfiles, campaigns, filmTitles, selectEligibleCampaign, type C
 import { composePlacementFrame, composeProductFrame } from "@/lib/placement-frame";
 import type { DirectionMode } from "@/lib/live-direction";
 import type { Engineered } from "@/lib/knowledge/engineer";
+import { demoFlowFor, type DemoStep } from "@/lib/demo/flows";
 
 type Section = "studio" | "campaigns" | "library" | "activity";
-type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign };
+type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign; assetId: string };
 type Activity = { id: string; label: string; detail: string; time: string };
 type Upload = { file: File; url: string };
+type Composite = Upload & { artworkKey: string };
 
 // How long a product answer stays on the stage before it fades.
 const OVERLAY_MS = 9_000;
@@ -48,7 +50,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [uploads, setUploads] = useState<Record<string, Upload>>({});
   const [assetSelections, setAssetSelections] = useState<Record<string, string>>({});
   const [zone, setZone] = useState<PlacementZone>(campaign.placement.zone);
-  const [composite, setComposite] = useState<Upload | null>(null);
+  const [composite, setComposite] = useState<Composite | null>(null);
   const [compositing, setCompositing] = useState(false);
   const [preparedRun, setPreparedRun] = useState<PreparedRun | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -57,6 +59,11 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [knowledgeVersion, setKnowledgeVersion] = useState(0);
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
+  // Fixed demo path: the beat the live take is on, the product state it left
+  // the take in, and a first beat waiting for its opening frame.
+  const [demoStepId, setDemoStepId] = useState<string | null>(null);
+  const [liveAssetId, setLiveAssetId] = useState("");
+  const [pendingDemoStart, setPendingDemoStart] = useState<DemoStep | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const [loadingSceneId, setLoadingSceneId] = useState("");
   const sourceDetails = useRef<HTMLDetailsElement>(null);
@@ -68,6 +75,8 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const upload = uploads[campaignId];
   const asset = campaign.assets.find((item) => item.id === assetId) ?? campaign.assets[0];
   const artwork = assetId === "upload" && upload ? upload.file : asset.src;
+  const artworkKey = typeof artwork === "string" ? artwork : "upload";
+  const flow = demoFlowFor(campaignId);
 
   const addActivity = useCallback((label: string, detail: string) => {
     setActivity((current) => [{ id: crypto.randomUUID(), label, detail, time: new Date().toISOString() }, ...current].slice(0, 150));
@@ -96,12 +105,24 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     (frame ? composePlacementFrame(frame.file, artwork, zone) : composeProductFrame(artwork)).then((file) => {
       if (cancelled) return;
       resultUrl = objectUrl(file);
-      setComposite({ file, url: resultUrl });
+      setComposite({ file, url: resultUrl, artworkKey });
       setError("");
     }).catch((caught) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Could not prepare the placement preview."); })
       .finally(() => { if (!cancelled) setCompositing(false); });
     return () => { cancelled = true; release(resultUrl); };
-  }, [frame, artwork, zone]);
+  }, [frame, artwork, zone]); // eslint-disable-line react-hooks/exhaustive-deps -- artworkKey derives from artwork
+
+  // A take that ends leaves the demo path; the next one starts from the first beat.
+  useEffect(() => { if (!session.runStarted) { setDemoStepId(null); setLiveAssetId(""); } }, [session.runStarted]);
+  // The first demo beat starts once the opening frame shows its product.
+  useEffect(() => {
+    if (!pendingDemoStart || compositing || !composite || locked) return;
+    const stepAsset = campaign.assets.find((item) => item.id === pendingDemoStart.assetId);
+    if (!stepAsset || composite.artworkKey !== stepAsset.src) return;
+    const step = pendingDemoStart;
+    setPendingDemoStart(null);
+    void startContinuation({ sceneBrief: step.brief }).then((started) => { if (started) setDemoStepId(step.id); });
+  }); // eslint-disable-line react-hooks/exhaustive-deps -- runs after every render until the pending start is consumed
 
   function chooseCampaign(id: string) {
     if (locked) return;
@@ -181,27 +202,57 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     addActivity("Product image added", `${campaign.brand} · ${file.name}`);
   }
 
-  async function startContinuation() {
-    if (!composite || locked) return;
-    if (!sceneBrief.trim()) { setError("Add a scene brief before generating."); return; }
+  async function startContinuation(overrides: { sceneBrief?: string } = {}): Promise<boolean> {
+    const brief = (overrides.sceneBrief ?? sceneBrief).trim();
+    if (!composite || locked) return false;
+    if (!brief) { setError("Add a scene brief before generating."); return false; }
     setPreparing(true); setError("");
     try {
-      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief: brief }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok || !result.prompt || !result.runId) throw new Error(result.error || "Could not prepare this scene.");
       setPreparedRun(result); setBrandRetained(true);
       if (result.engineered?.model === "gemini") addActivity("Scene brief engineered", result.engineered.text);
       await session.startContinuation({ image: composite.file, prompt: result.prompt });
+      setLiveAssetId(assetId);
       addActivity("Live take started", `${campaign.brand} · ${assetId === "upload" ? upload?.file.name : asset.label} · ${result.runId.slice(0, 8)}`);
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "Generation failed."); addActivity("Take could not start", caught instanceof Error ? caught.message : "Unknown error"); }
+      return true;
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Generation failed."); addActivity("Take could not start", caught instanceof Error ? caught.message : "Unknown error"); return false; }
     finally { setPreparing(false); }
+  }
+  // One beat of the campaign's fixed demo path, from a bubble or from words
+  // that match one. Before the take exists, the first beat sets the product
+  // and the opening brief and starts the take.
+  async function runDemoStep(step: DemoStep, source?: string): Promise<PivotResult> {
+    if (!flow) return { ok: false };
+    if (!session.runStarted) {
+      if (step.id !== flow.steps[0].id) { setError(`Start with “${flow.steps[0].chip}”.`); return { ok: false }; }
+      if (locked) return { ok: false };
+      setError("");
+      setSceneBrief(step.brief);
+      setAssetSelections((current) => ({ ...current, [campaignId]: step.assetId }));
+      setPendingDemoStart(step);
+      addActivity("Demo path started", `${flow.name} · ${step.title}`);
+      return { ok: true };
+    }
+    const target = preparedRun?.campaign ?? campaign;
+    setError("");
+    try {
+      const response = await fetch("/api/continuations/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: target.id, stepId: step.id, direction: source ?? "", currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "" }), signal: AbortSignal.timeout(15_000) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not run this demo step.");
+      await session.steer(result.prompt, result.actionPrompt ?? null);
+      setDemoStepId(step.id); setLiveAssetId(step.assetId); setBrandRetained(true);
+      addActivity(`Demo step · ${step.chip}`, source ? `“${source}” → ${step.title}` : step.title);
+      return { ok: true, engineered: result.engineered as Engineered };
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not run this demo step."); return { ok: false }; }
   }
   async function pivot(direction: string, mode: DirectionMode, preserveBrand: boolean): Promise<PivotResult> {
     // A live take keeps its prepared campaign; a product question can be asked against the workspace campaign without one.
     const target = session.runStarted && preparedRun ? preparedRun.campaign : campaign;
     setError("");
     try {
-      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: target.id, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "" }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: target.id, assetId: session.runStarted && preparedRun ? liveAssetId || preparedRun.assetId : assetId, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "" }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not prepare this direction.");
       if (result.outcome === "overlay") {
@@ -211,7 +262,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
         return { ok: true, answer };
       }
       if (!session.runStarted) throw new Error("Start a live take before sending a direction.");
-      await session.steer(result.prompt);
+      await session.steer(result.prompt, result.actionPrompt ?? null);
       setBrandRetained(preserveBrand);
       const engineered = result.engineered as Engineered | undefined;
       addActivity(mode === "pivot" ? "New direction accepted" : "Scene refinement accepted", engineered?.model === "gemini" ? `${direction} → ${engineered.text}` : direction);
@@ -240,7 +291,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
 
       <div hidden={section !== "studio"} className="studio-screen">
         <div className="studio-grid">
-          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} onStart={startContinuation} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} onStart={() => void startContinuation()} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} demoStepId={demoStepId} demoPending={Boolean(pendingDemoStart)} onDemoStep={runDemoStep} />
           <aside className="inspector" aria-label="Product setup">
             {locked && <div className="locked-notice"><Icon name="check" size={14} />Product and frame are held for this take. Use the director to steer live.</div>}
             <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />

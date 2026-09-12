@@ -70,7 +70,7 @@ export async function POST(request: Request) {
   const version = await recordPromptVersion({ campaignId: campaign.id, runId, role: "opening", engineered, prompt, outcome: "start" });
 
   return NextResponse.json(
-    { runId, prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id },
+    { runId, assetId: body?.assetId ?? "", prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

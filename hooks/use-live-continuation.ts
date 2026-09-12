@@ -3,6 +3,7 @@
 import { useReactor, useReactorMessage } from "@reactor-team/js-sdk";
 import { useEffect, useRef, useState } from "react";
 
+import { TRANSITION_BEAT_MS } from "@/lib/live-direction";
 import { type OrbisMessage, unwrapOrbisMessage } from "@/lib/orbis";
 
 type StartInput = { image: File; prompt: string };
@@ -305,13 +306,27 @@ export function useLiveContinuation(onDisconnected: () => void) {
     });
   }
 
-  async function steer(prompt: string) {
+  /**
+   * Sends a direction. With an action beat, the beat goes first so the change
+   * is visible at the next chunk boundary, then the settled prompt follows
+   * two chunks later. Any newer action cancels the pending settle.
+   */
+  async function steer(prompt: string, actionPrompt?: string | null) {
     await runAction(async (check) => {
       const nextPrompt = validatePrompt(prompt);
       if (!runStartedRef.current || status !== "ready") {
         throw new Error("Start a live continuation before sending a direction.");
       }
-      setPhase("Sending your direction");
+      if (actionPrompt) {
+        const beat = validatePrompt(actionPrompt);
+        setPhase("Transitioning");
+        await confirmedCommand("set_prompt", { prompt: beat }, (message) => message.type === "prompt_accepted", "your transition");
+        check();
+        setPendingPrompt(beat);
+        await new Promise<void>((resolve) => setTimeout(resolve, TRANSITION_BEAT_MS));
+        check();
+      }
+      setPhase(actionPrompt ? "Settling the new scene" : "Sending your direction");
       await confirmedCommand("set_prompt", { prompt: nextPrompt }, (message) => message.type === "prompt_accepted", "your new direction");
       check();
       setPendingPrompt(activePromptRef.current === nextPrompt ? "" : nextPrompt);

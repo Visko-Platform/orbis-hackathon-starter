@@ -6,7 +6,7 @@ Orbis Ad is a working local hackathon prototype for generating live,
 brand-integrated video continuations from a user-supplied movie frame. The
 current build supports:
 
-- real Pepsi, McDonald's, and Nike campaign assets;
+- real Pepsi, McDonald's, Nike, and Rolex campaign assets;
 - uploaded video or still-image source material;
 - browser-side 16:9 frame capture and artwork compositing;
 - manual campaign selection or deterministic sample-audience matching;
@@ -43,8 +43,13 @@ Then run:
 
 ```bash
 npm install
+npm run assets:rolex
 npm run dev
 ```
+
+`npm run assets:rolex` downloads the Rolex product images listed in
+`public/brands/SOURCES.md` from Rolex's media CDN; the other brand files are
+committed.
 
 Open <http://localhost:3000>.
 
@@ -53,7 +58,7 @@ already ignored by Git.
 
 ## 3. Demo walkthrough
 
-1. In **Studio**, choose Pepsi, McDonald's, or Nike under **01 / PRODUCT**, or
+1. In **Studio**, choose Pepsi, McDonald's, Nike, or Rolex under **01 / PRODUCT**, or
    **Add product image** (PNG, JPEG, WebP). The chosen image is what gets placed;
    without a reference frame it is also the starting frame.
 2. Under **02 / PRODUCT INFO**, press **Draft from product image** to fill what it
@@ -75,6 +80,21 @@ already ignored by Git.
 
 The **Scene library** sector is paused: story presets are parked while the
 studio focuses on the product.
+
+### Rolex demo path
+
+With Rolex selected, the director shows **ROLEX WALK · FIXED PATH** with a
+single bubble, **Walk the street**. It selects the Submariner as the opening
+frame, fills the scene brief and starts the take. Once live, three bubbles
+offer the next beats (**Enter the boutique**, **Try the Datejust**, **Show the
+back**, **Put it back on**, **Walk out**); typing a matching phrase such as
+"show the back" or "put it back on" runs the same beat. Beats are authored in
+`lib/demo/flows.ts`, served by `POST /api/continuations/demo`, validated
+against the Rolex knowledge (never rewritten by Gemini), and sent as an action
+beat followed by the settled scene. Each beat carries the appearance notes of
+its reference views (for example the plain, unengraved case back), and the
+Rolex knowledge seed (`lib/knowledge/seeds.ts`) keeps every boutique interior
+showing the word ROLEX with the gold crown and only Rolex watches.
 
 ## 4. Runtime architecture
 
@@ -154,6 +174,14 @@ the response carries `outcome` ("steer" or "overlay" for a product question),
 `engineered` (source, text, model, notes, rejected) and `promptVersionId`.
 Refused directions (competitor, injection, forbidden claim) return 400; a
 question with no approved answer returns 422.
+
+A pivot returns two prompts. `actionPrompt` is an action beat with no
+continuity language, sent first so the change is visible at the next chunk
+boundary; `prompt` is the settled scene, sent about 3.6 seconds (two chunks)
+later by the live hook. A newer direction cancels a pending settle. A
+refinement returns `actionPrompt: null`. When the direction names a product
+view the campaign has a reference for ("show the back", "open the clasp"), the
+matching asset's appearance is added to both beats as `productNotes`.
 
 ### `GET` / `PUT /api/campaigns/:id/knowledge`, `GET /api/campaigns/:id/suggestions`
 

@@ -9,7 +9,7 @@ scene as it unfolds.
 - A responsive Studio, Campaigns gallery, playable Scene library, and Activity history.
 - Three bundled, browser-ready clips from Blender Foundation open movies, with
   poster frames, attribution, license labels, and [source links](public/scenes/SOURCES.md).
-- Six original assets from Pepsi, McDonald's, and Nike, stored locally with
+- Fourteen original assets from Pepsi, McDonald's, Nike, and Rolex, stored locally with
   [official source links](public/brands/SOURCES.md). No generated brand assets.
 - Per-campaign artwork uploads and explicit asset selection.
 - Video upload (up to 250 MB), scrubbing, crop/fit controls, and 16:9 frame capture;
@@ -26,6 +26,11 @@ scene as it unfolds.
   every live direction are rewritten with that knowledge before they reach Orbis, with a
   "You said → Sent" receipt. Product questions are answered on screen from approved facts.
   See [docs/KNOWLEDGE_DIRECTOR.md](docs/KNOWLEDGE_DIRECTOR.md).
+- A **fixed demo path** for Rolex (`lib/demo/flows.ts`): street walk → boutique → swap to
+  the Datejust → show the case back → back on the wrist → walk out. Three bubbles in the
+  director offer the next beats; typing "show the back" jumps to that beat. Each beat lands
+  as two Orbis prompts (action, then settled) with the matching reference views' appearance,
+  and the Rolex knowledge seed keeps every boutique showing ROLEX and the crown.
 
 This prototype generates a new continuation from a composed reference frame.
 It does **not** rewrite every encoded frame of an existing movie or guarantee

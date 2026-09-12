@@ -44,6 +44,14 @@ export type Campaign = {
     src: string;
     kind: "logo" | "product" | "campaign";
     sourceUrl: string;
+    /** How this exact asset lives in the scene; used verbatim in prompts. */
+    integration?: string;
+    /** Visual facts the model must keep true when this asset is in frame. */
+    appearance?: string;
+    /** Lower-case phrases in a live direction that call this asset's appearance up. */
+    cues?: string[];
+    /** Id of the asset this one is another view of (e.g. the case back of a watch). */
+    variantOf?: string;
   }[];
   campaign: string;
   category: string;
@@ -144,6 +152,13 @@ export const audienceProfiles: AudienceProfile[] = [
     detail: "Streetwear · sport · design",
     initials: "CR",
     affinities: ["apparel", "sport", "music"],
+  },
+  {
+    id: "collector",
+    name: "Collector",
+    detail: "Watches · travel · craftsmanship",
+    initials: "CO",
+    affinities: ["luxury", "travel", "design"],
   },
 ];
 
@@ -252,6 +267,122 @@ export const campaigns: Campaign[] = [
       instruction:
         "Add one restrained Nike campaign poster to an existing background wall. Preserve the approved artwork and keep it secondary to the character and action.",
       zone: { x: 0.75, y: 0.2, width: 0.14, height: 0.28 },
+    },
+  },
+  {
+    id: "rolex-perpetual-moment",
+    brand: "Rolex",
+    logo: "/brands/rolex/logo.svg",
+    assets: [
+      {
+        id: "rolex-crown",
+        label: "Rolex crown",
+        src: "/brands/rolex/logo.svg",
+        kind: "logo",
+        sourceUrl: "https://www.rolex.com/",
+        integration:
+          "The Rolex crown emblem appears once, in gold, on an existing architectural surface such as a boutique window or a discreet wall clock.",
+        appearance: "A five-point gold crown above the word ROLEX in green serif capitals.",
+      },
+      {
+        id: "rolex-submariner",
+        label: "Submariner Date",
+        src: "/brands/rolex/submariner.png",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watches/submariner/m126610ln-0001",
+        cues: ["submariner", "dial", "bezel"],
+        integration:
+          "The Submariner is worn on the protagonist's wrist. As the hand moves, the black dial, luminous markers, and unidirectional rotating bezel catch the light. The watch stays exactly as shown in the reference.",
+        appearance:
+          "Oystersteel case, black dial with round luminous hour markers and Mercedes-style hands, black Cerachrom bezel with a 60-minute scale, three-link Oyster bracelet.",
+      },
+      {
+        id: "rolex-datejust",
+        label: "Datejust 41",
+        src: "/brands/rolex/datejust.png",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watches/datejust/m126334-0014",
+        cues: ["datejust", "dial", "fluted bezel"],
+        integration:
+          "The Datejust is worn on the protagonist's wrist, cuff pulled back just enough to reveal the fluted bezel and the date window under its Cyclops lens.",
+        appearance:
+          "Oystersteel and white gold case, fluted white gold bezel, slate grey dial with baton hour markers, date window with Cyclops lens at three o'clock, five-link Jubilee bracelet.",
+      },
+      {
+        id: "rolex-submariner-back",
+        label: "Submariner Date, case back",
+        src: "/brands/rolex/submariner-back.png",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watches/submariner/m126610ln-0001",
+        variantOf: "rolex-submariner",
+        cues: ["back", "caseback", "turn it over", "turn the watch over", "flip", "underside", "clasp", "behind"],
+        integration:
+          "The Submariner is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
+        appearance:
+          "Seen from behind: a plain, polished Oystersteel screw-down case back with no engraving, window, or markings; brushed three-link Oyster bracelet; a folding Oysterlock clasp with a small raised Rolex crown at its centre.",
+      },
+      {
+        id: "rolex-datejust-back",
+        label: "Datejust 41, case back",
+        src: "/brands/rolex/datejust-back.png",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watches/datejust/m126334-0014",
+        variantOf: "rolex-datejust",
+        cues: ["back", "caseback", "turn it over", "turn the watch over", "flip", "underside", "clasp", "behind"],
+        integration:
+          "The Datejust is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
+        appearance:
+          "Seen from behind: a plain, polished Oystersteel screw-down case back with no engraving or markings, the fluted bezel edge just visible around it; five-link Jubilee bracelet; a folding clasp with a small raised Rolex crown at its centre.",
+      },
+      {
+        id: "rolex-submariner-open",
+        label: "Submariner Date, bracelet open",
+        src: "/brands/rolex/submariner-clasp-open.jpg",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watchmaking/features/bracelets/glidelock",
+        variantOf: "rolex-submariner",
+        cues: ["open the strap", "strap open", "open the bracelet", "bracelet open", "unclasp", "open the clasp", "clasp open", "undo the clasp", "take it off", "unbuckle"],
+        integration:
+          "The Submariner lies turned over with its Oyster bracelet unfolded flat, the Glidelock clasp open exactly as in the reference, so the plain polished case back is fully exposed.",
+        appearance:
+          "Oystersteel Oyster bracelet opened out flat: the folding Oysterlock safety clasp unfolded, its polished cover and the Glidelock extension blade visible, brushed three-piece links either side; at the centre the plain polished screw-down case back with no engraving.",
+      },
+      {
+        id: "rolex-datejust-open",
+        label: "Datejust 41, Oysterclasp open",
+        src: "/brands/rolex/datejust-clasp-open.jpg",
+        kind: "product",
+        sourceUrl: "https://www.rolex.com/watchmaking/features/bracelets/oysterclasp",
+        variantOf: "rolex-datejust",
+        cues: ["open the strap", "strap open", "open the bracelet", "bracelet open", "unclasp", "open the clasp", "clasp open", "undo the clasp", "take it off", "unbuckle"],
+        integration:
+          "The Datejust lies turned over with its Jubilee bracelet unfolded flat and the Oysterclasp open as in the reference, so the plain polished case back is fully exposed. On this watch the whole bracelet is Oystersteel.",
+        appearance:
+          "Five-link Jubilee bracelet opened out flat with the folding Oysterclasp unfolded, polished clasp cover with a small raised Rolex crown; all Oystersteel on this reference, never two-tone; at the centre the plain polished screw-down case back with no engraving, fluted bezel edge just visible.",
+      },
+      {
+        id: "rolex-submariner-campaign",
+        label: "Submariner campaign visual",
+        src: "/brands/rolex/submariner-campaign.jpg",
+        kind: "campaign",
+        sourceUrl: "https://www.rolex.com/watches/submariner",
+        integration:
+          "The Submariner campaign visual hangs as a backlit poster inside the Rolex boutique window: a blue-dial, two-tone Submariner floating against sky and cloud. It stays secondary to the action.",
+      },
+    ],
+    campaign: "A Perpetual Moment",
+    category: "luxury",
+    accent: "#127749",
+    ink: "#c9a53e",
+    priority: 95,
+    segments: ["luxury", "travel", "design"],
+    allowedTitles: ["sintel-mountain", "bunny-forest", "bunny-meadow"],
+    placement: {
+      surface: "boutique window",
+      label: "Boutique window",
+      instruction:
+        "Integrate one Rolex boutique window into the established street architecture, its green facade and gold crown emblem lit from within. It belongs to the environment and is never presented to camera as an endorsement.",
+      zone: { x: 0.7, y: 0.24, width: 0.19, height: 0.24 },
     },
   },
 ];
