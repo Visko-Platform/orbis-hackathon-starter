@@ -11,6 +11,13 @@ export type FilmTitle = {
   moment: string;
   genre: string;
   palette: string;
+  media: {
+    video: string;
+    poster: string;
+    sourceUrl: string;
+    sourceLabel: string;
+    license: string;
+  };
   continuity: {
     setting: string;
     camera: string;
@@ -55,42 +62,63 @@ export type Campaign = {
 
 export const filmTitles: FilmTitle[] = [
   {
-    id: "odyssey-harbor",
-    title: "The Odyssey",
-    moment: "Harbor departure",
-    genre: "Epic adventure",
-    palette: "#d8a15b",
+    id: "sintel-mountain",
+    title: "Sintel",
+    moment: "Frozen mountain passage",
+    genre: "Fantasy adventure",
+    palette: "#9bb6c8",
+    media: {
+      video: "/scenes/sintel-trailer.mp4",
+      poster: "/scenes/sintel-poster.png",
+      sourceUrl: "https://durian.blender.org/download/",
+      sourceLabel: "Blender Foundation open movie",
+      license: "CC BY 3.0",
+    },
     continuity: {
-      setting: "A monumental ancient harbor opening onto a restless sea",
-      camera: "A low, steady tracking shot that continues forward without a cut",
-      lighting: "Late-afternoon amber sun with salt haze in the air",
-      objective: "The traveler moves through the harbor toward the departing ship",
+      setting: "A lone traveler crossing an immense snow-covered mountain range",
+      camera: "A measured cinematic follow shot that preserves the scale of the landscape",
+      lighting: "Cold overcast daylight with blue shadows and diffuse mountain haze",
+      objective: "The traveler pushes forward through the pass as the weather begins to turn",
     },
   },
   {
-    id: "spider-midtown",
-    title: "Spider-Man",
-    moment: "Midtown pursuit",
-    genre: "Superhero action",
-    palette: "#cf5148",
+    id: "bunny-forest",
+    title: "Big Buck Bunny",
+    moment: "Forest reckoning",
+    genre: "Animated comedy",
+    palette: "#88a56a",
+    media: {
+      video: "/scenes/bunny-trailer.mp4",
+      poster: "/scenes/bunny-poster.png",
+      sourceUrl: "https://studio.blender.org/films/big-buck-bunny/",
+      sourceLabel: "Blender Foundation open movie",
+      license: "CC BY 3.0",
+    },
     continuity: {
-      setting: "A crowded Midtown avenue immediately after a fast street pursuit",
-      camera: "Dynamic street-level tracking with the same forward momentum",
-      lighting: "Clear afternoon light reflected from glass and wet pavement",
-      objective: "The hero crosses the avenue while the city continues around him",
+      setting: "A bright forest clearing after a chaotic encounter with three small troublemakers",
+      camera: "Playful character-level tracking with clear foreground and background action",
+      lighting: "Warm spring daylight filtered through dense green foliage",
+      objective: "The forest settles for a beat before the next comic confrontation begins",
     },
   },
   {
-    id: "midnight-metro",
-    title: "Midnight Protocol",
-    moment: "Metro exchange",
-    genre: "Espionage thriller",
-    palette: "#7d8fb4",
+    id: "bunny-meadow",
+    title: "Big Buck Bunny",
+    moment: "Meadow encounter",
+    genre: "Animated short",
+    palette: "#b6b06f",
+    media: {
+      video: "/scenes/bunny-meadow.mp4",
+      poster: "/scenes/bunny-poster.png",
+      sourceUrl: "https://studio.blender.org/films/big-buck-bunny/",
+      sourceLabel: "Blender Foundation open movie",
+      license: "CC BY 3.0",
+    },
     continuity: {
-      setting: "A rain-darkened European metro entrance at night",
-      camera: "Controlled handheld follow shot over the protagonist's shoulder",
-      lighting: "Cool station light with warm reflections from nearby storefronts",
-      objective: "The protagonist reaches the street and searches for a waiting contact",
+      setting: "A sunlit meadow at the edge of a lively woodland",
+      camera: "A gentle wide shot that can drift toward the character without cutting",
+      lighting: "Soft natural daylight with saturated greens and warm highlights",
+      objective: "Hold the calm pastoral rhythm while introducing a new point of interest in the clearing",
     },
   },
 ];
@@ -147,7 +175,7 @@ export const campaigns: Campaign[] = [
     ink: "#ffffff",
     priority: 92,
     segments: ["beverage", "travel", "music"],
-    allowedTitles: ["odyssey-harbor", "spider-midtown", "midnight-metro"],
+    allowedTitles: ["sintel-mountain", "bunny-forest", "bunny-meadow"],
     placement: {
       surface: "refreshment kiosk",
       label: "Environmental kiosk",
@@ -182,7 +210,7 @@ export const campaigns: Campaign[] = [
     ink: "#ffcf23",
     priority: 90,
     segments: ["food", "family", "delivery"],
-    allowedTitles: ["spider-midtown", "midnight-metro", "odyssey-harbor"],
+    allowedTitles: ["bunny-forest", "bunny-meadow", "sintel-mountain"],
     placement: {
       surface: "street-side restaurant sign",
       label: "Storefront integration",
@@ -217,7 +245,7 @@ export const campaigns: Campaign[] = [
     ink: "#ffffff",
     priority: 88,
     segments: ["apparel", "sport", "music"],
-    allowedTitles: ["spider-midtown", "midnight-metro", "odyssey-harbor"],
+    allowedTitles: ["bunny-forest", "bunny-meadow", "sintel-mountain"],
     placement: {
       surface: "street poster",
       label: "Background poster",

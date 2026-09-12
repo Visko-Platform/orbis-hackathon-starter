@@ -6,7 +6,9 @@ scene as it unfolds.
 
 ## What the hackathon build demonstrates
 
-- A responsive Studio, Campaigns gallery, Scene library, and Activity history.
+- A responsive Studio, Campaigns gallery, playable Scene library, and Activity history.
+- Three bundled, browser-ready clips from Blender Foundation open movies, with
+  poster frames, attribution, license labels, and [source links](public/scenes/SOURCES.md).
 - Six original assets from Pepsi, McDonald's, and Nike, stored locally with
   [official source links](public/brands/SOURCES.md). No generated brand assets.
 - Per-campaign artwork uploads and explicit asset selection.
@@ -21,10 +23,9 @@ scene as it unfolds.
 - Local creative history with JSON export and model diagnostics.
 
 This prototype generates a new continuation from a composed reference frame.
-It does **not** rewrite every encoded frame of an existing movie, guarantee
-pixel-perfect logos in generated frames, or include downloadable movie footage.
-Scene-library entries are creative briefs, not actual source clips. Upload your
-licensed footage to use it as the starting point.
+It does **not** rewrite every encoded frame of an existing movie or guarantee
+pixel-perfect logos in generated frames. The Scene library includes three open-film
+demo clips; you can also upload licensed footage to use as the starting point.
 
 ## Run locally
 
@@ -52,7 +53,9 @@ Open <http://localhost:3000>.
 
 1. Select a campaign and its logo, product, or campaign artwork. You can also
    add your own artwork; it stays associated with that campaign for the session.
-2. Upload a movie clip and capture a frame, or use a reference image.
+2. Choose a playable clip in **Scene library**, or upload a movie clip/reference
+   image. A library scene arrives in Studio with its poster frame ready; scrub the
+   source video and choose another frame when needed.
 3. Review **Original** versus **Placement**. Expand **Scene brief & placement**
    to describe the action and adjust the artwork position.
 4. Select **Generate live**. Startup can take time while the provider allocates
@@ -106,8 +109,9 @@ The Reactor API key remains server-side and `.env.local` is ignored by Git.
 The browser receives only a short-lived model-scoped JWT. Source clips are
 decoded locally; the composed starting frame and scene prompts are sent to
 Reactor when generating. Creative activity is stored in this browser's local
-storage, not a server audit database. Artwork uploads and source media stay in
-memory and must be reselected after a refresh.
+storage, not a server audit database. Artwork uploads and user-imported source
+media stay in memory and must be reselected after a refresh. Bundled demo scenes
+remain available from the Scene library.
 
 This is a local hackathon prototype, not a multi-tenant hosted service. Add user
 authentication, authorization, rate limits, persistent campaign/media storage,

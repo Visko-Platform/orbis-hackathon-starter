@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const baseUrl = process.env.ORBIS_TEST_BASE_URL || "http://localhost:3000";
-const selection = { profileId: "urban-explorer", titleId: "spider-midtown", campaignId: "pepsi-thirsty-for-more", selectionMode: "manual", sceneBrief: "A sunlit cafe", assetId: "pepsi-can" };
+const selection = { profileId: "urban-explorer", titleId: "sintel-mountain", campaignId: "pepsi-thirsty-for-more", selectionMode: "manual", sceneBrief: "A sunlit cafe", assetId: "pepsi-can" };
 const pivot = { campaignId: selection.campaignId, currentPrompt: "OLD_SCENE", direction: "Fly through a snowy mountain pass", preserveBrand: true, mode: "pivot" };
 async function post(path, data) {
   return fetch(baseUrl + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), signal: AbortSignal.timeout(15_000) });
@@ -66,7 +66,7 @@ test("malformed JSON fails cleanly", async () => {
 });
 
 test("audience endpoint recommends Nike to culture runners", async () => {
-  const response = await fetch(baseUrl + "/api/continuations/eligible?profileId=culture-runner&titleId=spider-midtown");
+  const response = await fetch(baseUrl + "/api/continuations/eligible?profileId=culture-runner&titleId=sintel-mountain");
   assert.equal(response.status, 200);
   assert.equal((await response.json()).campaign.brand, "Nike");
 });

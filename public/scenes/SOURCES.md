@@ -1,0 +1,29 @@
+# Scene media sources
+
+The Scene library uses open-movie material created by the Blender Foundation.
+The files are stored locally so the hackathon demo does not depend on a third-party
+video host during a live presentation.
+
+## Sintel
+
+- Project and downloads: https://durian.blender.org/download/
+- Trailer file: https://media.w3.org/2010/05/sintel/trailer.mp4
+- Poster frame: https://media.w3.org/2010/05/sintel/poster.png
+- Local files: `sintel-trailer.mp4`, `sintel-poster.png`
+- Credit: © copyright Blender Foundation | durian.blender.org
+- License: Creative Commons Attribution 3.0
+  (https://creativecommons.org/licenses/by/3.0/)
+
+## Big Buck Bunny
+
+- Project: https://studio.blender.org/films/big-buck-bunny/
+- Trailer file: https://media.w3.org/2010/05/bunny/trailer.mp4
+- Meadow excerpt: https://media.w3.org/2010/05/video/movie_300.mp4
+- Poster frame: https://media.w3.org/2010/05/bunny/poster.png
+- Local files: `bunny-trailer.mp4`, `bunny-meadow.mp4`, `bunny-poster.png`
+- Credit: © copyright 2008, Blender Foundation | bigbuckbunny.org
+- License: Creative Commons Attribution 3.0
+  (https://creativecommons.org/licenses/by/3.0/)
+
+The included poster images and video excerpts are used as source footage and
+starting frames; Orbis Ad does not imply sponsorship or endorsement by Blender.
