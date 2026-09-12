@@ -116,6 +116,23 @@ const stages: Stage[] = [
       },
       {
         n: 8,
+        title: "The ad speaks",
+        plain: "A narrator line is written from the same approved facts, then spoken aloud over the scene.",
+        rows: [
+          { icon: "spark", label: "Model", value: "Gemini 3.5 Flash writes · Gemini TTS speaks (voice: Charon)" },
+          { icon: "audio", label: "Tech", value: "/api/continuations/voiceover · WAV played in the browser" },
+          { icon: "check", label: "Rule", value: "Orbis audio is picture-driven, so the words come from us — never from the model" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "deliver",
+    step: "04",
+    caption: "Where it lands, and what we keep",
+    boxes: [
+      {
+        n: 9,
         title: "An ordinary player",
         plain: "All of it arrives inside a normal video page, with a Skip button the viewer stops pressing.",
         rows: [
@@ -125,7 +142,7 @@ const stages: Stage[] = [
         ],
       },
       {
-        n: 9,
+        n: 10,
         title: "The receipts",
         plain: "Every word the ad was given is written down, so the brand can check what its ad said.",
         rows: [
@@ -141,7 +158,7 @@ const stages: Stage[] = [
 const principles = [
   { title: "The viewer's words never reach the model", body: "What they type is matched to an approved beat or rewritten against the brand's rules. The sentence that reaches Orbis was written by us, from records the brand signed off." },
   { title: "The brand's own words win", body: "Forbidden claims, competitors and protected details are refused before sending and rejected after rewriting — not corrected once they are on screen." },
-  { title: "Nothing is asked to say anything", body: "Answers are written from approved facts and shown over the take. The video model is never asked to render speech or text." },
+  { title: "Nothing is asked to say anything", body: "Answers and narration are written from approved facts and played over the take. The video model is never asked to render speech or text." },
 ];
 
 export function ArchitecturePanel() {

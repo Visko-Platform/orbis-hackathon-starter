@@ -24,6 +24,8 @@ type Props = {
   runId: string;
   brandRetained: boolean;
   overlay: FactOverlay | null;
+  voiceover: boolean;
+  onVoiceoverChange: (value: boolean) => void;
   knowledgeVersion: number;
   contract: SceneContract | null;
   onContractChange: (next: SceneContract) => void;
@@ -43,7 +45,7 @@ const QUESTION = /\?\s*$/;
 const KIND_LABELS: Record<ContractKind, string> = { product: "Product", person: "Person", setting: "Setting", custom: "Custom" };
 const MAX_CONTRACT_LINES = 12;
 
-export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, contract, onContractChange, onReadContract, canReadContract, onStart, onUserDemo, onPivot, onAction, onAddProduct }: Props) {
+export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, voiceover, onVoiceoverChange, knowledgeVersion, contract, onContractChange, onReadContract, canReadContract, onStart, onUserDemo, onPivot, onAction, onAddProduct }: Props) {
   const player = useRef<HTMLDivElement>(null);
   const [compare, setCompare] = useState(false);
   const [direction, setDirection] = useState("");
@@ -149,7 +151,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
       <form className="prompt-box" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
         <label className="sr-only" htmlFor="live-direction">Live direction prompt</label>
         <textarea id="live-direction" value={direction} disabled={submitting} maxLength={4000} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder={mode === "pivot" ? "A new setting for the product. A rooftop at night, neon rain, the camera circles it…" : "Warmer light, move closer to the product, slow the camera down…"} />
-        <div className="prompt-toolbar"><label className="switch-label"><input type="checkbox" disabled={submitting} checked={preserveBrand} onChange={(event) => setPreserveBrand(event.target.checked)} /><span className="switch-track" />Keep {campaign.brand} in scene</label><button className="button primary" type="submit" disabled={!canSubmit}>{submitting ? <span className="spinner" /> : <Icon name="arrow" size={17} />}{isQuestion ? "Ask" : mode === "pivot" ? "Pivot live" : "Apply direction"}</button></div>
+        <div className="prompt-toolbar"><label className="switch-label"><input type="checkbox" disabled={submitting} checked={preserveBrand} onChange={(event) => setPreserveBrand(event.target.checked)} /><span className="switch-track" />Keep {campaign.brand} in scene</label><label className="switch-label"><input type="checkbox" checked={voiceover} onChange={(event) => onVoiceoverChange(event.target.checked)} /><span className="switch-track" />Voiceover</label><button className="button primary" type="submit" disabled={!canSubmit}>{submitting ? <span className="spinner" /> : <Icon name="arrow" size={17} />}{isQuestion ? "Ask" : mode === "pivot" ? "Pivot live" : "Apply direction"}</button></div>
       </form>
       <div className="director-foot"><span>{footCopy}</span><span>{direction.length}/4000 · ⌘/Ctrl ↵</span></div>
       {suggestions.length > 0 && <div className="prompt-suggestions"><span>Try a direction</span>{suggestions.map((suggestion, index) => <button key={`${index}-${suggestion}`} type="button" disabled={submitting} onClick={() => setDirection(suggestion)}>{suggestion}<Icon name="arrow" size={12} /></button>)}</div>}

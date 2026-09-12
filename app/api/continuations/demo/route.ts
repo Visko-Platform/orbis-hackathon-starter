@@ -10,7 +10,7 @@ import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import type { Engineered } from "@/lib/knowledge/engineer";
 import { loadKnowledge } from "@/lib/knowledge/store";
 import { validateEngineered } from "@/lib/knowledge/validate";
-import { writeSoundCaption } from "@/lib/knowledge/sound";
+import { writeSoundCaption } from "@/lib/knowledge/dialogue";
 import { hasGemini } from "@/lib/knowledge/llm";
 import { buildLiveDirectionBeats, MAX_CURRENT_PROMPT_CHARS } from "@/lib/live-direction";
 import { productNotesFor } from "@/lib/product-cues";

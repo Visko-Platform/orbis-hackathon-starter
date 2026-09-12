@@ -4,7 +4,7 @@ import { forwardToHostedAi } from "@/lib/hosted-ai";
 
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { afterPivot, contractClause, type ContractLine, draftContractWithGemini, draftFromBrief, lineId, MAX_CONTRACT_LINES, parseContract, type SceneContract, validateLine } from "@/lib/knowledge/contract";
-import { writeSoundCaption } from "@/lib/knowledge/sound";
+import { writeSoundCaption } from "@/lib/knowledge/dialogue";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";

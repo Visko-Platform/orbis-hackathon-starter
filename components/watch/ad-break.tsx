@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFirstFrame } from "@/hooks/use-first-frame";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { useReleaseOnUnload } from "@/hooks/use-release-on-unload";
+import { useVoiceover } from "@/hooks/use-voiceover";
 import { requestDemoBeat, requestPivot } from "@/lib/demo/client";
 import { demoChips, demoFlowFor, resolveDemoStep } from "@/lib/demo/flows";
 import type { SceneContract } from "@/lib/knowledge/contract";
@@ -28,6 +29,8 @@ const STILL = "/brands/rolex/submariner-campaign.jpg";
 const NOMINAL_AD_S = 30;
 /** A product question is answered on screen; the pivot route decides, this only mirrors it. */
 const QUESTION = /\?\s*$/;
+/** How long a narrator caption stays on screen. */
+const CAPTION_MS = 9_000;
 
 type Status = "idle" | "preparing" | "live" | "offline" | "failed";
 type Props = { phase: AdPhase; live: boolean; onFinished: () => void };
@@ -49,9 +52,13 @@ export function AdBreak({ phase, live, onFinished }: Props) {
   const [poster, setPoster] = useState("");
   const [contract, setContract] = useState<SceneContract | null>(null);
   const [answer, setAnswer] = useState("");
+  const [caption, setCaption] = useState<{ text: string; at: number } | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [shownFor, setShownFor] = useState(0);
+  const { speak, stop: stopNarrator } = useVoiceover(true);
+  const showCaption = (lines: string[]) => setCaption({ text: lines.join(" "), at: Date.now() });
+  const contractLines = (value: SceneContract | null) => value?.lines.map((line) => line.text) ?? [];
   const began = useRef(false);
   const stage = useRef<HTMLDivElement>(null);
   const release = useRef<() => Promise<void>>(async () => {});
@@ -86,6 +93,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
         offer(first.id);
         setAssetId(first.assetId);
         setStatus("live");
+        void speak({ campaignId: CAMPAIGN_ID, scene: first.brief, role: "opening", contractLines: contractLines(prepared.contract ?? null), onLines: showCaption });
       } catch (caught) {
         setStatus("failed");
         setError(caught instanceof Error ? caught.message : "The live ad could not start.");
@@ -94,6 +102,11 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     void begin();
   }, [phase, live, campaign, flow]); // eslint-disable-line react-hooks/exhaustive-deps -- session functions read live state through refs
 
+  useEffect(() => {
+    if (!caption) return;
+    const timer = setTimeout(() => setCaption(null), CAPTION_MS);
+    return () => clearTimeout(timer);
+  }, [caption]);
 
   // The ad clock runs while the break is on screen.
   useEffect(() => {
@@ -120,6 +133,8 @@ export function AdBreak({ phase, live, onFinished }: Props) {
       await session.steer(result.prompt, result.actionPrompt);
       // A moment keeps the take on its beat; the route says which, and what to offer next.
       setStepId(result.step.beatId); setAssetId(result.step.assetId); setChips(result.nextChips); setPlaying(result.step.title); setContract(result.contract); setPrompt(result.prompt);
+      // The narrator speaks to the brief that ran (a beat's, or a moment's), which the route returns as engineered text.
+      void speak({ campaignId: CAMPAIGN_ID, scene: result.engineered.text, role: result.step.kind === "moment" ? "refine" : "pivot", direction: source || undefined, contractLines: contractLines(result.contract), onLines: showCaption });
     } catch (caught) { setError(caught instanceof Error ? caught.message : "That direction did not go through."); }
     finally { setSending(false); }
   }
@@ -136,11 +151,14 @@ export function AdBreak({ phase, live, onFinished }: Props) {
       if (result.outcome === "overlay") { setAnswer(result.answer); return; }
       await session.steer(result.prompt, result.actionPrompt);
       setContract(result.contract); setPrompt(result.prompt);
+      void speak({ campaignId: CAMPAIGN_ID, scene: source, role: "pivot", direction: source, contractLines: contractLines(result.contract), onLines: showCaption });
     } catch (caught) { setError(caught instanceof Error ? caught.message : "That direction did not go through."); }
     finally { setSending(false); }
   }
 
   async function skip() {
+    stopNarrator();
+    setCaption(null);
     try { if (session.connected) await session.disconnectSession(); } catch { /* the video resumes either way */ }
     onFinished();
   }
@@ -161,6 +179,7 @@ export function AdBreak({ phase, live, onFinished }: Props) {
       {pictureUp && <span className="yt-ad-live"><i />LIVE</span>}
     </div>
     <div className="yt-ad-bottom">
+      {caption && <p className="yt-ad-caption" key={caption.at}>{caption.text}</p>}
       <div className="yt-ad-steer">
         <span className="yt-ad-steer-label">{status === "live" ? (chips.length ? "You direct this ad" : "The walk is over. Say anything, or skip") : status === "offline" ? "Preview: the live model is not connected" : status === "failed" ? "Interactive controls unavailable" : "Preparing the live ad…"}</span>
         <div className="yt-ad-chips">{chips.map((step) => <button key={step.id} type="button" disabled={!canSteer} onClick={() => void runStep(step)}>{step.chip}</button>)}</div>

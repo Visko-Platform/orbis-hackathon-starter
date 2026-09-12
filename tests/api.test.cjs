@@ -291,3 +291,22 @@ test("a page can release its live session by id; bad ids are refused, unknown on
   assert.deepEqual(await unknown.json(), { released: false, alreadyGone: true });
 });
 
+test("the voiceover route writes grounded narrator lines for a scene", async () => {
+  // Writing the lines and synthesizing speech takes longer than the shared 15 s helper allows.
+  const response = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", scene: "A man in a grey coat crosses a rainy street at night, the Rolex on his wrist catching the light.", role: "pivot" }), signal: AbortSignal.timeout(45_000) });
+  assert.ok([200, 503].includes(response.status), `status ${response.status}`);
+  if (response.status === 200) {
+    const result = await response.json();
+    assert.ok(Array.isArray(result.lines) && result.lines.length >= 1 && result.lines.length <= 2);
+    assert.ok(result.lines.every((line) => line.split(/\s+/).length <= 24));
+    assert.equal(result.audio, null, "phase one returns lines only");
+    const spoken = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", scene: "x", role: "pivot", lines: result.lines }), signal: AbortSignal.timeout(60_000) });
+    assert.equal(spoken.status, 200);
+    const speech = await spoken.json();
+    assert.ok(typeof speech.audio === "string" && speech.audio.length > 1000, "phase two returns audio");
+  }
+  // Phase two without a scene or role is what the studio sends; it must still be accepted.
+  const bare = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", lines: ["He checks the time."] }), signal: AbortSignal.timeout(60_000) });
+  assert.ok([200, 502, 503].includes(bare.status), `bare speech call status ${bare.status}`);
+  assert.equal((await post("/api/continuations/voiceover", { campaignId: "nope", scene: "x", role: "pivot" })).status, 400);
+});

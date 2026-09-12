@@ -55,8 +55,9 @@ persistent campaign, knowledge, and audit storage described in
 [Known limits](#known-limits-and-honest-caveats).
 
 Also used: **Google Gemini** — `gemini-3.5-flash` for prompt engineering, scene contracts,
-and product-image description. Optional: without a key the operator's own words are used as
-written.
+product-image description and narrator lines, and `gemini-2.5-flash-preview-tts` to speak
+them. Optional: without a key the operator's own words are used as written and the voiceover
+is simply unavailable.
 
 ---
 
@@ -198,6 +199,12 @@ brand, and stored as a file locally or in Vercel Blob in production. Details in
 matched against the visual notes, rewritten by Gemini for the role (opening / pivot /
 refine), and validated. The UI shows *you said → what was sent*.
 
+**Narrator voiceover** — Gemini writes one or two narrator lines from the product knowledge
+and the scene currently on screen, then speaks them with Gemini TTS (voice *Charon*) and
+plays the WAV in the browser over the take. Orbis's own audio is picture-driven and carries
+no reliable speech, so the words come from us — and, like product answers, they never reach
+the video model ([`lib/knowledge/dialogue.ts`](lib/knowledge/dialogue.ts)).
+
 **Scene contract** — the lines that must stay true for the whole take: product lines from
 the knowledge base, person and setting lines drafted from the brief or a real frame, plus the
 operator's own. Every direction restates the contract, and pinned lines survive even a full
@@ -256,6 +263,7 @@ production ad targeting.
 | Frame capture | [`lib/frame-capture.ts`](lib/frame-capture.ts) | Pulls a real frame out of the running take |
 | Demo path | [`lib/demo/flows.ts`](lib/demo/flows.ts) | Authored beats and moments, cue resolution, three-bubble selection |
 | Demo path | [`lib/demo/client.ts`](lib/demo/client.ts) | Calls the beat and pivot routes from either surface |
+| Voiceover | [`lib/knowledge/dialogue.ts`](lib/knowledge/dialogue.ts) | Writes narrator lines from knowledge, speaks them with Gemini TTS |
 | Viewer page | [`components/watch/`](components/watch) | The video site, the player, and the interactive ad break |
 | Break timing | [`lib/watch/schedule.ts`](lib/watch/schedule.ts) | Prewarm, show, skip, and clock formatting as pure functions |
 | Demo data | [`lib/studio-data.ts`](lib/studio-data.ts) | Campaigns, assets, audiences, scene titles |
@@ -272,6 +280,7 @@ production ad targeting.
 | `POST /api/continuations/contract` | Drafts the scene contract's person and setting lines |
 | `GET,PUT /api/campaigns/[id]/knowledge` | Reads and writes a campaign's product knowledge |
 | `POST /api/campaigns/[id]/knowledge/describe` | Drafts appearance and portrayal notes from a product image (Gemini vision) |
+| `POST /api/continuations/voiceover` | Writes narrator lines from the knowledge and returns them spoken as a WAV |
 | `POST /api/sessions/release` | Releases the provider session when the viewer leaves the page |
 | `GET /api/campaigns/[id]/suggestions` | Knowledge-derived direction suggestions |
 
