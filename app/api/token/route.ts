@@ -12,6 +12,7 @@ export async function POST() {
     );
   }
 
+  try {
   const response = await fetch(`${REACTOR_API_URL}/tokens`, {
     method: "POST",
     headers: {
@@ -19,30 +20,33 @@ export async function POST() {
       "Reactor-API-Key": apiKey,
     },
     body: JSON.stringify({
-      // 6h: docs allow up to 21600. A session warmed at 16:15 must outlive a 17:00 demo.
-      expires_after: 21600,
+      expires_after: 3600,
       authorization_details: [
         {
           type: "session",
           resources: { models: { match: [MODEL_NAME] } },
-          // A cap, not a reservation. Headroom so a mid-demo reload can connect
-          // while an orphaned session ages out. Pair with the KILL button.
-          constraints: { max_sessions: 3 },
+          constraints: { max_sessions: 1 },
         },
       ],
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
   });
 
   const text = await response.text();
   if (!response.ok) {
     return NextResponse.json(
-      { error: `Reactor token request failed (${response.status}): ${text}` },
+      { error: response.status === 429 ? "Reactor is busy. Try connecting again shortly." : `Reactor token request failed (HTTP ${response.status}).` },
       { status: response.status },
     );
   }
 
-  const result = JSON.parse(text) as { jwt?: string };
+  let result: { jwt?: string };
+  try {
+    result = JSON.parse(text) as { jwt?: string };
+  } catch {
+    return NextResponse.json({ error: "Reactor returned an empty or invalid token response. Try again." }, { status: 502 });
+  }
   if (!result.jwt) {
     return NextResponse.json({ error: "Reactor returned no JWT" }, { status: 502 });
   }
@@ -51,4 +55,7 @@ export async function POST() {
     { jwt: result.jwt },
     { headers: { "Cache-Control": "no-store, max-age=0" } },
   );
+  } catch {
+    return NextResponse.json({ error: "Could not reach Reactor's token service. Try again shortly." }, { status: 502 });
+  }
 }

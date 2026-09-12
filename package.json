@@ -9,7 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@google/genai": "^2.22.0",
     "@reactor-team/js-sdk": "^3.0.2",
     "hls.js": "^1.6.13",
     "next": "16.3.5",

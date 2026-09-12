@@ -3,44 +3,45 @@
 import { ReactorView } from "@reactor-team/js-sdk";
 
 type OrbisPlayerProps = {
-  /**
-   * Mount the view for the whole life of the connection, not just while
-   * `runStarted` is true. The starter gated ReactorView on runStarted, which
-   * meant a generation_complete or a rejected start tore the video element out
-   * of the DOM mid-demo. The session hook lowers this flag only right before it
-   * closes the tracks the view is playing.
-   */
-  mounted: boolean;
   connected: boolean;
   muted: boolean;
+  runStarted: boolean;
   status: string;
-  phase: string;
+  statusLabel?: string;
+  posterUrl?: string;
+  placeholder?: string;
 };
 
 export function OrbisPlayer({
-  mounted,
   connected,
   muted,
+  runStarted,
   status,
-  phase,
+  statusLabel,
+  posterUrl,
+  placeholder,
 }: OrbisPlayerProps) {
   return (
     <div className="player">
-      {mounted ? (
+      {runStarted ? (
         <ReactorView
           track="main_video"
           audioTrack="main_audio"
           muted={muted}
-          videoObjectFit="cover"
+          videoObjectFit="contain"
         />
       ) : (
-        <div className="player-placeholder">
-          {connected ? "Connected — arm a run" : "No session"}
-        </div>
+        posterUrl ? (
+          // The generated frame is the visible arena until Orbis starts streaming.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="player-poster" src={posterUrl} alt="Battle opening frame" />
+        ) : (
+          <div className="player-placeholder">
+            {placeholder || (connected ? "Generate a battlefield image to begin" : "Connect to Orbis Stable")}
+          </div>
+        )
       )}
-      <span className={`status status-${status}`}>
-        {status} · {phase}
-      </span>
+      <span className={`status status-${status}`}>{statusLabel || status}</span>
     </div>
   );
 }

@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "Orbis Starter Code",
-  description: "A Reactor client starter for Visko Orbis Stable.",
+  title: "Arena — Live Battle",
+  description: "A team chat battle powered by Visko Orbis Stable.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
