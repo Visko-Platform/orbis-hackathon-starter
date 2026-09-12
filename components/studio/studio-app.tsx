@@ -9,6 +9,7 @@ import { KnowledgePanel } from "./knowledge-panel";
 import { SourceClipPanel } from "./source-clip-panel";
 import { Icon } from "./icon";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
+import { useReleaseOnUnload } from "@/hooks/use-release-on-unload";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 import { audienceProfiles, campaigns, DEFAULT_CAMPAIGN_ID, filmTitles, selectEligibleCampaign, type Campaign, type PlacementZone } from "@/lib/studio-data";
 import { composePlacementFrame, composeProductFrame } from "@/lib/placement-frame";
@@ -16,7 +17,7 @@ import { captureVideoFrame } from "@/lib/frame-capture";
 import type { SceneContract } from "@/lib/knowledge/contract";
 import type { DirectionMode } from "@/lib/live-direction";
 import type { Engineered } from "@/lib/knowledge/engineer";
-import { demoFlowFor, type DemoStep } from "@/lib/demo/flows";
+import { requestPivot } from "@/lib/demo/client";
 
 type Section = "studio" | "campaigns" | "library" | "architecture" | "activity";
 type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign; assetId: string; contract?: SceneContract | null };
@@ -44,6 +45,8 @@ export function StudioApp() {
 
 function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const session = useLiveContinuation(clearJwt);
+  // A refresh or closed tab ends the session server-side, so the next take does not wait for the old one.
+  useReleaseOnUnload();
   const [section, setSection] = useState<Section>("studio");
   const [titleId, setTitleId] = useState(filmTitles[1].id);
   const [profileId, setProfileId] = useState(audienceProfiles[0].id);
@@ -69,11 +72,8 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
   // What must stay true for the take; restated in every direction. Set by prepare, advanced by each pivot.
   const [contract, setContract] = useState<SceneContract | null>(null);
-  // Fixed demo path: the beat the live take is on, the product state it left
-  // the take in, and a first beat waiting for its opening frame.
-  const [demoStepId, setDemoStepId] = useState<string | null>(null);
+  // The product view the live take is running with; directions name it so views of the same product are preferred.
   const [liveAssetId, setLiveAssetId] = useState("");
-  const [pendingDemoStart, setPendingDemoStart] = useState<DemoStep | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const [loadingSceneId, setLoadingSceneId] = useState("");
   const sourceDetails = useRef<HTMLDetailsElement>(null);
@@ -86,7 +86,6 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const asset = campaign.assets.find((item) => item.id === assetId) ?? campaign.assets[0];
   const artwork = assetId === "upload" && upload ? upload.file : asset.src;
   const artworkKey = typeof artwork === "string" ? artwork : "upload";
-  const flow = demoFlowFor(campaignId);
 
   const addActivity = useCallback((label: string, detail: string) => {
     setActivity((current) => [{ id: crypto.randomUUID(), label, detail, time: new Date().toISOString() }, ...current].slice(0, 150));
@@ -122,17 +121,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     return () => { cancelled = true; release(resultUrl); };
   }, [frame, artwork, zone]); // eslint-disable-line react-hooks/exhaustive-deps -- artworkKey derives from artwork
 
-  // A take that ends leaves the demo path; the next one starts from the first beat.
-  useEffect(() => { if (!session.runStarted) { setDemoStepId(null); setLiveAssetId(""); } }, [session.runStarted]);
-  // The first demo beat starts once the opening frame shows its product.
-  useEffect(() => {
-    if (!pendingDemoStart || compositing || !composite || locked) return;
-    const stepAsset = campaign.assets.find((item) => item.id === pendingDemoStart.assetId);
-    if (!stepAsset || composite.artworkKey !== stepAsset.src) return;
-    const step = pendingDemoStart;
-    setPendingDemoStart(null);
-    void startContinuation({ sceneBrief: step.brief, verbatim: true }).then((started) => { if (started) setDemoStepId(step.id); });
-  }); // eslint-disable-line react-hooks/exhaustive-deps -- runs after every render until the pending start is consumed
+  useEffect(() => { if (!session.runStarted) setLiveAssetId(""); }, [session.runStarted]);
 
   function chooseCampaign(id: string) {
     if (locked) return;
@@ -213,13 +202,13 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     addActivity("Product image added", `${campaign.brand} · ${file.name}`);
   }
 
-  async function startContinuation(overrides: { sceneBrief?: string; verbatim?: boolean } = {}): Promise<boolean> {
-    const brief = (overrides.sceneBrief ?? sceneBrief).trim();
+  async function startContinuation(): Promise<boolean> {
+    const brief = sceneBrief.trim();
     if (!composite || locked) return false;
     if (!brief) { setError("Add a scene brief before generating."); return false; }
     setPreparing(true); setError("");
     try {
-      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief: brief, engineer: overrides.verbatim ? false : undefined }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief: brief }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok || !result.prompt || !result.runId) throw new Error(result.error || "Could not prepare this scene.");
       setPreparedRun(result); setBrandRetained(true);
@@ -233,42 +222,12 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Generation failed."); addActivity("Take could not start", caught instanceof Error ? caught.message : "Unknown error"); return false; }
     finally { setPreparing(false); }
   }
-  // One beat of the campaign's fixed demo path, from a bubble or from words
-  // that match one. Before the take exists, the first beat sets the product
-  // and the opening brief and starts the take.
-  async function runDemoStep(step: DemoStep, source?: string): Promise<PivotResult> {
-    if (!flow) return { ok: false };
-    if (!session.runStarted) {
-      if (step.id !== flow.steps[0].id) { setError(`Start with “${flow.steps[0].chip}”.`); return { ok: false }; }
-      if (locked) return { ok: false };
-      setError("");
-      setSceneBrief(step.brief);
-      setAssetSelections((current) => ({ ...current, [campaignId]: step.assetId }));
-      setPendingDemoStart(step);
-      addActivity("Demo path started", `${flow.name} · ${step.title}`);
-      return { ok: true };
-    }
-    const target = preparedRun?.campaign ?? campaign;
-    setError("");
-    try {
-      const response = await fetch("/api/continuations/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: target.id, stepId: step.id, direction: source ?? "", currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "", contract }), signal: AbortSignal.timeout(15_000) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not run this demo step.");
-      await session.steer(result.prompt, result.actionPrompt ?? null);
-      setDemoStepId(step.id); setLiveAssetId(step.assetId); setBrandRetained(true);
-      if (result.contract) setContract(result.contract);
-      addActivity(`Demo step · ${step.chip}`, source ? `“${source}” → ${step.title}` : step.title);
-      return { ok: true, engineered: result.engineered as Engineered, actionPrompt: result.actionPrompt ?? null };
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not run this demo step."); return { ok: false }; }
-  }
   async function pivot(direction: string, mode: DirectionMode, preserveBrand: boolean): Promise<PivotResult> {
     // A live take keeps its prepared campaign; a product question can be asked against the workspace campaign without one.
     const target = session.runStarted && preparedRun ? preparedRun.campaign : campaign;
     setError("");
     try {
-      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: target.id, assetId: session.runStarted && preparedRun ? liveAssetId || preparedRun.assetId : assetId, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "", contract: session.runStarted ? contract : null }), signal: AbortSignal.timeout(15_000) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not prepare this direction.");
+      const result = await requestPivot({ direction, mode, preserveBrand, campaignId: target.id, assetId: session.runStarted && preparedRun ? liveAssetId || preparedRun.assetId : assetId, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "", contract: session.runStarted ? contract : null });
       if (result.outcome === "overlay") {
         const answer = String(result.answer ?? "");
         setOverlay({ text: answer, at: Date.now() });
@@ -304,6 +263,12 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       addActivity("Scene contract read from frame", result.contract.lines.map((line: { text: string }) => line.text).join(" · "));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not read the scene."); }
   }
+  // The viewer's side of the demo opens in a new tab. One key gets one live
+  // session, so the studio's own session is released first.
+  function openUserDemo() {
+    window.open("/watch", "_blank", "noopener");
+    if (session.connected) void runAction(session.disconnectSession, "Session released for the user demo");
+  }
   async function runAction(action: () => Promise<void>, label: string) {
     setError("");
     try { await action(); addActivity(label, preparedRun ? `Take ${preparedRun.runId.slice(0, 8)}` : "Studio session"); }
@@ -326,7 +291,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
 
       <div hidden={section !== "studio"} className="studio-screen">
         <div className="studio-grid">
-          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} contract={contract} onContractChange={setContract} onReadContract={readContractFromFrame} canReadContract={Boolean(composite)} onStart={() => void startContinuation()} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} demoStepId={demoStepId} demoPending={Boolean(pendingDemoStart)} onDemoStep={runDemoStep} />
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} contract={contract} onContractChange={setContract} onReadContract={readContractFromFrame} canReadContract={Boolean(composite)} onStart={() => void startContinuation()} onUserDemo={openUserDemo} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
           <aside className="inspector" aria-label="Product setup">
             {locked && <div className="locked-notice"><Icon name="check" size={14} />Product and frame are held for this take. Use the director to steer live.</div>}
             <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />

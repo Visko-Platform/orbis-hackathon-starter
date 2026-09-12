@@ -89,29 +89,14 @@ Three CC BY 3.0 Blender Foundation clips ship with the app.
 
 ### Rolex demo path
 
-With Rolex selected, the director shows **ROLEX WALK · FIXED PATH** with a
-single bubble, **Walk the street**. It selects the Submariner as the opening
-frame, fills the scene brief and starts the take. Once live, three bubbles
-offer the next beats (**Enter the boutique**, **Try the Datejust**, **Show the
-back**, **Put it back on**, **Walk out**); typing a matching phrase such as
-"show the back" or "put it back on" runs the same beat. Beats are authored in
-`lib/demo/flows.ts`, served by `POST /api/continuations/demo`, validated
-against the Rolex knowledge (never rewritten by Gemini), and sent as an action
-beat followed by the settled scene. Each beat carries the appearance notes of
-its reference views (for example the flat, mirror-polished stainless steel
-case back) plus a rigid-body rule, and beats that handle the watch use an
-authored physical action ("his hands turn it over in one smooth rotation")
-instead of the scene-transform wording, so the object turns rather than
-warps. The flow names one cast member (a Chinese man in a charcoal overcoat)
-and a watch ledger per beat (on the wrist, in his hands, on the tray); both
-are restated as "Continuity:" in every beat, brand marks are declared static
-printed graphics, and the demo's opening brief is sent verbatim
-(`engineer: false`) rather than rewritten by Gemini. Each beat also returns
-the scene contract it leaves the take under (cast, ledger and marks as pinned
-lines), so a free direction typed after a beat still carries the same man and
-the same watch. The
-Rolex knowledge seed (`lib/knowledge/seeds.ts`) keeps every boutique interior
-showing the word ROLEX with the gold crown and only Rolex watches.
+`lib/demo/flows.ts` holds an authored six-beat walk (street → boutique → swap →
+inspect → wear → exit) with a fixed cast, a per-beat watch ledger (on the wrist,
+in his hands, on the tray) and static brand marks, all restated as a continuity
+line in both transition beats. `POST /api/continuations/demo` runs one beat,
+validated against the product knowledge but never rewritten, and returns the
+scene contract the beat leaves the take under. The path is presented to viewers
+in the user demo's interactive ad (below); the studio's director panel has no
+bubbles and sends every direction as written.
 
 ## 4. Runtime architecture
 
@@ -200,6 +185,29 @@ later by the live hook. A newer direction cancels a pending settle. A
 refinement returns `actionPrompt: null`. When the direction names a product
 view the campaign has a reference for ("show the back", "open the clasp"), the
 matching asset's appearance is added to both beats as `productNotes`.
+
+### User demo: the viewer's watch page (`/watch`)
+
+The "User demo" button next to "Generate live" opens `/watch` in a new tab
+and releases the studio's live session first (one session per key). The
+page is a fictional video site ("ViewTube", `components/watch/`) playing the
+Sintel trailer from `public/scenes` (CC BY 3.0, credited). Go fullscreen,
+watch, and at `adAt` (default 8 s, `?adAt=<seconds>`) the player pauses
+under an interactive Rolex ad: the Orbis take on the Rolex demo path, warmed
+up 6 s earlier (`lib/watch/schedule.ts`), with the next bubbles from
+`demoChips`, a free-text field (a cue runs that beat, a question is answered
+on screen, anything else is a pivot carrying the scene contract) and
+"Skip Ad" after 5 s, which releases the session and resumes the video.
+`?live=0` shows the ad with the campaign still instead of connecting. The
+browser-side requests both the studio and the ad use live in
+`lib/demo/client.ts`. The "Up next" thumbnails are frames cut from the same
+open-movie clips (`public/scenes/thumbs`).
+
+Closing, refreshing, or leaving either page ends the live session
+server-side: `hooks/use-release-on-unload.ts` sends the session id as a
+beacon (which outlives the page) to `POST /api/sessions/release`, which
+deletes it with the API key, so the next take does not wait for the old
+session to time out.
 
 ### `POST /api/continuations/contract`
 

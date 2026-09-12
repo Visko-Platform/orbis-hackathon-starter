@@ -7,7 +7,6 @@ import type { ContractKind, ContractLine, SceneContract } from "@/lib/knowledge/
 import type { Engineered } from "@/lib/knowledge/engineer";
 import type { Campaign } from "@/lib/studio-data";
 import type { DirectionMode } from "@/lib/live-direction";
-import { demoChips, demoFlowFor, resolveDemoStep, stepIndex, type DemoStep } from "@/lib/demo/flows";
 import { Icon } from "./icon";
 
 // What the studio reports back for one submitted direction: a steer carries the
@@ -31,13 +30,11 @@ type Props = {
   onReadContract: (video: HTMLVideoElement | null) => Promise<void>;
   canReadContract: boolean;
   onStart: () => void;
+  /** Opens the viewer's watch page (the user demo) in a new tab. */
+  onUserDemo: () => void;
   onPivot: (direction: string, mode: DirectionMode, preserveBrand: boolean) => Promise<PivotResult>;
   onAction: (action: () => Promise<void>, label: string) => void;
   onAddProduct: () => void;
-  /** Fixed demo path: the beat the take is on, and whether its first beat is starting. */
-  demoStepId: string | null;
-  demoPending: boolean;
-  onDemoStep: (step: DemoStep, source?: string) => Promise<PivotResult>;
 };
 
 // Mirrors the server's question check: a trailing "?" is answered on screen, not sent to Orbis.
@@ -46,7 +43,7 @@ const QUESTION = /\?\s*$/;
 const KIND_LABELS: Record<ContractKind, string> = { product: "Product", person: "Person", setting: "Setting", custom: "Custom" };
 const MAX_CONTRACT_LINES = 12;
 
-export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, contract, onContractChange, onReadContract, canReadContract, onStart, onPivot, onAction, onAddProduct, demoStepId, demoPending, onDemoStep }: Props) {
+export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, contract, onContractChange, onReadContract, canReadContract, onStart, onUserDemo, onPivot, onAction, onAddProduct }: Props) {
   const player = useRef<HTMLDivElement>(null);
   const [compare, setCompare] = useState(false);
   const [direction, setDirection] = useState("");
@@ -62,9 +59,6 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
   const busy = preparing || session.busy;
   const isQuestion = QUESTION.test(direction.trim());
   const canSubmit = Boolean(direction.trim()) && !submitting && !busy && (live || isQuestion);
-  const flow = demoFlowFor(campaign.id);
-  const chips = flow ? demoChips(flow, live ? demoStepId : null) : [];
-  const stepNumber = flow && demoStepId ? stepIndex(flow, demoStepId) + 1 : 0;
 
   useEffect(() => { setReceipt(null); setPreserveBrand(true); }, [runId]);
   // Before a take a direction sets the scene; during one, small adjustments are the usual case.
@@ -84,18 +78,8 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
     const source = direction.trim();
     setSubmitting(true);
     try {
-      // Words that name a beat of the demo path take that beat; anything else is an open direction.
-      const step = flow && live && !isQuestion ? resolveDemoStep(flow, source) : null;
-      const result = step ? await onDemoStep(step, source) : await onPivot(source, mode, preserveBrand);
+      const result = await onPivot(source, mode, preserveBrand);
       if (result.ok) { setReceipt({ source, engineered: result.engineered ?? null, answered: result.answer !== undefined, actionPrompt: result.actionPrompt ?? null }); setDirection(""); }
-    } finally { setSubmitting(false); }
-  }
-  async function runChip(step: DemoStep) {
-    if (submitting || busy) return;
-    setSubmitting(true);
-    try {
-      const result = await onDemoStep(step);
-      if (result.ok && result.engineered) setReceipt({ source: step.chip, engineered: result.engineered, answered: false, actionPrompt: result.actionPrompt ?? null });
     } finally { setSubmitting(false); }
   }
 
@@ -151,6 +135,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
       <div className="player-footer">
         <div className="partner-info"><img src={campaign.logo} alt={campaign.brand} /><div><span>{live && !brandRetained ? "Original campaign" : "In-scene partner"}</span><strong>{campaign.brand}</strong></div></div>
         <div className="transport-controls">
+          <button className="button secondary" type="button" title="Open the viewer experience in a new tab: a video page where the interactive Rolex ad takes over the player. Releases this studio's live session first (one live session per key)." onClick={onUserDemo}><Icon name="film" size={15} />User demo</button>
           {live ? <><button type="button" className="icon-button" onClick={session.toggleMuted} aria-label={session.muted ? "Enable audio" : "Mute audio"}><Icon name={session.muted ? "mute" : "audio"} /></button><button className="button secondary" disabled={busy} onClick={() => onAction(session.pauseOrResume, session.paused ? "Resumed" : "Paused")}><Icon name={session.paused ? "play" : "pause"} size={15} />{session.paused ? "Resume" : "Pause"}</button><button className="button stop-button" disabled={busy} onClick={() => onAction(session.reset, "Take ended")}><Icon name="stop" size={14} />End take</button></>
             : <button className="button primary" type="button" disabled={!framePreview || busy} onClick={onStart}>{busy ? <span className="spinner" /> : <Icon name="play" size={16} />}{busy ? "Preparing…" : "Generate live"}</button>}
         </div>
@@ -161,11 +146,6 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
     <section className="director-panel" aria-labelledby="director-heading">
       <div className="director-heading"><div><span className="eyebrow">DIRECT THE SCENE</span><h2 id="director-heading">What should change around the product?</h2></div><span className={`subtle-badge ${live ? "live-badge" : ""}`}><span className="state-dot" />{live ? "Live control" : "Ready when you are"}</span></div>
       <div className="direction-modes" role="group" aria-label="Direction mode"><button type="button" disabled={submitting} aria-pressed={mode === "pivot"} className={mode === "pivot" ? "selected" : ""} onClick={() => setMode("pivot")}><Icon name="spark" size={16} />Change direction</button><button type="button" disabled={submitting} aria-pressed={mode === "refine"} className={mode === "refine" ? "selected" : ""} onClick={() => setMode("refine")}><Icon name="refresh" size={15} />Refine this scene</button></div>
-      {flow && chips.length > 0 && <div className="demo-path" role="group" aria-label={`${flow.name} demo path`}>
-        <div className="demo-path-head"><span className="eyebrow">{flow.name.toUpperCase()} · FIXED PATH</span><span>{live && stepNumber ? `Step ${stepNumber} of ${flow.steps.length} · ${flow.steps[stepNumber - 1].chip}` : demoPending ? "Starting the take…" : live ? "Tap a bubble to begin the path" : "The first bubble sets the scene and starts the take"}</span></div>
-        <div className="demo-chips">{chips.map((step) => <button key={step.id} type="button" className={`demo-chip ${!live ? "start" : ""}`} disabled={submitting || busy || demoPending} onClick={() => void runChip(step)}><Icon name={live ? "arrow" : "play"} size={12} />{step.chip}</button>)}</div>
-        {live && <p className="demo-hint">Or type it your own way: “show the back” jumps to that beat.</p>}
-      </div>}
       <form className="prompt-box" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
         <label className="sr-only" htmlFor="live-direction">Live direction prompt</label>
         <textarea id="live-direction" value={direction} disabled={submitting} maxLength={4000} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} placeholder={mode === "pivot" ? "A new setting for the product. A rooftop at night, neon rain, the camera circles it…" : "Warmer light, move closer to the product, slow the camera down…"} />

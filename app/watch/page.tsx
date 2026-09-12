@@ -6,7 +6,7 @@ import "./watch.css";
 
 export const metadata: Metadata = {
   title: "Sintel — Official Trailer (Open Movie) · ViewTube",
-  description: "A viewer's watch page with an interactive ad break, for demonstrating Orbis Ad.",
+  description: "A viewer's watch page with an interactive ad break, for demonstrating Adtractive.",
 };
 
 export default function Watch() {
