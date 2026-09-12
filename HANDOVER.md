@@ -220,7 +220,10 @@ under an interactive Rolex ad: the Orbis take on the Rolex demo path, warmed
 up 6 s earlier (`lib/watch/schedule.ts`), with the next three bubbles the
 route returns (beats that fit, then moments), a free-text field (a cue runs that beat or moment, a question is answered
 on screen, anything else is a pivot carrying the scene contract) and
-"Skip Ad" after 5 s, which releases the session and resumes the video.
+"Skip Ad" after 5 s, which releases the session and resumes the video. The
+composed opening frame the take starts from stays on the stage as a poster
+until the live video paints its first frame (`hooks/use-first-frame.ts`), so
+the warm-up never shows a black stage.
 `?live=0` shows the ad with the campaign still instead of connecting. The
 browser-side requests both the studio and the ad use live in
 `lib/demo/client.ts`. The "Up next" thumbnails are frames cut from the same

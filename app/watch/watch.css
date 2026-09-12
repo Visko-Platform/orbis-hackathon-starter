@@ -71,6 +71,8 @@
 .yt-ad-stage { position:absolute; inset:0; display:grid; place-items:center; }
 .yt-ad-view,.yt-ad-view video { width:100%; height:100%; display:block; object-fit:contain; }
 .yt-ad-still { width:100%; height:100%; object-fit:cover; filter:brightness(.55); }
+/* The composed opening frame, framed exactly like the live video so the first frame continues it. */
+.yt-ad-poster { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; }
 .yt-ad-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:rgba(0,0,0,.35); font-size:15px; letter-spacing:.2px; text-align:center; padding:24px; }
 .yt-ad-loading small { color:var(--yt-muted); max-width:520px; line-height:1.5; }
 .yt-ad-failed strong { font-size:17px; }
