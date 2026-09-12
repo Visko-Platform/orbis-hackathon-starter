@@ -102,6 +102,7 @@ None yet.
 | 260911-qab | create a vercel website | 2026-09-11 | 463367a | [260911-qab-create-a-vercel-website](./quick/260911-qab-create-a-vercel-website/) |
 | 260912-g80 | Redesign front page to match Family World modernist Claude Design import, add Google login button top right | 2026-09-12 | 6c92d17 | [260912-g80-redesign-front-page-to-match-family-worl](./quick/260912-g80-redesign-front-page-to-match-family-worl/) |
 | 260912-keg | Add the "Add Family" page (Claude Design import: multi-photo intake + saved-list flow) | 2026-09-12 | 12c8ca1 | [260912-keg-add-the-family-page-import-claude-design](./quick/260912-keg-add-the-family-page-import-claude-design/) |
+| 5 | add these files to the working feature branch romy-ilano-family-video-memories | 2026-09-12 | bcf85ff | — |
 
 ## Deferred Items
 
