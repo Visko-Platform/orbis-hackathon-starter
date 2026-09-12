@@ -388,6 +388,106 @@ export const campaigns: Campaign[] = [
       zone: { x: 0.7, y: 0.24, width: 0.19, height: 0.24 },
     },
   },
+  {
+    id: "bmw-the-drive-home",
+    brand: "BMW",
+    logo: "/brands/bmw/logo.svg",
+    assets: [
+      {
+        id: "bmw-roundel",
+        label: "BMW roundel",
+        src: "/brands/bmw/logo.svg",
+        kind: "logo",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:BMW.svg",
+        integration:
+          "The BMW roundel appears once on an existing surface in the scene - a dealership window, a parking sign or the car's own grille - never floating in the frame.",
+        appearance:
+          "A circle quartered in blue and white inside a black ring, with the letters BMW in white capitals at the top of the ring.",
+      },
+      {
+        id: "bmw-3-series",
+        label: "BMW 3 Series sedan",
+        src: "/brands/bmw/3-series.jpg",
+        kind: "product",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:BMW_3_SERIES_SEDAN_(G20)_China.jpg",
+        cues: ["car", "sedan", "bmw", "grille", "drive", "driving", "parked"],
+        integration:
+          "The 3 Series drives through the shot or waits at the kerb in the middle distance, moving with the traffic already in the scene. The camera does not stop on it.",
+        appearance:
+          "A dark navy four-door sedan with a low roofline, large twin kidney grilles outlined in chrome, slim swept-back headlights, black alloy wheels and the BMW roundel on the bonnet.",
+      },
+    ],
+    campaign: "The Drive Home",
+    category: "automotive",
+    accent: "#0066b1",
+    ink: "#ffffff",
+    priority: 87,
+    segments: ["luxury", "travel", "design"],
+    allowedTitles: ["sintel-mountain", "bunny-forest", "tears-of-steel-bridge"],
+    placement: {
+      surface: "street-side vehicle",
+      label: "Vehicle in scene",
+      instruction:
+        "Place one BMW 3 Series in the established street traffic or parked at the kerb. It belongs to the environment, is never presented to camera as an endorsement, and no one comments on it.",
+      zone: { x: 0.6, y: 0.44, width: 0.28, height: 0.22 },
+    },
+  },
+  {
+    id: "ray-ban-long-light",
+    brand: "Ray-Ban",
+    logo: "/brands/ray-ban/logo.svg",
+    assets: [
+      {
+        id: "ray-ban-logo",
+        label: "Ray-Ban signature",
+        src: "/brands/ray-ban/logo.svg",
+        kind: "logo",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:Ray-Ban_logo.svg",
+        integration:
+          "The Ray-Ban signature appears once, on an existing optician or boutique window in the background architecture.",
+        appearance: "The words Ray-Ban in a red handwritten script with a small trademark mark.",
+      },
+      {
+        id: "ray-ban-clubmaster",
+        label: "Clubmaster sunglasses",
+        src: "/brands/ray-ban/clubmaster.jpg",
+        kind: "product",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:2023_Okulary_przeciws%C5%82oneczne_Ray-Ban_(1).jpg",
+        cues: ["sunglasses", "glasses", "shades", "clubmaster", "lenses", "put them on", "take them off"],
+        integration:
+          "The Clubmaster is worn by the character or held in one hand. When it catches the light the browline and the gold bridge read clearly, and the frame stays exactly as shown in the reference.",
+        appearance:
+          "A browline frame: thick glossy black upper rims and temple tips, a thin gold metal lower rim and bridge, gold hinges, and dark green G-15 lenses. The white Ray-Ban signature sits on the left lens.",
+      },
+      {
+        id: "ray-ban-temple-detail",
+        label: "Temple and signature, close up",
+        src: "/brands/ray-ban/wayfarer-detail.jpg",
+        kind: "product",
+        sourceUrl: "https://commons.wikimedia.org/wiki/File:Ray-Ban_Classic_Wayfarer_RB5121_47-22.jpg",
+        variantOf: "ray-ban-clubmaster",
+        cues: ["arm", "temple", "side", "hinge", "close up", "folded", "engraving", "the logo"],
+        integration:
+          "A close handheld view of the folded frame, turned so the Ray-Ban name on the temple faces the camera.",
+        appearance:
+          "A glossy black acetate temple arm photographed against white, with Ray-Ban printed in small white script near the hinge and a grey temple tip.",
+      },
+    ],
+    campaign: "The Long Light",
+    category: "eyewear",
+    accent: "#c8102e",
+    ink: "#ffffff",
+    priority: 84,
+    segments: ["apparel", "design", "music"],
+    allowedTitles: ["sintel-mountain", "bunny-forest", "tears-of-steel-bridge"],
+    placement: {
+      surface: "worn eyewear",
+      label: "Worn by the character",
+      instruction:
+        "The character wears or holds one pair of Ray-Ban Clubmaster sunglasses. They are part of the wardrobe, never presented to camera as an endorsement.",
+      zone: { x: 0.66, y: 0.3, width: 0.2, height: 0.16 },
+    },
+  },
 ];
 
 export function selectEligibleCampaign(profileId: string, titleId: string) {
