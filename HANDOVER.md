@@ -23,6 +23,11 @@ image upload, Orbis start, a complete scene pivot, pause, resume, end, and
 disconnect.
 
 Repository: <https://github.com/mian-abd/Orbis-ad>
+Live deployment: TODO_VERCEL_URL
+
+Built at the Live Models Hackathon (Visko x Reactor x Nebius). The live video is
+Visko's Orbis model, reached through the Reactor platform; see the README for what
+each partner provides and what this build does and does not use.
 
 ## 2. Start the project
 
@@ -78,8 +83,9 @@ already ignored by Git.
 7. Demonstrate pause/resume, then end and disconnect the take.
 8. Open **Activity** to show or export the browser-local history.
 
-The **Scene library** sector is paused: story presets are parked while the
-studio focuses on the product.
+The **Scene library** is live: each card loads its real clip and poster frame
+directly into Studio as the reference frame, alongside the chosen product image.
+Three CC BY 3.0 Blender Foundation clips ship with the app.
 
 ### Rolex demo path
 
@@ -273,7 +279,14 @@ session is released.
 
 ## 11. Deployment checklist
 
-- Configure `REACTOR_API_KEY` as a server secret.
+- Configure `REACTOR_API_KEY` (required) and `GEMINI_API_KEY` (optional) as
+  server-side secrets. Never prefix either with `NEXT_PUBLIC_`.
+- Connect a Vercel Blob store before relying on saved knowledge:
+  `lib/knowledge/store.ts` uses a local file in development and Vercel Blob in
+  production, switching on `BLOB_READ_WRITE_TOKEN`. Without a connected store the
+  disk is read-only and **Save product info** fails; reads still fall back to the
+  in-code seeds. `lib/knowledge/audit.ts` skips writing entirely when `VERCEL` is
+  set, so the prompt-version log is a development-only record today.
 - Use Node.js 20.9+ and run `npm ci && npm run build`.
 - Put authentication and rate limiting in front of `/api/token`.
 - Confirm the deployment supports WebRTC and does not block Reactor traffic.

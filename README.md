@@ -1,132 +1,312 @@
 # Orbis Ad
 
-A video-first workspace for dynamic, in-scene brand placements. Bring a film
-clip or reference image, choose real campaign artwork, and direct a live Orbis
-scene as it unfolds.
+**Product placement that is generated live, inside the scene — not cut in around it.**
 
-## What the hackathon build demonstrates
+Orbis Ad is a studio for *dynamic in-scene brand placement*. You bring a product and a
+moment of footage; the app composes a starting frame, grounds a prompt in the brand's own
+approved knowledge, and hands it to a live video model that keeps generating — so the
+placement is part of the scene, and you can redirect that scene while it plays.
 
-- A responsive Studio, Campaigns gallery, playable Scene library, and Activity history.
-- Three bundled, browser-ready clips from Blender Foundation open movies, with
-  poster frames, attribution, license labels, and [source links](public/scenes/SOURCES.md).
-- Fourteen original assets from Pepsi, McDonald's, Nike, and Rolex, stored locally with
-  [official source links](public/brands/SOURCES.md). No generated brand assets.
-- Per-campaign artwork uploads and explicit asset selection.
-- Video upload (up to 250 MB), scrubbing, crop/fit controls, and 16:9 frame capture;
-  image uploads up to 10 MB are also supported.
-- Original/placement comparison and artwork position/size controls.
-- Manual campaign choice or optional matching against three sample audiences.
-- Live video/audio through Reactor, with acknowledged start, pause, resume,
-  reset, and disconnect controls.
-- A free-form director: **Change direction** replaces the old scene brief;
-  **Refine this scene** retains recent context. **Keep brand in scene** is optional.
-- Local creative history with JSON export and model diagnostics.
-- A per-campaign **product knowledge base** (appearance, visual notes, facts, never-say,
-  protections) edited in the inspector, and **prompt engineering**: the scene brief and
-  every live direction are rewritten with that knowledge before they reach Orbis, with a
-  "You said → Sent" receipt. Product questions are answered on screen from approved facts.
-  See [docs/KNOWLEDGE_DIRECTOR.md](docs/KNOWLEDGE_DIRECTOR.md).
-- A **fixed demo path** for Rolex (`lib/demo/flows.ts`): street walk → boutique → swap to
-  the Datejust → show the case back → back on the wrist → walk out. Three bubbles in the
-  director offer the next beats; typing "show the back" jumps to that beat. Each beat lands
-  as two Orbis prompts (action, then settled) with the matching reference views' appearance,
-  and the Rolex knowledge seed keeps every boutique showing ROLEX and the crown.
+| | |
+|---|---|
+| **Live demo** | TODO_VERCEL_URL |
+| **Source** | <https://github.com/mian-abd/Orbis-ad> |
+| **Built at** | Live Models Hackathon — Visko × Reactor × Nebius, Ferry Building, San Francisco |
 
-This prototype generates a new continuation from a composed reference frame.
-It does **not** rewrite every encoded frame of an existing movie or guarantee
-pixel-perfect logos in generated frames. The Scene library includes three open-film
-demo clips; you can also upload licensed footage to use as the starting point.
+---
 
-## Run locally
+## Built on the hackathon stack
 
-Requirements:
+This project runs on the partners' platforms end to end — it is not a mock.
 
-- Node.js 20.9 or newer
-- A Reactor API key with access to `reactor/visko-orbis-stable`
+### Visko — Orbis, the live model
 
-Create `.env.local`:
+[Orbis](https://www.reactor.inc/models/visko-orbis-stable) is Visko's real-time video
+model: it generates video continuously and responds to new instructions as it runs.
+Everything on screen in this app is Orbis output. We use `reactor/visko-orbis-stable`,
+conditioned on a composed 16:9 starting frame, and steered mid-stream while the take is
+live. The whole product idea depends on Orbis being *live* — a finished clip could not be
+redirected mid-scene, and the ad could not adapt to the viewer.
 
-```dotenv
-REACTOR_API_KEY=your_reactor_api_key
-GEMINI_API_KEY=your_gemini_api_key   # optional: prompt engineering and suggested directions
+### Reactor — the real-time generative video platform
+
+[Reactor](https://www.reactor.inc) is how we reach Orbis, and it does the heavy lifting:
+
+- **Auth** — our server exchanges a held API key for a short-lived, model-scoped JWT
+  ([`app/api/token/route.ts`](app/api/token/route.ts)); the browser never sees the key.
+- **Transport** — `@reactor-team/js-sdk` v3 opens the WebRTC session and delivers the
+  `main_video` / `main_audio` tracks into `<ReactorView>`.
+- **Command protocol** — `set_image` → `set_prompt` → `start`, then `set_prompt` again to
+  steer, plus pause / resume / reset. Every command is confirmed against the model's own
+  events (`image_accepted`, `conditions_ready`, `prompt_accepted`, `generation_started`)
+  rather than assumed — see [`hooks/use-live-continuation.ts`](hooks/use-live-continuation.ts).
+
+### Nebius — AI cloud partner
+
+[Nebius](https://nebius.com) (NASDAQ: NBIS) is the event's AI cloud partner and provides
+Builder Program credits to participants. It is **not** in this app's runtime path today —
+the app is a Next.js front end talking to Reactor — so we are not claiming a Nebius
+dependency we do not have. It is the natural host if this moves off serverless for the
+persistent campaign, knowledge, and audit storage described in
+[Known limits](#known-limits-and-honest-caveats).
+
+Also used: **Google Gemini** (`gemini-3.5-flash`) for prompt engineering and product
+description drafting. Optional — the app degrades cleanly without a key.
+
+---
+
+## The idea
+
+A sponsor should not interrupt the story. It should be *in* the story — the storefront the
+character walks past, the watch on their wrist, the can on the table — and it should be
+able to differ by viewer, by moment, and by what the viewer asks to see.
+
+That needs video that is still being generated at the moment of delivery. Orbis makes that
+possible, so this build works through the whole chain:
+
+```
+ product image ─┐
+                ├─► composed 16:9 starting frame ─┐
+ reference frame┘   (lib/placement-frame.ts)      │
+                                                  ▼
+ brand knowledge ─► guard ─► retrieve ─► engineer (Gemini) ─► validate ─► PromptVersion
+ (approved facts,                                                             │
+  appearance, rules)                                                          ▼
+                                     Reactor JWT ─► set_image → set_prompt → start
+                                                                              │
+ live direction / demo beat ─► same guard+engineer path ─► set_prompt (steer) ─┤
+                                                                              ▼
+                                                          streaming video + audio
 ```
 
-Then run:
+Two rules hold the whole thing together:
+
+1. **The browser never authors a prompt.** Every prompt is built server-side from approved
+   records and persisted as a `PromptVersion` before it is sent.
+2. **The brand's own words win.** Forbidden claims, competitor names, and protected details
+   are enforced before text reaches the model — not hoped for afterwards.
+
+---
+
+## Quickstart
+
+Requirements: **Node.js 20.9+**, and a Reactor API key with access to
+`reactor/visko-orbis-stable`.
 
 ```bash
+git clone https://github.com/mian-abd/Orbis-ad.git
+cd Orbis-ad
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
+Fill in `.env.local`:
+
+```dotenv
+REACTOR_API_KEY=your_reactor_api_key
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+`REACTOR_API_KEY` is required for live video. `GEMINI_API_KEY` is optional: without it
+everything still runs, and operator text is used as written instead of being rewritten
+against the knowledge base.
+
 Open <http://localhost:3000>.
 
-## Demo flow
+Optional — fetch the Rolex reference assets from rolex.com:
 
-1. Choose a brand or **Add product image**. The image you choose is what gets
-   placed; with no reference frame it is also the starting frame.
-2. Under **Product info**, **Draft from product image** to fill in what it looks
-   like, edit, add facts and never-say lines, and save.
-3. Optionally add a reference frame: pick a playable clip in **Scene library**
-   (it arrives with its poster frame ready to use, and you can scrub the source
-   video for another frame) or upload your own clip/still. Review **Original**
-   versus **Placement** and adjust the scene brief and artwork position.
-4. Select **Generate live**. Startup can take time while the provider allocates
-   and warms the model; the UI shows the current phase.
-5. Type a new direction and select **Pivot live** (or press Ctrl/Cmd+Enter).
-   Try a new setting, lighting, camera movement, or action. Use **Refine this
-   scene** for smaller adjustments; uncheck **Keep brand in scene** when the
-   new direction should also be free to change the sponsor.
-6. Pause/resume or end the take. Disconnect when finished to release the session.
-7. Review **Activity** and export the local creative history.
+```bash
+npm run assets:rolex
+```
 
-Directions are asynchronous. An acknowledgement means the model accepted the
-prompt, not that the requested visual result is guaranteed. Video evolves over
-subsequent generated chunks. See the
-[Reactor model API](https://www.reactor.inc/models/visko-orbis-stable/api).
+---
 
-## Architecture
+## The 3-minute demo
 
-- `components/studio/` contains the product shell and focused workflow panels.
-- `hooks/use-live-continuation.ts` owns Reactor connection and command state.
-- `lib/studio-data.ts` defines campaigns, audience matching, scene briefs, and assets.
-- `lib/placement-frame.ts` composites the actual artwork onto the reference frame.
-- `lib/continuation-prompt.ts` builds the asset-aware opening prompt.
-- `lib/live-direction.ts` builds full-pivot and context-preserving refinement prompts.
-- `app/api/continuations/eligible` applies campaign selection rules.
-- `lib/knowledge/` holds the knowledge base, guard, retrieval, prompt engineer, audit log,
-  and suggestions; `app/api/campaigns/[id]/{knowledge,suggestions}` expose them.
-- `app/api/continuations/prepare` validates the campaign/asset selection and creates a
-  run identifier and prompt.
-- `app/api/continuations/pivot` validates and composes a new live direction.
-- `app/api/token` exchanges the server-held Reactor API key for a short-lived
-  browser session token.
+The fastest path to "oh, that's different":
 
-The product and production data model are described in
-[`docs/DYNAMIC_AD_PLATFORM_PLAN.md`](docs/DYNAMIC_AD_PLATFORM_PLAN.md).
-This implementation adds free-form live direction and manual brand selection
-beyond that initial plan.
-For another engineer taking ownership, see [`HANDOVER.md`](HANDOVER.md).
+1. **Studio → 01 / PRODUCT** — pick **Rolex**. The Submariner is selected as the product.
+2. **02 / PRODUCT INFO** — the Rolex knowledge seed is already loaded (approved appearance,
+   boutique rules, forbidden claims). **Draft from product image** shows Gemini filling this
+   in from a photo, for a brand that has none.
+3. **Generate live** — Orbis starts from the composed frame. Watch the phase indicator; a
+   cold provider session takes a moment to warm.
+4. The director shows **ROLEX WALK · FIXED PATH** with one bubble: **Walk the street**. Then
+   follow the beats — boutique → swap to the Datejust → show the case back → back on the
+   wrist → walk out. Each beat lands as **two prompts**: an action beat, then the settled
+   scene 3.6 s later, so the transition reads as a move rather than a jump cut.
+5. **Type instead of clicking** — "show me the back" resolves to the *inspect* beat by cue
+   matching; "make it rain" stays an open-ended pivot. Both carry the matching reference
+   view's approved appearance.
+6. **Ask a question** — end a direction with `?` ("how much is it?"). It is answered on
+   screen from approved facts and is **never sent to the model**.
+7. **Activity** — every decision, engineered prompt, and on-screen answer, exportable as JSON.
+
+Full run-of-show, including what to say and how to recover from a stall:
+**[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)**.
+
+---
+
+## What's in the build
+
+**Live video** — Orbis through Reactor with acknowledged start, steer, pause, resume, reset,
+and disconnect; model events are authoritative for every state the UI shows.
+
+**Two-beat transitions** — a pivot sends an action prompt, then the settled scene
+`TRANSITION_BEAT_MS` (3.6 s) later; a newer action cancels a pending settle
+([`lib/live-direction.ts`](lib/live-direction.ts)).
+
+**Product knowledge base** — per campaign: approved appearance, visual notes, facts,
+never-say lines, competitors, protected changes. Edited in the inspector, seeded for every
+brand, stored per machine. Details in
+**[docs/KNOWLEDGE_DIRECTOR.md](docs/KNOWLEDGE_DIRECTOR.md)**.
+
+**Prompt engineering with a receipt** — the scene brief and every direction are guarded,
+matched against the visual notes, rewritten by Gemini for the role (opening / pivot /
+refine), and validated. The UI shows *you said → what was sent*.
+
+**Scene contract** — the lines that must stay true for the whole take: product lines from
+the knowledge base, person and setting lines drafted from the brief or a real frame, plus the
+operator's own. Every direction restates the contract, and pinned lines survive even a full
+pivot ([`lib/knowledge/contract.ts`](lib/knowledge/contract.ts)).
+
+**Fixed demo path** — an authored six-beat Rolex walk offered as three bubbles, with free
+text resolved to beats by longest-cue match ([`lib/demo/flows.ts`](lib/demo/flows.ts)).
+
+**Real brand assets** — 14 original assets from **Pepsi, McDonald's, Nike, and Rolex**,
+stored locally with [official source links](public/brands/SOURCES.md). No generated brand
+artwork.
+
+**Scene library** — three browser-ready clips from Blender Foundation open movies (Sintel,
+Big Buck Bunny ×2) with poster frames, attribution, and CC BY 3.0 labels
+([sources](public/scenes/SOURCES.md)). Or upload your own clip (up to 250 MB) and scrub to
+a frame, or a still (up to 10 MB).
+
+**Audience matching** — four sample profiles (Urban explorer, Family night, Culture runner,
+Collector) matched to campaigns by affinity, then priority, then a deterministic ID
+tie-break ([`app/api/continuations/eligible`](app/api/continuations/eligible/route.ts)).
+Sample logic for the demo, not production ad targeting.
+
+---
+
+## Project map
+
+| Area | Path | Responsibility |
+|---|---|---|
+| App shell | [`components/studio/studio-app.tsx`](components/studio/studio-app.tsx) | Navigation, draft state, run preparation, activity |
+| Live stage | [`components/studio/continuation-stage.tsx`](components/studio/continuation-stage.tsx) | Player, transport, director, demo bubbles, overlays |
+| Session state | [`hooks/use-live-continuation.ts`](hooks/use-live-continuation.ts) | Confirmed Reactor commands, events, timeouts, cancellation |
+| Reactor glue | [`lib/orbis.ts`](lib/orbis.ts) | Model name, tracks, message envelope, JWT fetch |
+| Frame composition | [`lib/placement-frame.ts`](lib/placement-frame.ts) | Composites the product onto the reference frame, or fits it 16:9 |
+| Opening prompt | [`lib/continuation-prompt.ts`](lib/continuation-prompt.ts) | Asset- and knowledge-aware starting prompt |
+| Live prompts | [`lib/live-direction.ts`](lib/live-direction.ts) | Pivot vs refine semantics, two-beat transitions |
+| Product views | [`lib/product-cues.ts`](lib/product-cues.ts) | Maps "show the back" to the right approved reference view |
+| Knowledge | [`lib/knowledge/`](lib/knowledge) | Types, seeds, store, guard, retrieval, engineer, validate, audit |
+| Scene contract | [`lib/knowledge/contract.ts`](lib/knowledge/contract.ts) | What must stay true for the whole take; restated every direction |
+| Frame capture | [`lib/frame-capture.ts`](lib/frame-capture.ts) | Pulls a real frame out of the running take |
+| Demo path | [`lib/demo/flows.ts`](lib/demo/flows.ts) | Authored beats, cue resolution, next-bubble selection |
+| Demo data | [`lib/studio-data.ts`](lib/studio-data.ts) | Campaigns, assets, audiences, scene titles |
+
+### API
+
+| Route | Purpose |
+|---|---|
+| `POST /api/token` | Exchanges the server-held Reactor key for a 1-hour, one-session, model-scoped JWT |
+| `GET /api/continuations/eligible` | Picks the highest-affinity campaign for a profile and title |
+| `POST /api/continuations/prepare` | Validates the selection, engineers the opening prompt, returns a run ID |
+| `POST /api/continuations/pivot` | Guards, engineers, and validates a live direction — or answers a question as an overlay |
+| `POST /api/continuations/demo` | Runs one authored beat of a campaign's fixed demo path |
+| `POST /api/continuations/contract` | Drafts the scene contract's person and setting lines |
+| `GET,PUT /api/campaigns/[id]/knowledge` | Reads and writes a campaign's product knowledge |
+| `POST /api/campaigns/[id]/knowledge/describe` | Drafts appearance and portrayal notes from a product image (Gemini vision) |
+| `GET /api/campaigns/[id]/suggestions` | Knowledge-derived direction suggestions |
+
+---
+
+## Deploying (Vercel)
+
+```bash
+vercel
+vercel --prod
+```
+
+Set both environment variables in the Vercel project — `REACTOR_API_KEY` (required) and
+`GEMINI_API_KEY` (optional) — as **server-side** variables. Never prefix them with
+`NEXT_PUBLIC_`; that would ship the key in the client bundle.
+
+Three things to know before relying on a deployment:
+
+- **WebRTC must not be blocked.** The video arrives peer-to-peer from Reactor, not through
+  your origin. Test a preview deployment end to end before demo day.
+- **Connect a Blob store, or saved knowledge will not persist.**
+  [`lib/knowledge/store.ts`](lib/knowledge/store.ts) writes to a local file under
+  `data/knowledge/` in development and to [Vercel Blob](https://vercel.com/docs/vercel-blob)
+  in production, switching automatically when `BLOB_READ_WRITE_TOKEN` is present (Vercel
+  injects it once a Blob store is connected to the project). Without that store the disk is
+  read-only and **Save product info** will fail; reads still fall back to the in-code seeds,
+  so the demo itself keeps working.
+- **The prompt-version audit log is local-only.**
+  [`lib/knowledge/audit.ts`](lib/knowledge/audit.ts) skips writing when `VERCEL` is set, so
+  `PromptVersion` records exist in development but not on the deployment. A durable audit
+  trail needs a real datastore — see the platform plan.
+- **Protect the token endpoint.** `/api/token` has no auth or rate limiting. Anyone who can
+  reach the deployment can mint a session against your Reactor quota.
+
+---
 
 ## Verify
 
 ```bash
-npm test
 npm run typecheck
+npm test
 npm run build
-# With the app running on localhost:3000:
 npm run test:api
 ```
 
+`npm test` runs the domain, knowledge, and demo suites. `npm run test:api` needs the dev
+server already running on port 3000.
+
+Then one live smoke test: small still image → start a take → one pivot → pause → resume →
+end → **disconnect**, so the provider session is released.
+
+---
+
+## Known limits and honest caveats
+
+- This generates a **continuation** from one composed frame. It does not inpaint or rewrite
+  every frame of an existing encoded movie.
+- Generative video cannot guarantee a pixel-perfect logo after many chunks. Placement is a
+  2D composite on the starting frame, not semantic surface tracking.
+- `set_image` is only read at `start`. A different product mid-run means a `reset` and a
+  visible discontinuity, which is why product changes are authored as beats.
+- Directions are asynchronous. An acknowledgement means the model accepted the prompt, not
+  that the visual result is guaranteed; it lands over the next chunks.
+- One JWT is scoped to one live session, and provider capacity can return `429`.
+- Audience profiles are synthetic, and activity history is browser-local — useful for a
+  demo, not a tamper-proof audit log.
+- No authentication, authorization, multi-tenancy, or persistent storage. This is a
+  hackathon prototype.
+
+The production architecture — rights windows, approvals, viewer-request guardrails, and the
+full data model — is written up in
+**[docs/DYNAMIC_AD_PLATFORM_PLAN.md](docs/DYNAMIC_AD_PLATFORM_PLAN.md)**.
+For engineering handover, see **[HANDOVER.md](HANDOVER.md)**.
+
+---
+
 ## Security
 
-The Reactor API key remains server-side and `.env.local` is ignored by Git.
-The browser receives only a short-lived model-scoped JWT. Source clips are
-decoded locally; the composed starting frame and scene prompts are sent to
-Reactor when generating. Creative activity is stored in this browser's local
-storage, not a server audit database. Artwork uploads and user-imported source
-media stay in memory and must be reselected after a refresh. Bundled demo scenes
-remain available from the Scene library.
+The Reactor and Gemini keys stay server-side; `.env.local` is gitignored. The browser gets
+only a short-lived, model-scoped JWT. Source clips are decoded locally in the browser —
+only the composed starting frame and the server-authored prompt are sent to Reactor.
+Product questions are answered from approved facts on screen and never reach the model.
 
-This is a local hackathon prototype, not a multi-tenant hosted service. Add user
-authentication, authorization, rate limits, persistent campaign/media storage,
-and server-side audit records before exposing the token endpoint publicly.
+## Credits
+
+Brand assets are the property of their respective owners (Pepsi, McDonald's, Nike, Rolex)
+and are used here for a non-commercial hackathon demonstration; every file's origin is
+recorded in [`public/brands/SOURCES.md`](public/brands/SOURCES.md). Demo footage is
+© Blender Foundation, CC BY 3.0 — see [`public/scenes/SOURCES.md`](public/scenes/SOURCES.md).
+No sponsorship or endorsement by any brand, or by Blender, Visko, Reactor, or Nebius, is
+implied.
