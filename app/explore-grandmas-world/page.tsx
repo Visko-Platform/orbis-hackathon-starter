@@ -21,10 +21,14 @@ type Memory = {
   memory: string;
   photo: string;
   video: string;
+  liveMemoryId: string;
 };
 
 // Same three seed relatives as the FamilyGallery on "/", paired with the
-// raw memory-video footage for each place.
+// raw memory-video footage for each place. `liveMemoryId` is the matching
+// key in LiveWorld.tsx's SCENES map (written as literals, not derived from
+// `id`, so a future rename on either side fails loudly instead of silently
+// falling through to the live-session branch).
 const MEMORIES: Memory[] = [
   {
     id: "lola",
@@ -36,6 +40,7 @@ const MEMORIES: Memory[] = [
       "She ran a small sari-sari store on the corner and knew everyone who passed by.",
     photo: "/images/cavite-1953.jpg",
     video: "/videos/cavite_city.mp4",
+    liveMemoryId: "seed-lola",
   },
   {
     id: "yay",
@@ -47,6 +52,7 @@ const MEMORIES: Memory[] = [
       "She crossed the wide boulevard barefoot on her way to school every morning.",
     photo: "/images/phnom-penh-1964.jpg",
     video: "/videos/phnom_penh.mp4",
+    liveMemoryId: "seed-yay",
   },
   {
     id: "babushka",
@@ -57,6 +63,7 @@ const MEMORIES: Memory[] = [
     memory: "She rode the tram past the old bell tower on her way to school.",
     photo: "/images/leningrad-1980s.jpg",
     video: "/videos/leningrad.mp4",
+    liveMemoryId: "seed-babushka",
   },
 ];
 
@@ -136,12 +143,21 @@ export default function ExploreGrandmasWorldPage() {
                   <source src={m.video} type="video/mp4" />
                 </video>
               </div>
-              <div style={{ padding: "16px 16px 18px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ padding: "16px 16px 18px", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
                 <h3 style={{ fontSize: 24, margin: 0 }}>{m.person}</h3>
                 <p style={{ fontSize: 13, lineHeight: "20px", margin: 0, color: "var(--color-neutral-700)" }}>
                   {m.relationship} · {m.place} · {m.year}
                 </p>
                 <p style={{ fontSize: 15, lineHeight: "24px", margin: "6px 0 0" }}>{m.memory}</p>
+                <div style={{ marginTop: "auto", paddingTop: 14 }}>
+                  <a
+                    href={`/live-world?memoryId=${encodeURIComponent(m.liveMemoryId)}`}
+                    className="fw-btn fw-btn-primary"
+                    style={{ justifyContent: "flex-start", whiteSpace: "nowrap", alignSelf: "flex-start" }}
+                  >
+                    Enter their live world →
+                  </a>
+                </div>
               </div>
             </article>
           ))}
