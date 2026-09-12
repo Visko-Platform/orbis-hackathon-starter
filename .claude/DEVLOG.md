@@ -41,6 +41,22 @@
   knowledge-derived. Directions themselves need a live take, so the "You → Sent" receipt was checked
   through the API response only.
 
+## Product-first studio (2026-09-12 ~14:40–15:05)
+- tay: no story part on the main dashboard (story board work is halted; leave it as one dead
+  sector), focus on the product: easy to add product info and an image.
+- Decisions: inspector order PRODUCT → PRODUCT INFO (open) → REFERENCE FRAME (optional, collapsed)
+  → SCENE BRIEF; the chosen product image is the starting frame when no reference frame exists
+  (`composeProductFrame`, fitted on black, never stretched); default asset = the product photo,
+  not the logo; "Draft from product image" = `POST …/knowledge/describe` (gemini-3.5-flash with
+  the image, JSON schema, sanitized like knowledge; drafts only, Save persists); Scene library
+  stays in the nav as paused with disabled preset buttons; `titleId` is a fixed default because the
+  prepare route still requires one. Story copy removed from Studio headings, empty stage,
+  director panel, footer.
+- Verified: typecheck; npm test 35; test:api 25 (describe route live: Pepsi can → appearance +
+  4 notes); browser: product frame auto-preview, Generate live enabled without a reference
+  frame, draft button fills the fields, library shows the paused note.
+- Not verified: a live take started from a product-only frame (no Orbis session this phase).
+
 ## Next
 - Live run; re-sample opening rewrites after the "no unasked product interaction" rule.
 - PR #2 opened 2026-09-12 on tay's "open it" (push + PR). Later doc commits stay local until asked.

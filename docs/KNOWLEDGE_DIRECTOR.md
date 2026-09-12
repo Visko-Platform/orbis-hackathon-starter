@@ -79,21 +79,38 @@ engineered, prompt, outcome). Disk failure logs and does not block. The response
 
 - `GET/PUT /api/campaigns/:id/knowledge` — the operator's knowledge (400 names the field;
   404 unknown campaign).
+- `POST /api/campaigns/:id/knowledge/describe` (multipart `image`) — `{ appearance,
+  visualNotes, model }` drafted from a product image; 503 without a Gemini key.
 - `GET /api/campaigns/:id/suggestions` — `{ suggestions, source }`: up to six short
   directions built from the knowledge (Gemini, or defaults), cached per knowledge content.
 - `POST /api/continuations/prepare` — as before, plus `engineered`, `promptVersionId`.
 - `POST /api/continuations/pivot` — `{ outcome: "steer", prompt, mode, engineered,
   promptVersionId }` or `{ outcome: "overlay", answer, mode }`; 400 refused; 422 no answer.
 
-## Studio UI
+## Studio UI (product-first)
 
-- **04 / KNOWLEDGE** in the inspector (`components/studio/knowledge-panel.tsx`): edit and
-  save the knowledge; saving refreshes the suggestions.
+The Studio is organised around the product; the story side (scene presets) is parked as
+a single paused sector in the nav.
+
+- **01 / PRODUCT** — brand, product images, **Add product image** (PNG/JPEG/WebP ≤ 10 MB),
+  and which image to place. The product photo is the default.
+- **02 / PRODUCT INFO** (open by default, `components/studio/knowledge-panel.tsx`) — what it
+  looks like first, then name, aliases, how it is shown, facts viewers can ask, never-say,
+  keep-true, competitors. **Draft from product image** sends the chosen image to
+  `POST /api/campaigns/:id/knowledge/describe` (Gemini vision) and fills the appearance and
+  notes as a draft; nothing is saved until Save.
+- **03 / REFERENCE FRAME** (optional, collapsed) — a clip or still to place the product
+  into. Without it the product image itself is the starting frame, fitted inside 16:9 on
+  black (`composeProductFrame`), so "Generate live" works from a product image alone.
+- **04 / SCENE BRIEF** (collapsed) — the brief the engineer rewrites; artwork position
+  controls appear only when a reference frame is used.
 - Director panel: suggestions come from the knowledge; after a direction the receipt shows
   "You: …" and "Sent: …" with whether Gemini rewrote it and how many notes it used;
   questions are answered in an overlay on the stage and never sent.
-- Activity records "Scene brief engineered", "Product knowledge saved", and "Question
-  answered on screen".
+- Scene library: shown as paused; preset buttons are disabled. The prepare route still
+  receives the default title id.
+- Activity records "Scene brief engineered", "Product info saved", "Product image added",
+  and "Question answered on screen".
 
 ## Verified (2026-09-12)
 

@@ -1,4 +1,4 @@
-# Orbis-ad knowledge director (branch feat/knowledge-director, from origin/main) — 7/7  updated 2026-09-12 14:35
+# Orbis-ad knowledge director (branch feat/knowledge-director, PR #2) — 9/9  updated 2026-09-12 15:05
 
 Branch: feat/knowledge-director, pushed with tay's permission 2026-09-12; PR #2 https://github.com/mian-abd/Orbis-ad/pull/2. Ports the knowledge base and
 prompt engineering into the teammate's studio prototype. The older feat/director branch is the
@@ -13,6 +13,9 @@ full director (states, anchors, overlay) against the old starter UI; kept as ref
 ✓ 6 docs: docs/KNOWLEDGE_DIRECTOR.md, README, HANDOVER, .env.example       me   written
 ✓ 7 studio UI: 04 / KNOWLEDGE panel, receipt, overlay, suggestions         agent  verified (typecheck, build, browser: overlay + save)
 
+✓ 8 product-first studio: 01 PRODUCT (add image), 02 PRODUCT INFO open + draft-from-image, frame optional, scene library paused  me  verified (typecheck, tests, browser)
+✓ 9 describe endpoint (Gemini vision → appearance + notes draft), product image as starting frame  me  verified (unit + API live + browser)
+
 ## Subagents
 - studio UI builder (general-purpose) — done in 8 min; every file read by me; browser-verified by me
 
@@ -23,5 +26,6 @@ full director (states, anchors, overlay) against the old starter UI; kept as ref
   tightened after one sample, not re-sampled.
 
 ## Needs from tay
+- say "push" to update PR #2 with the product-first commits (not pushed)
 - review/merge PR #2 with the teammate
 - live run to see engineered prompts on Orbis

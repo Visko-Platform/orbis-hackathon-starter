@@ -53,23 +53,28 @@ already ignored by Git.
 
 ## 3. Demo walkthrough
 
-1. In **Studio**, choose Pepsi, McDonald's, or Nike.
-2. Choose a logo, product image, or campaign image. A custom PNG, JPEG, or
-   WebP can also be added to the active campaign.
-3. Under **Source & reference frame**, upload a clip and scrub to a frame, or
-   upload a still image.
-4. Compare **Original** and **Placement**. Expand **Scene brief & placement**
-   to adjust the prompt and artwork position.
-5. Select **Generate live** and wait for the live output. A cold provider
+1. In **Studio**, choose Pepsi, McDonald's, or Nike under **01 / PRODUCT**, or
+   **Add product image** (PNG, JPEG, WebP). The chosen image is what gets placed;
+   without a reference frame it is also the starting frame.
+2. Under **02 / PRODUCT INFO**, press **Draft from product image** to fill what it
+   looks like and how it is shown from the image, edit anything, add facts and
+   never-say lines, and **Save product info**.
+3. Optionally open **03 / REFERENCE FRAME** to place the product into a clip
+   frame or still, and **04 / SCENE BRIEF** to change what happens in the scene.
+4. Select **Generate live** and wait for the live output. A cold provider
    session can take time to warm.
-6. Enter a direction such as “Move into a neon rooftop garden at night.”
-   **Change direction** replaces the old setting and story instructions;
-   **Refine this scene** preserves recent context and changes only the named
-   details.
-7. Leave **Keep [brand] in scene** enabled to restate the sponsor constraint,
-   or disable it for a fully unconstrained creative pivot.
-8. Demonstrate pause/resume, then end and disconnect the take.
-9. Open **Activity** to show or export the browser-local history.
+5. Enter a direction such as "Warmer light, move closer to the product."
+   **Change direction** replaces the setting; **Refine this scene** changes only
+   the named details. The receipt shows what you typed and what was sent after
+   prompt engineering. End a direction with "?" to ask a product question; it is
+   answered on screen from the saved facts and never sent to the model.
+6. Leave **Keep [brand] in scene** enabled to restate the sponsor, or disable it
+   for an unconstrained pivot.
+7. Demonstrate pause/resume, then end and disconnect the take.
+8. Open **Activity** to show or export the browser-local history.
+
+The **Scene library** sector is paused: story presets are parked while the
+studio focuses on the product.
 
 ## 4. Runtime architecture
 
@@ -111,7 +116,7 @@ and prepared prompt are sent to Reactor when generation starts.
 | Token exchange | `app/api/token/route.ts` | Mints a one-hour, one-session, model-scoped JWT |
 | Knowledge base | `lib/knowledge/` | Per-campaign knowledge (seeds, store, guard, retrieval, prompt engineer, audit, suggestions) |
 | Knowledge UI | `components/studio/knowledge-panel.tsx` | 04 / KNOWLEDGE inspector section |
-| Knowledge API | `app/api/campaigns/[id]/knowledge`, `…/suggestions` | Read/write knowledge; suggested directions |
+| Knowledge API | `app/api/campaigns/[id]/knowledge`, `…/knowledge/describe`, `…/suggestions` | Read/write knowledge; draft from an image; suggested directions |
 | Product design | `docs/DYNAMIC_AD_PLATFORM_PLAN.md` | Production roadmap, APIs, ERD, viewer-director design |
 
 Brand files and their original download URLs are documented in

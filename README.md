@@ -56,11 +56,12 @@ Open <http://localhost:3000>.
 
 ## Demo flow
 
-1. Select a campaign and its logo, product, or campaign artwork. You can also
-   add your own artwork; it stays associated with that campaign for the session.
-2. Upload a movie clip and capture a frame, or use a reference image.
-3. Review **Original** versus **Placement**. Expand **Scene brief & placement**
-   to describe the action and adjust the artwork position.
+1. Choose a brand or **Add product image**. The image you choose is what gets
+   placed; with no reference frame it is also the starting frame.
+2. Under **Product info**, **Draft from product image** to fill in what it looks
+   like, edit, add facts and never-say lines, and save.
+3. Optionally add a reference frame (clip or still) and adjust the scene brief and
+   artwork position. Story presets in the Scene library are paused.
 4. Select **Generate live**. Startup can take time while the provider allocates
    and warms the model; the UI shows the current phase.
 5. Type a new direction and select **Pivot live** (or press Ctrl/Cmd+Enter).
