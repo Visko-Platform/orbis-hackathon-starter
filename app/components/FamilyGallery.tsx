@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { saveFamilyMemory, type FamilyPhotoInput } from "../lib/family-memory-store";
 
 type Member = {
   id: string;
@@ -31,12 +30,12 @@ const EMPTY_FORM: FormState = {
 // Ported from the "Family World" Claude Design import (Front Page.dc.html).
 // Three example relatives seed the gallery; a presenter can drop in one
 // more family photo and answer four questions to add it to the grid.
-// A seed card's "Enter their world" click stores its bundled photo +
-// place/year/memory via saveFamilyMemory() (same sessionStorage handoff
-// AddFamily.tsx uses) before following the link to /session?memoryId=...,
-// so MemoryAutostart runs the real Nano Banana -> Gemini -> Visko Orbis
-// Stable pipeline against the example photo — no billable API calls happen
-// here on the public "/" page itself, only once inside the gated /session.
+// Seed cards' "Enter their world" links to /live-world?memoryId=<seed id>,
+// a working steerable panorama demo for each of the three examples (see
+// LiveWorld.tsx). Added (non-seed) members still link to
+// /session?memoryId=... — that query param isn't consumed by the session
+// app yet, matching the design's own scope, and there's no seeded panorama
+// for a freshly uploaded photo.
 const SEEDS: Member[] = [
   {
     id: "seed-lola",
@@ -71,17 +70,6 @@ const SEEDS: Member[] = [
     photo: "/images/leningrad-1980s.jpg",
   },
 ];
-
-function seedToInput(m: Member): FamilyPhotoInput {
-  return {
-    id: m.id,
-    image: m.photo,
-    person: { nameOrRelationship: m.relationship },
-    place: m.place,
-    time: { userText: m.year },
-    sceneDescription: m.memory,
-  };
-}
 
 function personFrom(relationship: string) {
   return (
@@ -268,10 +256,11 @@ export function FamilyGallery() {
                   }}
                 >
                   <a
-                    href={`/session?memoryId=${encodeURIComponent(m.id)}`}
-                    onClick={() => {
-                      if (m.seed) saveFamilyMemory(seedToInput(m));
-                    }}
+                    href={
+                      m.seed
+                        ? `/live-world?memoryId=${encodeURIComponent(m.id)}`
+                        : `/session?memoryId=${encodeURIComponent(m.id)}`
+                    }
                     className="fw-btn fw-btn-primary"
                     style={{ justifyContent: "flex-start", whiteSpace: "nowrap" }}
                   >
