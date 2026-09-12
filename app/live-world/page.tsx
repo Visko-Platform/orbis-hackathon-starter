@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import "../family-world.css";
 import { LiveWorld } from "../components/LiveWorld";
 import { LiveWorldSession } from "../components/LiveWorldSession";
 import { isSeedMemoryId } from "../lib/live-world-scenes";
 
-const archivo = Archivo({
+const schibsted = Schibsted_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "600", "800"],
-  variable: "--font-archivo",
+  variable: "--font-schibsted",
 });
 
 export const metadata: Metadata = {
@@ -42,11 +41,12 @@ export default async function LiveWorldPage({
   searchParams: Promise<{ memoryId?: string }>;
 }) {
   const { memoryId } = await searchParams;
-  const useSimulatedSeed = !memoryId || isSeedMemoryId(memoryId);
   return (
-    <div className={`family-world ${archivo.variable}`}>
+    <div className={`family-world live-world-theme ${schibsted.variable}`}>
       <nav className="fw-nav" style={{ paddingInline: "clamp(20px, 5vw, 72px)" }}>
-        <span className="fw-nav-brand">Family World</span>
+        <a href="/" className="fw-nav-brand" style={{ color: "var(--color-text)", textDecoration: "none", fontSize: 18 }}>
+          Family World
+        </a>
         <span
           style={{
             fontSize: 12,
@@ -75,10 +75,10 @@ export default async function LiveWorldPage({
           margin: "0 auto",
         }}
       >
-        {useSimulatedSeed ? (
+        {!memoryId || isSeedMemoryId(memoryId) ? (
           <LiveWorld memoryId={memoryId} />
         ) : (
-          <LiveWorldSession />
+          <LiveWorldSession memoryId={memoryId} />
         )}
       </main>
 

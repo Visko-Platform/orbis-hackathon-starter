@@ -32,7 +32,24 @@ import {
 //
 // Don't bind main_audio to a second hidden <audio> element: that
 // double-plays the track and gives the user no unmute affordance.
-export function Video() {
+//
+// The three `lg:` modifiers below (`lg:h-full lg:aspect-auto lg:max-h-full`)
+// exist for /session's fitted shell (ViskoOrbisStableApp.tsx's
+// `lg:h-screen lg:overflow-hidden`), the only ancestor that gives them a
+// definite height to resolve against. A page with no such ancestor (e.g.
+// /live-world) would have this panel collapse to the bare <video>'s
+// intrinsic height at `lg`, losing its 16:9 box. `className` is therefore
+// overridable — defaulting to today's exact string so /session (and any
+// other caller that doesn't pass one) is unaffected — so a definite-height-
+// free page can opt out of just those three modifiers.
+const DEFAULT_VIDEO_CLASSNAME =
+  "relative aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black lg:h-full lg:aspect-auto lg:max-h-full";
+
+export function Video({
+  className = DEFAULT_VIDEO_CLASSNAME,
+}: {
+  className?: string;
+}) {
   const [priming, setPriming] = useState(false);
   const videoTrack = useVideoTrack();
 
@@ -53,7 +70,7 @@ export function Video() {
   const showPriming = priming && !videoTrack;
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-zinc-800 bg-black lg:h-full lg:aspect-auto lg:max-h-full">
+    <div className={className}>
       {/*
        * main_audio rides the same <video> element via the SDK's audioTrack
        * prop (muted=false by default when an audioTrack is set — the user
