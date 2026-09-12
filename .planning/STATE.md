@@ -51,7 +51,7 @@ is still "not started" as the stale fields below still say.
 Phase: 1 of 3 (Auth + Seed-Contract Spike) — **stale, predates pivot; needs reconciliation**
 Plan: 0 of TBD in current phase
 Status: Needs reconciliation (see Repo Migration note above)
-Last activity: 2026-09-12 — Completed quick task 260912-mpu: Fix the design of the live-world page
+Last activity: 2026-09-12 — Completed quick task 260912-mlm: Fix /live-world?memoryId=<id> not running and the broken live-session layout
 
 Progress: [░░░░░░░░░░] 0% (stale — see Repo Migration note)
 
@@ -108,6 +108,7 @@ None yet.
 | 6 | when tapping add someone it should go to "add your family" | 2026-09-12 | 169ca01 | — |
 | 260912-mt7 | Fix invisible red-on-red primary button text (CSS specificity fix, .family-world .fw-btn.fw-btn-primary) | 2026-09-12 | 9524dda | [260912-mt7-fix-button-font-color-buttons-using-fw-b](./quick/260912-mt7-fix-button-font-color-buttons-using-fw-b/) |
 | 260912-mpu | Fix the design of the live-world page to match the Claude Design "Live World.dc.html" import (cream/orange/blue Schibsted Grotesk palette, page-scoped so /, /add-family, /explore-grandmas-world keep the old palette) | 2026-09-12 | 8d5224e | [260912-mpu-fix-the-design-of-the-live-world-page-to](./quick/260912-mpu-fix-the-design-of-the-live-world-page-to/) |
+| 260912-mlm | Fix /live-world?memoryId=<id> not running (grounded-prompt field mismatch + sessionStorage tab-scoping + signed-out JSON parse error) and the broken live-session layout (collapsed video, dead grid, missing header) | 2026-09-12 | b018e02 | [260912-mlm-why-doesn-t-the-family-memory-live-run-h](./quick/260912-mlm-why-doesn-t-the-family-memory-live-run-h/) |
 
 ## Deferred Items
 
