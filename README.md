@@ -14,7 +14,7 @@ control through an approved knowledge base that every prompt has to pass.
 | | |
 |---|---|
 | **Live demo** | <https://orbis-ad.vercel.app/> |
-| **Source** | <https://github.com/mian-abd/Orbis-ad> |
+| **Source** | <https://github.com/mian-abd/orbis-hackathon-adtractive> |
 | **Built at** | Live Models Hackathon — Visko × Reactor × Nebius, Ferry Building, San Francisco |
 
 ---
@@ -105,8 +105,8 @@ Requirements: **Node.js 20.9+**, and a Reactor API key with access to
 `reactor/visko-orbis-stable`.
 
 ```bash
-git clone https://github.com/mian-abd/Orbis-ad.git
-cd Orbis-ad
+git clone https://github.com/mian-abd/orbis-hackathon-adtractive.git
+cd orbis-hackathon-adtractive
 npm install
 cp .env.example .env.local
 npm run dev

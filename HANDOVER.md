@@ -22,7 +22,7 @@ The production build and automated tests pass. A live test has also covered
 image upload, Orbis start, a complete scene pivot, pause, resume, end, and
 disconnect.
 
-Repository: <https://github.com/mian-abd/Orbis-ad>
+Repository: <https://github.com/mian-abd/orbis-hackathon-adtractive>
 Live deployment: <https://orbis-ad.vercel.app/>
 
 Built at the Live Models Hackathon (Visko x Reactor x Nebius). The live video is
