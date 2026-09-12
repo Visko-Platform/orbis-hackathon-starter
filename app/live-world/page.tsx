@@ -17,8 +17,14 @@ export const metadata: Metadata = {
 // facing live-generation viewer, sibling to /add-family and
 // /explore-grandmas-world from the same import. Public route: /live-world
 // is unmatched by proxy.ts, same as /, /add-family, and
-// /explore-grandmas-world.
-export default function LiveWorldPage() {
+// /explore-grandmas-world. The grandmother example cards on / link here
+// with ?memoryId=<seed id> to steer that person's panorama scene.
+export default async function LiveWorldPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ memoryId?: string }>;
+}) {
+  const { memoryId } = await searchParams;
   return (
     <div className={`family-world ${archivo.variable}`}>
       <nav className="fw-nav" style={{ paddingInline: "clamp(20px, 5vw, 72px)" }}>
@@ -51,7 +57,7 @@ export default function LiveWorldPage() {
           margin: "0 auto",
         }}
       >
-        <LiveWorld />
+        <LiveWorld memoryId={memoryId} />
       </main>
 
       <footer
