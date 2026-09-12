@@ -51,7 +51,7 @@ is still "not started" as the stale fields below still say.
 Phase: 1 of 3 (Auth + Seed-Contract Spike) — **stale, predates pivot; needs reconciliation**
 Plan: 0 of TBD in current phase
 Status: Needs reconciliation (see Repo Migration note above)
-Last activity: 2026-09-12 — Repo migration: `.planning/` copied from family_videos_memories prototype into orbis-hackathon-starter to continue project tracking here
+Last activity: 2026-09-12 — Completed quick task 260912-keg: Add the "Add Family" page (Claude Design import)
 
 Progress: [░░░░░░░░░░] 0% (stale — see Repo Migration note)
 
@@ -101,6 +101,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260911-qab | create a vercel website | 2026-09-11 | 463367a | [260911-qab-create-a-vercel-website](./quick/260911-qab-create-a-vercel-website/) |
 | 260912-g80 | Redesign front page to match Family World modernist Claude Design import, add Google login button top right | 2026-09-12 | 6c92d17 | [260912-g80-redesign-front-page-to-match-family-worl](./quick/260912-g80-redesign-front-page-to-match-family-worl/) |
+| 260912-keg | Add the "Add Family" page (Claude Design import: multi-photo intake + saved-list flow) | 2026-09-12 | 12c8ca1 | [260912-keg-add-the-family-page-import-claude-design](./quick/260912-keg-add-the-family-page-import-claude-design/) |
 
 ## Deferred Items
 
