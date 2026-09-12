@@ -90,7 +90,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
       addActivity("Voiceover", lines.join(" "));
       // Phase two: the speech for those lines.
-      const spoken = await post({ lines }, 60_000);
+      const spoken = await post({ lines, scene, role }, 60_000);
       const speech = await spoken.json();
       if (!spoken.ok || ticket !== voiceoverTake.current || !speech.audio) return;
       narrator.current?.pause();

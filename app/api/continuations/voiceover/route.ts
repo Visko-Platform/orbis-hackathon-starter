@@ -14,8 +14,8 @@ const ROLES: VoiceoverRole[] = ["opening", "pivot", "refine"];
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
-  if (!body || !campaign || typeof body.scene !== "string" || !body.scene.trim() || body.scene.length > 4000 ||
-    !ROLES.includes(body.role) || (body.direction !== undefined && typeof body.direction !== "string") ||
+  const speakOnly = Boolean(body && Array.isArray(body.lines));
+  if (!body || !campaign || (!speakOnly && (typeof body.scene !== "string" || !body.scene.trim() || body.scene.length > 4000 || !ROLES.includes(body.role))) || (body.direction !== undefined && typeof body.direction !== "string") ||
     (body.contractLines !== undefined && !Array.isArray(body.contractLines))) {
     return NextResponse.json({ error: "A campaign, a scene, and a role are required." }, { status: 400 });
   }
