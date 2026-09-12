@@ -92,6 +92,16 @@ export async function fetchReactorToken(): Promise<string> {
   inflightToken = (async () => {
     try {
       const r = await fetch("/api/reactor/token", { cache: "no-store" });
+      // `/live-world` is public but `/api/reactor/token` is gated by
+      // proxy.ts, so a signed-out visitor's fetch follows the middleware's
+      // redirect to the NextAuth sign-in HTML page: `r.ok` is true (the HTML
+      // page loads fine), and `r.json()` would throw a raw
+      // "SyntaxError: Unexpected token '<'". Detect that case up front and
+      // fail with a message the UI already knows how to show instead.
+      const contentType = r.headers.get("content-type") ?? "";
+      if (r.redirected || !contentType.includes("application/json")) {
+        throw new Error("Sign in to run a live world");
+      }
       if (!r.ok) {
         const body = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Token fetch failed: ${r.status}`);

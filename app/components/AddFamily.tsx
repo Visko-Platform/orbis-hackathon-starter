@@ -157,7 +157,22 @@ export function AddFamily() {
           .join(" "),
       });
       const savedInput: GroundedFamilyMemory = { ...input, ...grounded };
-      saveFamilyMemory(savedInput);
+      const stored = saveFamilyMemory(savedInput);
+      if (!stored) {
+        setPhotos((prev) =>
+          prev.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  generating: false,
+                  error:
+                    "Couldn't store this world in this browser — it may be out of space. Try a smaller photo.",
+                }
+              : p,
+          ),
+        );
+        return;
+      }
       setPhotos((prev) =>
         prev.map((p) =>
           p.id === id

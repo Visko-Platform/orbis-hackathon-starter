@@ -18,11 +18,12 @@ import {
 
 type Stage = "starting" | "done" | "error";
 
-// Looked up once the searchParams/sessionStorage read resolves client-side:
+// Looked up once the searchParams/localStorage read resolves client-side:
 // "pending" keeps the first render identical to the server's (no memoryId
-// lookup happens during SSR), "missing" means sessionStorage didn't have a
-// fully-grounded memory for this id (different tab, expired, or /add-family's
-// groundFamilyMemory() step never finished) — see loadFamilyMemory in
+// lookup happens during SSR), "missing" means this browser's localStorage
+// didn't have a fully-grounded memory for this id (a different device never
+// has one — worlds are browser-local by design — or /add-family's
+// groundFamilyMemory() step never finished/saved) — see loadFamilyMemory in
 // family-memory-store.ts.
 type MemoryLookup = "pending" | "missing" | GroundedFamilyMemory;
 
@@ -108,10 +109,10 @@ export function MemoryAutostart() {
           Family memory
         </p>
         <p className="mt-1 leading-relaxed">
-          This memory isn&apos;t ready in this browser tab (it may have
-          expired, or wasn&apos;t fully generated).{" "}
+          This world lives on the device that made it, so it isn&apos;t
+          stored on this one (or the save never finished).{" "}
           <a href="/add-family" className="text-brand underline">
-            Add the family member again
+            Add the family member on this device
           </a>
           .
         </p>
