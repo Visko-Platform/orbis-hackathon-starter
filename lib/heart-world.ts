@@ -9,120 +9,161 @@ export type HeartZone = {
   prompt: string;
 };
 
-// Calibrate these to the athlete's real zones (Garmin: get_activity_hr_zones).
-// Every zone repeats the same subject and camera so Orbis morphs the action
-// instead of cutting to a new scene.
-const SUBJECT = `A man in his thirties in a grey t-shirt and black shorts in
-the same small living room, same couch, same TV glowing behind him, filmed
-from the same fixed camera angle.`;
+export type Trend = "up" | "down" | "flat";
+export type HeartSample = { t: number; bpm: number };
+
+export const MAX_SCALE_BPM = 220;
+
+// The protagonist is the thread across every world. The place changes with
+// effort, he does not, so the jump reads as the same story escalating.
+const HERO = `The same man in his thirties, grey t-shirt, black shorts, dark
+hair.`;
 
 const STYLE = `Cinematic, photorealistic, continuous shot, no cuts.`;
 
-export const HEART_ZONES: HeartZone[] = [
+type World = {
+  id: string;
+  label: string;
+  minBpm: number;
+  color: string;
+  scene: string;
+  rising: string;
+  falling: string;
+};
+
+const WORLDS: World[] = [
   {
     id: "z1",
-    label: "Calma",
+    label: "Living",
     minBpm: 0,
     color: "#6ee7b7",
-    prompt: `${SUBJECT} He sits back on the couch watching TV, completely
-relaxed, breathing slowly, barely moving. Calm warm lamp light. ${STYLE}`,
+    scene: `He is sunk deep into a couch in a dim living room, a TV glowing
+blue on his face, a warm lamp in the corner, totally still`,
+    rising: "He shifts forward, restless, about to get up.",
+    falling: "He sinks further into the cushions, completely at rest.",
   },
   {
     id: "z2",
-    label: "Activo",
+    label: "Calle",
     minBpm: 95,
     color: "#fcd34d",
-    prompt: `${SUBJECT} He is up off the couch now, walking briskly in place in
-front of the TV, arms swinging, light effort, breathing a little faster.
-${STYLE}`,
+    scene: `He is walking fast down a crowded city sidewalk at golden hour,
+weaving between people, shop windows and traffic sliding past`,
+    rising: "His pace quickens, he starts pushing through the crowd.",
+    falling: "He slows to an easy walk, letting the crowd close around him.",
   },
   {
     id: "z3",
-    label: "Esfuerzo",
+    label: "Cancha",
     minBpm: 125,
     color: "#fb923c",
-    prompt: `${SUBJECT} He is jogging hard in place, knees rising, shirt
-starting to soak with sweat, breathing heavily, hair damp. ${STYLE}`,
+    scene: `He is in a fast outdoor pickup basketball game, driving hard to the
+hoop, defenders closing, the ball slapping the asphalt`,
+    rising: "He accelerates past his defender, the game speeding up.",
+    falling: "He pulls up, hands on his shorts, the play breaking down.",
   },
   {
     id: "z4",
-    label: "Umbral",
+    label: "Persecución",
     minBpm: 150,
     color: "#f87171",
-    prompt: `${SUBJECT} He is doing explosive burpees and jumping squats,
-drenched in sweat, chest heaving, face straining with effort, sweat flying.
-${STYLE}`,
+    scene: `He is sprinting down a narrow alley at night, wet asphalt throwing
+back neon, fences and fire escapes flying past, something behind him`,
+    rising: "He is gaining speed, running for his life.",
+    falling: "He staggers, losing speed, the alley swallowing him.",
   },
   {
     id: "z5",
-    label: "Máximo",
+    label: "Volcán",
     minBpm: 170,
     color: "#ef4444",
-    prompt: `${SUBJECT} He is at absolute maximum effort, sprinting in place,
-completely drenched, gasping for air, face red and contorted, sweat pouring
-off him, on the edge of collapse. ${STYLE}`,
+    scene: `He is running across black volcanic rock, rivers of lava on both
+sides, embers storming through a blood-red sky, heat warping the air`,
+    rising: "He drives forward into the fire, past his limit.",
+    falling: "He falters, collapsing to his knees in the ash.",
+  },
+  // Beyond here no human heart goes. Reachable only by dragging the slider,
+  // which is the point: the manual override is where the demo gets strange.
+  {
+    id: "z6",
+    label: "Órbita",
+    minBpm: 190,
+    color: "#a78bfa",
+    scene: `He is sprinting across the hull of a space station, Earth turning
+enormous and blue below him, stars streaking past, no air, no sound`,
+    rising: "He pushes off the hull and launches into open space.",
+    falling: "He slows, drifting, tethered to nothing.",
+  },
+  {
+    id: "z7",
+    label: "Supernova",
+    minBpm: 205,
+    color: "#f0abfc",
+    scene: `He is running through a collapsing star, his body breaking apart
+into light and particles, space folding around him, reality tearing`,
+    rising: "He dissolves completely into the blast.",
+    falling: "The light drains away, leaving only his silhouette.",
   },
 ];
 
-// --- Continuous prompt construction -------------------------------------
-// The zones above drive the UI. The prompt itself is rebuilt from the exact
-// BPM plus its direction, so the world keeps evolving inside a zone instead
-// of only at the five crossings.
+// Real training zones span 60-190 BPM. Nobody reaches 190 in front of a
+// jury, so demo mode compresses the same five worlds into the band a person
+// actually crosses doing jumping jacks for thirty seconds.
+export const DEMO_THRESHOLDS = [0, 78, 90, 102, 114, 126, 138];
 
-const EFFORT_LADDER: { min: number; action: string }[] = [
-  { min: 0, action: "sinks deep into the couch watching TV, totally still" },
-  { min: 80, action: "sits up on the edge of the couch, restless, foot tapping" },
-  { min: 95, action: "is on his feet, walking slowly in place in front of the TV" },
-  { min: 110, action: "marches briskly in place, arms swinging" },
-  { min: 125, action: "jogs in place at a steady rhythm" },
-  { min: 140, action: "runs hard in place, knees driving high" },
-  { min: 155, action: "sprints in place, arms pumping furiously" },
-  { min: 170, action: "hammers out explosive burpees and jump squats" },
-  { min: 182, action: "goes all out, sprinting flat out on the edge of collapse" },
-];
-
-export type Trend = "up" | "down" | "flat";
-
-export function buildWorldPrompt(bpm: number, trend: Trend) {
-  let step = EFFORT_LADDER[0];
-  for (const entry of EFFORT_LADDER) if (bpm >= entry.min) step = entry;
-
-  const sweat =
-    bpm < 95
-      ? "His shirt is dry"
-      : bpm < 125
-        ? "A light sheen of sweat shows on his forehead"
-        : bpm < 150
-          ? "Sweat is soaking through his shirt"
-          : bpm < 170
-            ? "He is drenched, hair matted, sweat running down his face"
-            : "He is completely soaked, sweat flying off him with every movement";
-
-  const breath =
-    bpm < 95
-      ? "breathing slowly and evenly"
-      : bpm < 130
-        ? "breathing faster now"
-        : bpm < 160
-          ? "breathing hard, chest rising and falling"
-          : "gasping for air, mouth wide open";
-
-  const trendClause =
-    trend === "up"
-      ? "He is visibly accelerating, pushing harder every second."
-      : trend === "down"
-        ? "He is easing off, slowing down, starting to recover."
-        : "He holds this exact effort, steady.";
-
-  return `${SUBJECT} He ${step.action}, ${breath}. ${sweat}. ${trendClause} ${STYLE}`;
+function thresholds(demo: boolean) {
+  return demo ? DEMO_THRESHOLDS : WORLDS.map((world) => world.minBpm);
 }
 
-export function zoneForBpm(bpm: number, zones: HeartZone[] = HEART_ZONES) {
+export function zonesFor(demo: boolean): HeartZone[] {
+  const cuts = thresholds(demo);
+  return WORLDS.map((world, index) => ({
+    id: world.id,
+    label: world.label,
+    minBpm: cuts[index],
+    color: world.color,
+    prompt: `${HERO} ${world.scene}. ${STYLE}`,
+  }));
+}
+
+export const HEART_ZONES = zonesFor(false);
+
+export function zoneForBpm(bpm: number, demo = false) {
+  const zones = zonesFor(demo);
   let match = zones[0];
   for (const zone of zones) if (bpm >= zone.minBpm) match = zone;
   return match;
 }
 
-export const MAX_SCALE_BPM = 190;
+function worldForBpm(bpm: number, demo: boolean) {
+  const cuts = thresholds(demo);
+  let match = WORLDS[0];
+  WORLDS.forEach((world, index) => {
+    if (bpm >= cuts[index]) match = world;
+  });
+  return match;
+}
 
-export type HeartSample = { t: number; bpm: number };
+// The prompt is rebuilt from the exact BPM and its direction, so the world
+// keeps evolving inside a range instead of only at the five crossings.
+export function buildWorldPrompt(bpm: number, trend: Trend, demo = false) {
+  const world = worldForBpm(bpm, demo);
+  // Describe the body by which world we are in, not by raw BPM, so the two
+  // threshold scales stay consistent.
+  const level = WORLDS.indexOf(world);
+
+  const body = [
+    "breathing slowly and evenly, shirt dry",
+    "breathing faster, a light sheen of sweat on his forehead",
+    "breathing hard, sweat soaking through his shirt",
+    "gasping, drenched, hair matted to his forehead",
+    "lungs burning, completely soaked, sweat flying off him",
+    "no breath at all, weightless, eyes wide",
+    "beyond a body now, coming apart into light",
+  ][level];
+
+  const trendClause =
+    trend === "up" ? world.rising : trend === "down" ? world.falling : "";
+
+  return `${HERO} ${world.scene}, ${body}. ${trendClause} ${STYLE}`;
+}

@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
-  HEART_ZONES,
   MAX_SCALE_BPM,
   buildWorldPrompt,
   type HeartSample,
   type Trend,
   zoneForBpm,
+  zonesFor,
 } from "@/lib/heart-world";
 import type { OrbisSession } from "@/hooks/use-orbis-session";
 
@@ -19,7 +19,9 @@ const REPLAY_SPEED = 20; // 1 real second of the activity per 50ms tick
 // Orbis applies a prompt at the next chunk boundary (~1.8s). Steering faster
 // than that just queues prompts the model will never show.
 const MIN_STEER_MS = 4000;
+const DEMO_STEER_MS = 2500;
 const BPM_DELTA = 4;
+const DEMO_BPM_DELTA = 2;
 const TREND_DELTA = 3;
 
 export function HeartWorld({ session }: { session: OrbisSession }) {
@@ -28,6 +30,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
   const [auto, setAuto] = useState(true);
   const [deviceName, setDeviceName] = useState("");
   const [bleError, setBleError] = useState("");
+  const [demo, setDemo] = useState(true);
   const [replay, setReplay] = useState<HeartSample[]>([]);
   const [replayName, setReplayName] = useState("");
 
@@ -38,10 +41,13 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
   const history = useRef<number[]>([]);
   const [lastSteer, setLastSteer] = useState("");
 
-  const zone = zoneForBpm(bpm);
+  const zone = zoneForBpm(bpm, demo);
+  const zones = zonesFor(demo);
   const live = session.connected && session.runStarted;
 
+  const demoRef = useRef(demo);
   bpmRef.current = bpm;
+  demoRef.current = demo;
 
   // The whole product: the body moves, the world follows. The prompt is
   // rebuilt from the exact BPM and its direction, not from five fixed states.
@@ -52,9 +58,11 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
       const current = bpmRef.current;
       history.current = [...history.current, current].slice(-6);
 
+      const fast = demoRef.current;
       const now = Date.now();
-      if (now - steeredAt.current < MIN_STEER_MS) return;
-      if (Math.abs(current - steeredBpm.current) < BPM_DELTA) return;
+      if (now - steeredAt.current < (fast ? DEMO_STEER_MS : MIN_STEER_MS)) return;
+      const delta = fast ? DEMO_BPM_DELTA : BPM_DELTA;
+      if (Math.abs(current - steeredBpm.current) < delta) return;
 
       const oldest = history.current[0] ?? current;
       const drift = current - oldest;
@@ -63,7 +71,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
 
       steeredAt.current = now;
       steeredBpm.current = current;
-      const nextPrompt = buildWorldPrompt(current, trend);
+      const nextPrompt = buildWorldPrompt(current, trend, demoRef.current);
       setLastSteer(`${current} BPM · ${trend}`);
       void session.steerWith(nextPrompt);
     }, 1000);
@@ -166,14 +174,24 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
           </div>
         </div>
 
-        <label className="auto-toggle">
-          <input
-            checked={auto}
-            onChange={(event) => setAuto(event.target.checked)}
-            type="checkbox"
-          />
-          Steer automático
-        </label>
+        <div className="toggle-stack">
+          <label className="auto-toggle">
+            <input
+              checked={auto}
+              onChange={(event) => setAuto(event.target.checked)}
+              type="checkbox"
+            />
+            Steer automático
+          </label>
+          <label className="auto-toggle">
+            <input
+              checked={demo}
+              onChange={(event) => setDemo(event.target.checked)}
+              type="checkbox"
+            />
+            Modo demo (rangos comprimidos)
+          </label>
+        </div>
       </header>
 
       <div className="bpm-readout" style={{ color: zone.color }}>
@@ -182,26 +200,29 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
       </div>
 
       <div className="zone-track">
-        {HEART_ZONES.map((entry) => (
+        {zones.map((entry) => (
           <span
             className={entry.id === zone.id ? "zone on" : "zone"}
             key={entry.id}
             style={{ background: entry.id === zone.id ? entry.color : undefined }}
           >
             {entry.label}
+            <em>{entry.minBpm ? `${entry.minBpm}+` : "reposo"}</em>
           </span>
         ))}
       </div>
 
-      {source === "manual" ? (
-        <input
-          max={MAX_SCALE_BPM}
-          min={40}
-          onChange={(event) => setBpm(Number(event.target.value))}
-          type="range"
-          value={bpm}
-        />
-      ) : null}
+      <input
+        max={MAX_SCALE_BPM}
+        min={40}
+        onChange={(event) => {
+          // Dragging always takes over, even mid-stream from the watch.
+          setSource("manual");
+          setBpm(Number(event.target.value));
+        }}
+        type="range"
+        value={bpm}
+      />
 
       <p className="hint">
         {live

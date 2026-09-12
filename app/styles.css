@@ -383,7 +383,7 @@ aside code {
 
 .zone-track {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
 
@@ -405,4 +405,16 @@ aside code {
 .heart-world input[type="range"] {
   width: 100%;
   accent-color: #f87171;
+}
+
+.toggle-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.zone em {
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  opacity: 0.65;
 }
