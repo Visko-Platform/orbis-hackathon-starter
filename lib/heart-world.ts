@@ -34,7 +34,7 @@ type World = {
 const WORLDS: World[] = [
   {
     id: "z1",
-    label: "Living",
+    label: "Living room",
     minBpm: 0,
     color: "#6ee7b7",
     scene: `He is sunk deep into a couch in a dim living room, a TV glowing
@@ -44,7 +44,7 @@ blue on his face, a warm lamp in the corner, totally still`,
   },
   {
     id: "z2",
-    label: "Calle",
+    label: "Street",
     minBpm: 95,
     color: "#fcd34d",
     scene: `He is walking fast down a crowded city sidewalk at golden hour,
@@ -54,7 +54,7 @@ weaving between people, shop windows and traffic sliding past`,
   },
   {
     id: "z3",
-    label: "Cancha",
+    label: "Court",
     minBpm: 125,
     color: "#fb923c",
     scene: `He is in a fast outdoor pickup basketball game, driving hard to the
@@ -64,7 +64,7 @@ hoop, defenders closing, the ball slapping the asphalt`,
   },
   {
     id: "z4",
-    label: "Persecución",
+    label: "Chase",
     minBpm: 150,
     color: "#f87171",
     scene: `He is sprinting down a narrow alley at night, wet asphalt throwing
@@ -74,7 +74,7 @@ back neon, fences and fire escapes flying past, something behind him`,
   },
   {
     id: "z5",
-    label: "Volcán",
+    label: "Volcano",
     minBpm: 170,
     color: "#ef4444",
     scene: `He is running across black volcanic rock, rivers of lava on both
@@ -86,7 +86,7 @@ sides, embers storming through a blood-red sky, heat warping the air`,
   // which is the point: the manual override is where the demo gets strange.
   {
     id: "z6",
-    label: "Órbita",
+    label: "Orbit",
     minBpm: 190,
     color: "#a78bfa",
     scene: `He is sprinting across the hull of a space station, Earth turning

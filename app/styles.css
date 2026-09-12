@@ -356,7 +356,9 @@ aside code {
 
 .auto-toggle {
   display: flex;
+  flex-direction: row;
   align-items: center;
+  white-space: nowrap;
   gap: 8px;
   font-size: 14px;
   color: #b8b2a6;
@@ -410,6 +412,7 @@ aside code {
 .toggle-stack {
   display: grid;
   gap: 6px;
+  justify-items: end;
 }
 
 .zone em {
@@ -417,4 +420,33 @@ aside code {
   font-style: normal;
   font-size: 10px;
   opacity: 0.65;
+}
+
+.manual-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.manual-row input[type="range"] {
+  flex: 1;
+}
+
+.manual-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #b8b2a6;
+  white-space: nowrap;
+}
+
+.manual-entry input {
+  width: 88px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2b2823;
+  background: #0f0e0d;
+  color: #f6f4ed;
+  font-variant-numeric: tabular-nums;
 }

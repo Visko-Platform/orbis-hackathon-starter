@@ -148,7 +148,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
     <section className="heart-world">
       <header className="heart-head">
         <div>
-          <p className="eyebrow">Fuente</p>
+          <p className="eyebrow">Source</p>
           <div className="button-row">
             <button
               className={source === "manual" ? "" : "secondary"}
@@ -162,14 +162,14 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
               onClick={connectWatch}
               type="button"
             >
-              {deviceName || "Conectar reloj"}
+              {deviceName || "Connect watch"}
             </button>
             <button
               className={source === "replay" ? "" : "secondary"}
               onClick={loadReplay}
               type="button"
             >
-              {replayName || "Replay Garmin"}
+              {replayName || "Garmin replay"}
             </button>
           </div>
         </div>
@@ -181,7 +181,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
               onChange={(event) => setAuto(event.target.checked)}
               type="checkbox"
             />
-            Steer automático
+            Auto-steer
           </label>
           <label className="auto-toggle">
             <input
@@ -189,7 +189,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
               onChange={(event) => setDemo(event.target.checked)}
               type="checkbox"
             />
-            Modo demo (rangos comprimidos)
+            Demo mode (compressed ranges)
           </label>
         </div>
       </header>
@@ -207,31 +207,48 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
             style={{ background: entry.id === zone.id ? entry.color : undefined }}
           >
             {entry.label}
-            <em>{entry.minBpm ? `${entry.minBpm}+` : "reposo"}</em>
+            <em>{entry.minBpm ? `${entry.minBpm}+` : "rest"}</em>
           </span>
         ))}
       </div>
 
-      <input
-        max={MAX_SCALE_BPM}
-        min={40}
-        onChange={(event) => {
-          // Dragging always takes over, even mid-stream from the watch.
-          setSource("manual");
-          setBpm(Number(event.target.value));
-        }}
-        type="range"
-        value={bpm}
-      />
+      <div className="manual-row">
+        <input
+          max={MAX_SCALE_BPM}
+          min={40}
+          onChange={(event) => {
+            // Dragging always takes over, even mid-stream from the watch.
+            setSource("manual");
+            setBpm(Number(event.target.value));
+          }}
+          type="range"
+          value={bpm}
+        />
+        <label className="manual-entry">
+          Set BPM
+          <input
+            max={MAX_SCALE_BPM}
+            min={40}
+            onChange={(event) => {
+              const next = Number(event.target.value);
+              if (!Number.isFinite(next)) return;
+              setSource("manual");
+              setBpm(Math.min(MAX_SCALE_BPM, Math.max(40, next)));
+            }}
+            type="number"
+            value={bpm}
+          />
+        </label>
+      </div>
 
       <p className="hint">
         {live
           ? auto
             ? lastSteer
-              ? `Último steer: ${lastSteer}`
-              : "El mundo sigue tus pulsaciones."
-            : "Steer automático apagado."
-          : "Conectá Orbis y apretá Start para que el mundo reaccione."}
+              ? `Last steer: ${lastSteer}`
+              : "The world follows your heart rate."
+            : "Auto-steer off."
+          : "Connect Orbis and hit Start to make the world react."}
       </p>
 
       {bleError ? <p className="error">{bleError}</p> : null}
