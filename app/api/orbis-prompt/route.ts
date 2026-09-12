@@ -42,17 +42,18 @@ export async function POST(request: Request) {
   }
 
   const relationship = requireField(formData, "relationship");
-  const city = requireField(formData, "city");
-  const country = requireField(formData, "country");
+  const place = requireField(formData, "place") ?? undefined;
+  const city = requireField(formData, "city") ?? undefined;
+  const country = requireField(formData, "country") ?? undefined;
   const year = requireField(formData, "year");
   const memory = requireField(formData, "memory");
   const age = requireField(formData, "age") ?? undefined;
 
-  if (!relationship || !city || !country || !year || !memory) {
+  if (!relationship || !year || !memory || !(place || (city && country))) {
     return NextResponse.json(
       {
         error:
-          "relationship, city, country, year, and memory are all required",
+          "relationship, year, memory, and either place or city+country are all required",
       },
       { status: 400 },
     );
@@ -64,7 +65,15 @@ export async function POST(request: Request) {
       model: MEMORY_PROMPT_MODEL,
       contents: [
         {
-          text: buildMemoryContext({ relationship, age, city, country, year, memory }),
+          text: buildMemoryContext({
+            relationship,
+            age,
+            place,
+            city,
+            country,
+            year,
+            memory,
+          }),
         },
         {
           inlineData: {

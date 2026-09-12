@@ -45,8 +45,11 @@ tags, Markdown, JSON, headings, labels, analysis, or commentary.`;
 export type MemoryContext = {
   relationship: string;
   age?: string;
-  city: string;
-  country: string;
+  /** Free-text place (e.g. "Cavite City, Philippines"). Takes precedence
+   * over city/country when supplied — /add-family only collects one field. */
+  place?: string;
+  city?: string;
+  country?: string;
   year: string;
   memory: string;
 };
@@ -57,9 +60,12 @@ export function buildMemoryContext(input: MemoryContext): string {
   const who = input.age
     ? `${input.relationship}, approximately age ${input.age}`
     : input.relationship;
+  const location =
+    input.place?.trim() ||
+    [input.city, input.country].filter((part) => part?.trim()).join(", ");
   return [
     `Person: ${who}`,
-    `Place: ${input.city}, ${input.country}`,
+    `Place: ${location}`,
     `Year: ${input.year}`,
     `Remembered detail: ${input.memory.trim()}`,
   ].join("\n");

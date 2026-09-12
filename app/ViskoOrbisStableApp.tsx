@@ -1,9 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import { ViskoOrbisStableProvider } from "@reactor-models/visko-orbis-stable";
 import { MODEL_NAME, fetchReactorToken } from "./lib/visko";
 import { Header } from "./components/Header";
 import { StatusBadge } from "./components/StatusBadge";
+import { MemoryAutostart } from "./components/MemoryAutostart";
 import { NowPlaying } from "./components/NowPlaying";
 import { EvolveScene } from "./components/EvolveScene";
 import { PromptComposer } from "./components/PromptComposer";
@@ -47,8 +49,10 @@ export function ViskoOrbisStableApp() {
            * null when it isn't its turn:
            *
            *   SETUP (snapshot.started is false):
-           *     StatusBadge · PromptComposer (T2V) · ImageStarter (I2V) ·
-           *     SessionOptions + AudioPanel — idle-only knobs, lock in at start
+           *     StatusBadge · MemoryAutostart (runs the restore/ground/start
+           *     pipeline for a ?memoryId= from /add-family) · PromptComposer
+           *     (T2V) · ImageStarter (I2V) · SessionOptions + AudioPanel —
+           *     idle-only knobs, lock in at start
            *
            *   LIVE (snapshot.started is true):
            *     StatusBadge · NowPlaying · EvolveScene
@@ -69,6 +73,9 @@ export function ViskoOrbisStableApp() {
            */}
           <aside className="flex w-full flex-col gap-4 lg:h-full lg:w-80 lg:shrink-0 lg:overflow-y-auto">
             <StatusBadge />
+            <Suspense fallback={null}>
+              <MemoryAutostart />
+            </Suspense>
             <NowPlaying />
             <EvolveScene />
             <PromptComposer />
