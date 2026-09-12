@@ -32,6 +32,9 @@ export default function Page() {
         >
           Step into a family photograph
         </span>
+        <a href="/explore-grandmas-world" style={{ whiteSpace: "nowrap" }}>
+          Explore Grandma&apos;s World
+        </a>
         <a
           href="#add"
           className="fw-btn fw-btn-primary"
