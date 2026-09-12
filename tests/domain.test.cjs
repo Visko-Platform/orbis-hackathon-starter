@@ -114,8 +114,13 @@ test("an authored action beat describes physical motion instead of a scene trans
   assert.ok(beats.action.startsWith("Right now, in one continuous take, his hands turn the watch over in one smooth rotation."));
   assert.ok(!beats.action.includes("the scene transforms into"));
   assert.ok(beats.action.includes("Rigid-body rule") && beats.settled.includes("Rigid-body rule"));
-  assert.ok(beats.settled.includes("this view takes precedence over the general product description"));
+  assert.ok(beats.settled.includes("Product views in this shot, exactly as in the brand's reference photos"));
+  assert.ok(!beats.settled.includes("takes precedence"), "no view overrides the watch's other face");
   assert.ok(buildLiveDirectionBeats(base).action.includes("the scene transforms into"));
+  const generic = buildLiveDirectionBeats({ ...base, direction: "A rooftop at dusk." });
+  assert.equal(generic.action.split("A rooftop at dusk").length - 1, 1, "the generic action beat states the scene once");
+  assert.ok(generic.settled.includes("into this scene: A rooftop at dusk. This replaces") && !generic.settled.includes(".."), "no doubled periods");
+  assert.ok(buildLiveDirection({ ...base, productNotes: ["Datejust 41, case back: steel"] }).includes("only one face is visible at a time, and the dial face is never plain steel"));
   assert.ok(!buildLiveDirection(base).includes("Rigid-body rule"));
   const carried = buildLiveDirectionBeats({ ...base, continuity: "the same man; the Datejust 41 stays on his wrist" });
   assert.ok(carried.action.includes("Continuity: the same man") && carried.settled.includes("Continuity: the same man"));

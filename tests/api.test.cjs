@@ -123,6 +123,19 @@ test("the Rolex demo path resolves bubbles and free text into fixed beats", asyn
   assert.match(result.actionPrompt, /Rigid-body rule/);
   assert.ok(!result.actionPrompt.includes("the scene transforms into"));
   assert.ok(result.productNotes.some((note) => /no engraving/.test(note)));
+  assert.ok(result.productNotes.some((note) => note.startsWith("Datejust 41: Oystersteel")), "the dial side is described alongside the back");
+  assert.match(result.prompt, /the slate dial is still on the other side, hidden/);
+  assert.ok(!result.prompt.includes(".."), "no doubled periods");
+  // Coming from the boutique, the swap tells the wrist as a change, not as the same watch.
+  const swap = await (await post("/api/continuations/demo", { campaignId: "rolex-perpetual-moment", stepId: "swap", fromStepId: "boutique", currentPrompt: "x" })).json();
+  assert.match(swap.actionPrompt, /the Submariner Date he wore until now comes off first/);
+  assert.ok(!swap.prompt.includes("the same physical watch as in the previous shot"));
+  assert.equal((await post("/api/continuations/demo", { campaignId: "rolex-perpetual-moment", stepId: "swap", fromStepId: 7, currentPrompt: "x" })).status, 400);
+  // Showing the back of the Datejust while he still wears the Submariner cannot follow.
+  const refused = await post("/api/continuations/demo", { campaignId: "rolex-perpetual-moment", stepId: "inspect", fromStepId: "boutique", currentPrompt: "x" });
+  assert.equal(refused.status, 409);
+  assert.match((await refused.json()).error, /needs the Datejust 41 on his wrist, inside the boutique/);
+  assert.equal((await post("/api/continuations/demo", { campaignId: "rolex-perpetual-moment", stepId: "street", fromStepId: "exit", currentPrompt: "x" })).status, 409, "the opening never follows a running take");
   assert.match(result.prompt, /Continuity: The same person throughout: a Chinese man/);
   assert.match(result.prompt, /On the green leather tray, lying still and unchanged: the Submariner Date/);
   assert.ok(!result.prompt.includes("The product looks like this:"), "demo beats leave out the general appearance");
@@ -135,7 +148,7 @@ test("the Rolex demo path resolves bubbles and free text into fixed beats", asyn
   assert.match(free.prompt, /The same man throughout: a Chinese man/);
   assert.match(free.prompt, /On the green leather tray, unchanged: the Submariner Date/);
   assert.ok(!free.prompt.includes("The product looks like this:"), "the clause carries the appearance once");
-  assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear", "exit", "boutique"]);
+  assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear"], "with the watch in his hands, only putting it on can follow");
   assert.ok(result.promptVersionId);
   const byText = await (await post("/api/continuations/demo", { ...base, direction: "can you show the back" })).json();
   assert.equal(byText.step.id, "inspect");

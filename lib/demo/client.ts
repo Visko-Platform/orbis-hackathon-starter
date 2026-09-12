@@ -9,6 +9,8 @@ import type { DirectionMode } from "@/lib/live-direction";
 export type DemoBeatRequest = {
   campaignId: string;
   stepId?: string;
+  /** The beat the take is on now, so the ledger is told as a change from it. */
+  fromStepId?: string;
   direction?: string;
   currentPrompt: string;
   contract: SceneContract | null;
