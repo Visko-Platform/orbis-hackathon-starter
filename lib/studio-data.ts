@@ -162,6 +162,9 @@ export const audienceProfiles: AudienceProfile[] = [
   },
 ];
 
+// The brand the studio opens on.
+export const DEFAULT_CAMPAIGN_ID = "rolex-perpetual-moment";
+
 export const campaigns: Campaign[] = [
   {
     id: "pepsi-thirsty-for-more",

@@ -158,3 +158,9 @@ test("capacity refusals from Reactor are recognised and reworded", () => {
   assert.equal(friendlyStartError(new Error("other")).message, "other");
   assert.ok(CAPACITY_RETRY_LIMIT >= 3);
 });
+
+const { DEFAULT_CAMPAIGN_ID } = load("lib/studio-data.ts");
+test("the studio opens on the Rolex campaign", () => {
+  assert.equal(DEFAULT_CAMPAIGN_ID, "rolex-perpetual-moment");
+  assert.ok(campaigns.some((campaign) => campaign.id === DEFAULT_CAMPAIGN_ID));
+});
