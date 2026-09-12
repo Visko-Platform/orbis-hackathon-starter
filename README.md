@@ -1,4 +1,4 @@
-# Orbis hackathon starter!
+# Orbis hackathon starter
 
 A minimal Next.js example for the public Reactor-hosted Visko Orbis Stable API.
 It demonstrates server-side token minting, WebRTC video and audio, text-to-video,

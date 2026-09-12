@@ -19,15 +19,12 @@ export async function POST() {
       "Reactor-API-Key": apiKey,
     },
     body: JSON.stringify({
-      // 6h: docs allow up to 21600. A session warmed at 16:15 must outlive a 17:00 demo.
-      expires_after: 21600,
+      expires_after: 3600,
       authorization_details: [
         {
           type: "session",
           resources: { models: { match: [MODEL_NAME] } },
-          // A cap, not a reservation. Headroom so a mid-demo reload can connect
-          // while an orphaned session ages out. Pair with the KILL button.
-          constraints: { max_sessions: 3 },
+          constraints: { max_sessions: 1 },
         },
       ],
     }),
