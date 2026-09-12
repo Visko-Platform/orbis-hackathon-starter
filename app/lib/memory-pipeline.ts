@@ -32,6 +32,31 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
+// Nano Banana can hand back a full-resolution PNG, whose base64 form alone
+// overruns the ~5MB localStorage quota the saved record has to fit in. The
+// stored anchor only ever seeds the first video frame, so bounded JPEG is a
+// cheap trade for a record that actually persists. Falls back to the raw
+// blob if the canvas path is unavailable.
+async function toStorableAnchor(blob: Blob): Promise<string> {
+  const MAX_EDGE = 1280;
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return blobToDataUrl(blob);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    return canvas.toDataURL("image/jpeg", 0.82);
+  } catch {
+    return blobToDataUrl(blob);
+  }
+}
+
 export async function groundFamilyMemory(
   input: MemoryPipelineInput,
 ): Promise<GroundedMemory> {
@@ -50,7 +75,7 @@ export async function groundFamilyMemory(
     throw new Error(result.error || "Photo restoration failed");
   }
   const editedBlob = await editResponse.blob();
-  const anchorImage = await blobToDataUrl(editedBlob);
+  const anchorImage = await toStorableAnchor(editedBlob);
   const extension = editedBlob.type === "image/jpeg" ? "jpg" : "png";
   const anchor = new File([editedBlob], `${input.id}-anchor.${extension}`, {
     type: editedBlob.type || "image/png",

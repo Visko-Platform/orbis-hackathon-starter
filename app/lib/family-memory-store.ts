@@ -65,14 +65,27 @@ export function saveFamilyMemory(input: GroundedFamilyMemory): boolean {
   // Trim the raw upload before persisting — see file header. `image` is
   // never read back by anything that loads from this store.
   const { image: _image, ...trimmed } = input;
+  const key = STORAGE_PREFIX + input.id;
+  const payload = JSON.stringify(trimmed);
   try {
-    window.localStorage.setItem(
-      STORAGE_PREFIX + input.id,
-      JSON.stringify(trimmed),
-    );
+    window.localStorage.setItem(key, payload);
     return true;
   } catch {
-    return false;
+    // Out of quota. Every previously saved world carries its own base64
+    // anchor, and only the one being opened next matters — evict them and
+    // retry once before telling the presenter their photo was too big.
+    try {
+      for (let i = window.localStorage.length - 1; i >= 0; i--) {
+        const stale = window.localStorage.key(i);
+        if (stale && stale.startsWith(STORAGE_PREFIX) && stale !== key) {
+          window.localStorage.removeItem(stale);
+        }
+      }
+      window.localStorage.setItem(key, payload);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
