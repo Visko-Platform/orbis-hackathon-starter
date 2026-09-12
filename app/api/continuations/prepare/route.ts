@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { buildContinuationPrompt } from "@/lib/continuation-prompt";
+import { recordPromptVersion } from "@/lib/knowledge/audit";
+import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
+import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
+import { loadKnowledge } from "@/lib/knowledge/store";
 import {
   audienceProfiles,
   campaigns,
@@ -48,13 +52,25 @@ export async function POST(request: Request) {
     );
   }
 
+  // Prompt engineering: the operator's brief is rewritten with the approved
+  // product knowledge before it is wrapped into the continuation prompt.
+  const knowledge = await loadKnowledge(campaign.id);
+  const continuity = title.continuity;
+  const brief = body?.sceneBrief?.trim() || `Setting: ${continuity.setting}. Camera: ${continuity.camera}. Lighting: ${continuity.lighting}. Story action: ${continuity.objective}.`;
+  let engineered;
+  try {
+    engineered = await engineerPrompt(knowledge, brief, "opening", hasGemini() ? { engine: new GeminiEngine() } : {});
+  } catch (caught: unknown) {
+    if (caught instanceof RefusedError) return NextResponse.json({ error: caught.message }, { status: 400 });
+    throw caught;
+  }
+
+  const runId = crypto.randomUUID();
+  const prompt = buildContinuationPrompt({ title, campaign, profile, sceneBrief: engineered.text, assetId: body?.assetId, knowledge });
+  const version = await recordPromptVersion({ campaignId: campaign.id, runId, role: "opening", engineered, prompt, outcome: "start" });
+
   return NextResponse.json(
-    {
-      runId: crypto.randomUUID(),
-      prompt: buildContinuationPrompt({ title, campaign, profile, sceneBrief: body?.sceneBrief, assetId: body?.assetId }),
-      campaign,
-      preparedAt: new Date().toISOString(),
-    },
+    { runId, prompt, campaign, preparedAt: new Date().toISOString(), engineered, promptVersionId: version.id },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
