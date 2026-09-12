@@ -1,11 +1,13 @@
 # WonderBook — Little voices. Big adventures.
 
-An interactive fairy-tale storybook by denemlabs for the Live Models Hackathon.
+An interactive fairy-tale storybook by team **jvc** for the Live Models Hackathon.
 Children suggest a topic, choose what happens next, and ask questions while
 GPT writes the story and Orbis steers a continuous video scene.
 
 - **Live demo:** https://live-models-hackathon-production.up.railway.app/
 - **Source repository:** https://github.com/denemlabs/live-models-hackathon
+- **Team:** jvc
+- **Submission branch:** [`WonderBook-jvc`](https://github.com/denemlabs/orbis-hackathon-starter/tree/WonderBook-jvc)
 - **Source snapshot:** [`1a1da9c`](https://github.com/denemlabs/live-models-hackathon/commit/1a1da9ccdcf664db16b1cae7e356f9f2edbf4431)
 
 This directory is a standalone React / Vite / Express application with its own

@@ -107,5 +107,5 @@ behavior, use the public Reactor documentation:
 
 ## Hackathon examples
 
-- [WonderBook](examples/wonderbook): an interactive fairy-tale storybook using GPT,
+- [WonderBook](examples/wonderbook) by team **jvc**: an interactive fairy-tale storybook using GPT,
   live Orbis video, and AI narration. Includes its own setup instructions and tests.
