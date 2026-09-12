@@ -5,8 +5,6 @@ export const ORBIS_TRACKS = [
   { name: "main_audio", kind: "audio", direction: "recvonly" },
 ] as const;
 
-export const DOCUMENTED_RESOLUTIONS = ["1080p", "2k", "4k"];
-
 export type OrbisMessage = {
   type?: string;
   command?: string;

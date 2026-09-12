@@ -9,7 +9,6 @@ export type FilmTitle = {
   id: string;
   title: string;
   moment: string;
-  timecode: string;
   genre: string;
   palette: string;
   continuity: {
@@ -17,7 +16,6 @@ export type FilmTitle = {
     camera: string;
     lighting: string;
     objective: string;
-    protected: string[];
   };
 };
 
@@ -55,19 +53,11 @@ export type Campaign = {
   };
 };
 
-export type StoryBeat = {
-  id: string;
-  label: string;
-  detail: string;
-  instruction: string;
-};
-
 export const filmTitles: FilmTitle[] = [
   {
     id: "odyssey-harbor",
     title: "The Odyssey",
     moment: "Harbor departure",
-    timecode: "00:42:18",
     genre: "Epic adventure",
     palette: "#d8a15b",
     continuity: {
@@ -75,14 +65,12 @@ export const filmTitles: FilmTitle[] = [
       camera: "A low, steady tracking shot that continues forward without a cut",
       lighting: "Late-afternoon amber sun with salt haze in the air",
       objective: "The traveler moves through the harbor toward the departing ship",
-      protected: ["the traveler's face", "weathered wardrobe", "harbor geography"],
     },
   },
   {
     id: "spider-midtown",
     title: "Spider-Man",
     moment: "Midtown pursuit",
-    timecode: "01:08:44",
     genre: "Superhero action",
     palette: "#cf5148",
     continuity: {
@@ -90,14 +78,12 @@ export const filmTitles: FilmTitle[] = [
       camera: "Dynamic street-level tracking with the same forward momentum",
       lighting: "Clear afternoon light reflected from glass and wet pavement",
       objective: "The hero crosses the avenue while the city continues around him",
-      protected: ["hero silhouette", "suit continuity", "direction of travel"],
     },
   },
   {
     id: "midnight-metro",
     title: "Midnight Protocol",
     moment: "Metro exchange",
-    timecode: "00:27:06",
     genre: "Espionage thriller",
     palette: "#7d8fb4",
     continuity: {
@@ -105,7 +91,6 @@ export const filmTitles: FilmTitle[] = [
       camera: "Controlled handheld follow shot over the protagonist's shoulder",
       lighting: "Cool station light with warm reflections from nearby storefronts",
       objective: "The protagonist reaches the street and searches for a waiting contact",
-      protected: ["protagonist wardrobe", "rain level", "screen direction"],
     },
   },
 ];
@@ -240,30 +225,6 @@ export const campaigns: Campaign[] = [
         "Add one restrained Nike campaign poster to an existing background wall. Preserve the approved artwork and keep it secondary to the character and action.",
       zone: { x: 0.75, y: 0.2, width: 0.14, height: 0.28 },
     },
-  },
-];
-
-export const storyBeats: StoryBeat[] = [
-  {
-    id: "crowd-parts",
-    label: "The crowd parts",
-    detail: "Reveal a clear route ahead",
-    instruction:
-      "The same scene continues as the crowd naturally parts, revealing a clear route ahead. Maintain the same subject, camera, lighting, sponsor, and placement.",
-  },
-  {
-    id: "weather-turns",
-    label: "The weather turns",
-    detail: "Add atmosphere, preserve action",
-    instruction:
-      "The same unbroken shot continues as a light rain begins and reflections deepen. Maintain the same subject, movement, sponsor, and placement.",
-  },
-  {
-    id: "camera-follows",
-    label: "Follow the movement",
-    detail: "Track into the next location",
-    instruction:
-      "The camera follows the same subject forward into the next part of the location without a cut. Preserve identity, wardrobe, sponsor, and placement continuity.",
   },
 ];
 

@@ -1,5 +1,10 @@
-.env.local
+.env*
+!.env.example
 .next/
 node_modules/
 npm-debug.log*
 *.tsbuildinfo
+.vercel/
+coverage/
+.DS_Store
+Thumbs.db

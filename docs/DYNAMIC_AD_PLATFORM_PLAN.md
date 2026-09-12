@@ -1,5 +1,9 @@
 # Dynamic Product Placement Studio for Licensed Film Moments
 
+> **Status:** Production architecture proposal, not the current runtime.
+> See [`../HANDOVER.md`](../HANDOVER.md) for what is implemented today and the
+> boundary between the hackathon prototype and this roadmap.
+
 ## Summary
 
 Build a studio-operator platform that lets rights holders ingest an approved

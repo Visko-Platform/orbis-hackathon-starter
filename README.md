@@ -88,6 +88,7 @@ The product and production data model are described in
 [`docs/DYNAMIC_AD_PLATFORM_PLAN.md`](docs/DYNAMIC_AD_PLATFORM_PLAN.md).
 This implementation adds free-form live direction and manual brand selection
 beyond that initial plan.
+For another engineer taking ownership, see [`HANDOVER.md`](HANDOVER.md).
 
 ## Verify
 
