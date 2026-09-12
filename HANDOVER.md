@@ -90,7 +90,12 @@ Three CC BY 3.0 Blender Foundation clips ship with the app.
 ### Rolex demo path
 
 `lib/demo/flows.ts` holds an authored six-beat walk (street → boutique → swap →
-inspect → wear → exit) with a fixed cast, a per-beat watch ledger (on the wrist,
+inspect → wear → exit). Each beat is a structured director's brief (`scene`:
+setting, camera, what happens step by step, light, product, brand marks, never)
+rendered in that fixed order into the direction, so a short bubble like "Enter
+the boutique" injects a complete description of the facade, the interior, the
+camera move, the sequence of movements and what must not happen. The flow has a
+fixed cast, a per-beat watch ledger (on the wrist,
 in his hands, on the tray) and static brand marks, all restated as a continuity
 line in both transition beats; the ledger is told as a change from the beat the
 take was on (`fromStepId`, else the previous beat), so a swapped watch is never

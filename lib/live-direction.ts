@@ -50,10 +50,12 @@ function brandLine(input: DirectionInput) {
 export function buildLiveDirection(input: DirectionInput) {
   const direction = sentence(input.direction);
   const continuity = input.continuity?.trim();
+  // A structured brief already opens with "Scene:", so it is introduced as a whole rather than as "this scene: Scene:".
+  const into = /^Scene:/.test(direction) ? `Transition the running video as directed here. ${direction}.` : `Transition the running video into this scene: ${direction}.`;
   const scene = input.mode === "pivot"
     ? continuity
-      ? `New creative direction. Transition the running video into this scene: ${direction}. This replaces the previous setting, lighting, and camera instructions; the continuity below carries over unchanged. Let the visual transition unfold continuously.`
-      : `New creative direction. Transition the running video into this scene: ${direction}. This replaces the previous setting, narrative, lighting, and camera instructions. Let the visual transition unfold continuously.`
+      ? `New creative direction. ${into} This replaces the previous setting, lighting, and camera instructions; the continuity below carries over unchanged. Let the visual transition unfold continuously.`
+      : `New creative direction. ${into} This replaces the previous setting, narrative, lighting, and camera instructions. Let the visual transition unfold continuously.`
     : `Current scene context: ${input.currentPrompt.slice(-2000)}\nDirector's latest adjustment, which takes precedence over earlier conflicting details: ${direction}. Maintain continuity for elements not changed by this adjustment.`;
   return [scene, continuity ? `Continuity: ${continuity}` : null, fidelityLine(input), brandLine(input),
   "Photorealistic cinematic motion. Respond to the director's request in the next generated sequence."].filter(Boolean).join("\n");

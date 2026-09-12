@@ -29,6 +29,21 @@ test("every demo step points at real campaign assets and passes the product know
   assert.equal(demoFlowFor("pepsi-thirsty-for-more"), null);
 });
 
+test("every beat is a full director's brief rendered in a fixed order and short enough for the guard", () => {
+  const { MAX_INPUT_CHARS } = load("lib/knowledge/guard.ts");
+  for (const step of rolex.steps) {
+    const { scene, brief } = step;
+    assert.ok(scene.sequence.length >= 3, `${step.id} has a step-by-step sequence`);
+    assert.ok(scene.never.length >= 3, `${step.id} says what must not happen`);
+    for (const key of ["setting", "camera", "light", "product", "marks"]) assert.ok(scene[key].length > 60, `${step.id} ${key} is descriptive`);
+    const order = ["Scene: ", "Camera: ", "What happens, in order: (1) ", "Light: ", "Product: ", "Brand marks: ", "Never: "].map((mark) => brief.indexOf(mark));
+    assert.ok(order.every((index, i) => index >= 0 && (i === 0 || index > order[i - 1])), `${step.id} renders its sections in order`);
+    assert.ok(brief.length < MAX_INPUT_CHARS * 0.75, `${step.id} brief (${brief.length}) leaves headroom under the input guard`);
+  }
+  assert.ok(rolex.steps[1].scene.marks.includes("exactly twice") && rolex.steps[1].scene.setting.includes("gold serif capitals"));
+  assert.ok(rolex.steps[2].scene.sequence.some((line) => line.includes("for a moment his left wrist is bare")));
+});
+
 test("the Rolex walk follows street → boutique → swap → inspect → wear → exit", () => {
   assert.deepEqual(rolex.steps.map((step) => step.id), ["street", "boutique", "swap", "inspect", "wear", "exit"]);
   assert.equal(rolex.steps[0].assetId, "rolex-submariner");
@@ -46,7 +61,7 @@ test("the Rolex walk follows street → boutique → swap → inspect → wear �
 test("one cast member and a watch ledger carry through every beat", () => {
   const campaign = campaigns.find((item) => item.id === "rolex-perpetual-moment");
   assert.ok(rolex.cast.startsWith("a Chinese man"));
-  assert.ok(rolex.steps[0].brief.startsWith("A Chinese man"));
+  assert.ok(rolex.steps[0].brief.includes("A Chinese man in his early thirties"));
   assert.ok(rolex.steps.slice(1).every((step) => step.brief.includes("The same man")));
   assert.deepEqual(rolex.steps.map((step) => step.state.onWrist ?? step.state.inHands), ["rolex-submariner", "rolex-submariner", "rolex-datejust", "rolex-datejust", "rolex-datejust", "rolex-datejust"]);
   assert.deepEqual(rolex.steps.map((step) => step.state.onTray ?? null), [null, null, "rolex-submariner", "rolex-submariner", "rolex-submariner", null]);

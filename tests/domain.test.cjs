@@ -120,6 +120,8 @@ test("an authored action beat describes physical motion instead of a scene trans
   const generic = buildLiveDirectionBeats({ ...base, direction: "A rooftop at dusk." });
   assert.equal(generic.action.split("A rooftop at dusk").length - 1, 1, "the generic action beat states the scene once");
   assert.ok(generic.settled.includes("into this scene: A rooftop at dusk. This replaces") && !generic.settled.includes(".."), "no doubled periods");
+  const structured = buildLiveDirection({ ...base, direction: "Scene: A boutique. Camera: tracking." });
+  assert.ok(structured.includes("as directed here. Scene: A boutique.") && !structured.includes("this scene: Scene:"), "a structured brief is introduced as a whole");
   assert.ok(buildLiveDirection({ ...base, productNotes: ["Datejust 41, case back: steel"] }).includes("only one face is visible at a time, and the dial face is never plain steel"));
   assert.ok(!buildLiveDirection(base).includes("Rigid-body rule"));
   const carried = buildLiveDirectionBeats({ ...base, continuity: "the same man; the Datejust 41 stays on his wrist" });
