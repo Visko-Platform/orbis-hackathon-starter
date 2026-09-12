@@ -1,8 +1,8 @@
-# Orbis Ad — Engineering Handover
+# Adtractive — Engineering Handover
 
 ## 1. Current status
 
-Orbis Ad is a working local hackathon prototype for generating live,
+Adtractive is a working local hackathon prototype for generating live,
 brand-integrated video continuations from a user-supplied movie frame. The
 current build supports:
 

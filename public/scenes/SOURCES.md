@@ -39,4 +39,4 @@ video host during a live presentation.
   (https://creativecommons.org/licenses/by/3.0/)
 
 The included poster images and video excerpts are used as source footage and
-starting frames; Orbis Ad does not imply sponsorship or endorsement by Blender.
+starting frames; Adtractive does not imply sponsorship or endorsement by Blender.

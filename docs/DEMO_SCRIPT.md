@@ -1,6 +1,6 @@
 # Demo script — run of show
 
-A presenter-facing script for the Orbis Ad demo. Everything here is authored in
+A presenter-facing script for the Adtractive demo. Everything here is authored in
 [`lib/demo/flows.ts`](../lib/demo/flows.ts); this document is how to *drive* it.
 
 Target length: **3 minutes** of demo inside a 5-minute slot, leaving time for the pitch

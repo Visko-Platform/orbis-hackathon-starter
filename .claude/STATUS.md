@@ -1,4 +1,4 @@
-# Orbis-ad knowledge director — 10/10  updated 2026-09-12 15:50
+# Adtractive (was Orbis-ad) knowledge director — 10/10  updated 2026-09-12 15:50
 
 Current branch: feat/scene-contract from origin/main (1541c3e, which includes the teammate's real-footage scene library). Not pushed.
 

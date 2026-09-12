@@ -1,8 +1,8 @@
-# Orbis Ad
+# Adtractive
 
 **Product placement that is generated live, inside the scene — not cut in around it.**
 
-Orbis Ad is a studio for *dynamic in-scene brand placement*. You bring a product and a
+Adtractive is a studio for *dynamic in-scene brand placement*. You bring a product and a
 moment of footage; the app composes a starting frame, grounds a prompt in the brand's own
 approved knowledge, and hands it to a live video model that keeps generating — so the
 placement is part of the scene, and you can redirect that scene while it plays.

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "Orbis Ad Studio",
+  title: "Adtractive Studio",
   description: "Dynamic product placement for licensed film moments.",
 };
 
