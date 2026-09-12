@@ -1,106 +1,97 @@
-# Orbis hackathon starter
+# Pokémon Battle Live: Visko Orbis Turn-Based Arena
 
-A minimal Next.js example for the public Reactor-hosted Visko Orbis Stable API.
-It demonstrates server-side token minting, WebRTC video and audio, text-to-video,
-optional image-to-video, live prompt steering, delivery resolution, pause,
-resume, and a foldable Nano Banana-to-Orbis livestreaming example.
+A real-time, turn-based Pokémon battle game between Pikachu and Charizard powered by **Visko Orbis** (`reactor/visko-orbis-stable`). The entire visual battle is generated live as a continuous video stream and steered dynamically through combat prompts.
 
-## Requirements
+---
 
-- Node.js 20.9 or newer
-- A Reactor API key with access to Visko Orbis Stable
-- A Google Gemini API key with access to Nano Banana
+## Gameplay Demo
 
-## Run locally
+https://github.com/user-attachments/assets/demo_battle.mp4
+
+<p align="center">
+  <img src="demo_preview.gif" alt="Pokémon Battle Orbis Live Preview" width="100%" style="border-radius: 12px;" />
+</p>
+
+> Full 1080p demo recording: [`demo_battle.mp4`](demo_battle.mp4) (44 seconds, 818 live-generated Orbis frames).
+
+---
+
+## Features
+
+- **100% Continuous Generative Stream:** Video is continuously generated in real-time by Visko Orbis seeded with `assets/pokemon.png`—no artificial still-image freezing or frame pausing.
+- **Dynamic Prompt Steering:** Clicking attack moves dispatches concise steering prompts to the live Orbis session at chunk boundaries (`Pikachu uses Thunderbolt`, `Charizard uses Flamethrower`, `Pikachu uses Quick Attack`).
+- **Zero Entity Duplication:** Resolves diffusion model character hallucination by spatially anchoring combatants on session initialization, ensuring exactly two Pokémon (Pikachu on the left, Charizard on the right) throughout the battle.
+- **Dual Player Controls:** Full move pads for both Pikachu and Charizard with damage calculations, type effectiveness, and combat sound effects.
+- **Visual Stance Recovery:** Automatically steers combatants back to battle-ready holding stances between attacks.
+- **One-Click Arena Reset:** Re-arms Orbis with the seed image and holding position stance on `↺ Reset`.
+
+---
+
+## Quality Inspection & Keyframe Verification
+
+Every keyframe of the battle was verified to maintain character consistency with zero duplicate Pokémon:
+
+| Turn 1: Stance | Turn 2: Thunderbolt | Turn 4: Flamethrower |
+| :---: | :---: | :---: |
+| <img src="pokemon-battle/static/demo_qc/turn1_hold_position.png" width="280" /> | <img src="pokemon-battle/static/demo_qc/turn2_thunderbolt.png" width="280" /> | <img src="pokemon-battle/static/demo_qc/turn4_flamethrower.png" width="280" /> |
+
+| Turn 5: Quick Attack | Turn 6: Defeated |
+| :---: | :---: |
+| <img src="pokemon-battle/static/demo_qc/turn5_quick_attack.png" width="280" /> | <img src="pokemon-battle/static/demo_qc/turn6_fainted.png" width="280" /> |
+
+---
+
+## Quickstart
+
+### 1. Requirements
+
+- Python 3.10+
+- `uv` (recommended) or `pip`
+- Reactor API Key with access to `reactor/visko-orbis-stable`
+
+### 2. Configure API Key
+
+Create `.env.local` or set your environment variable:
 
 ```bash
-cp .env.example .env.local
-# Add your Reactor API key to .env.local.
-npm install
-npm run dev
+echo "REACTOR_API_KEY=your_reactor_api_key" > .env.local
 ```
 
-Open <http://localhost:3000>.
+### 3. Launch the Battle Arena
 
-Set both keys in `.env.local`:
+Using `uv`:
 
-```dotenv
-REACTOR_API_KEY=your_reactor_api_key
-GEMINI_API_KEY=your_gemini_api_key
+```bash
+uv run --with reactor-sdk --with pillow --with aiohttp --with numpy python pokemon_live_server.py
 ```
 
-Keep both keys server-side. The browser receives only the short-lived Reactor
-JWT and the image returned by the Nano Banana route.
+Or using standard `pip`:
 
-## Nano Banana kickoff example
+```bash
+pip install reactor-sdk pillow aiohttp numpy
+python pokemon_live_server.py
+```
 
-Connect to Orbis, expand **Livestreaming example**, and click
-**Edit and start stream**. The bundled `dog.png` is displayed as the source
-image. The server sends it with the displayed image-editing prompt to
-`gemini-2.5-flash-image`. Gemini then analyzes the edited image with the user
-prompt and returns a plain-text, image-grounded prompt. The
-edited output is previewed, uploaded as the Orbis start image, and used with
-that grounded prompt to begin the stream.
+Open your browser to:
 
-The two starting prompts are exported from `lib/nano-banana.ts`.
-`NANO_BANANA_PROMPT` controls the image edit, while `ORBIS_KICKOFF_PROMPT`
-describes the requested motion. The final Gemini-grounded prompt is displayed
-before it is sent to Orbis.
+```
+http://localhost:8001
+```
 
-## API flow
+---
 
-1. `POST /api/token` requests a scoped session JWT from
-   `https://api.reactor.inc/tokens`.
-2. `ReactorProvider` connects to `reactor/visko-orbis-stable` with the
-   recv-only `main_video` and `main_audio` tracks.
-3. The model sends a `state` snapshot. Its `state.available_resolutions` list
-   replaces the starter's initial documented resolution choices.
-4. If supplied, the reference image is uploaded and passed to `set_image`
-   before `start`.
-5. If selected, `set_resolution` stages a delivery tier for the next `start`.
-   Omitting it keeps the model's current setting; the documented default is
-   `2k`.
-6. `set_prompt` supplies the required prompt, then `start` begins generation.
-7. Sending another `set_prompt` while running steers the video at the next
-   chunk boundary.
+## Project Structure
 
-## Documented model behavior
-
-- A prompt is required before `start`; the reference image is optional.
-- A 16:9 reference image works best. Other aspect ratios are resized without
-  cropping and may appear distorted.
-- The starter initially shows the currently documented `1080p`, `2k`, and `4k`
-  tiers. After connection, treat `state.available_resolutions` as authoritative
-  and send the selected value exactly as given.
-- `set_resolution` applies from the next `start`, not during the active run.
-- Orbis emits chunks about every 1.8 seconds. The first chunk emits no frames
-  while the upscaler primes; this is expected.
-- Commands are asynchronous. Use model events such as `state`,
-  `prompt_accepted`, `resolution_accepted`, `generation_started`,
-  `chunk_complete`, and `command_error` as the source of truth.
-- `pause` takes effect after the current chunk. `resume` continues the same
-  generation, and `reset` clears the current prompt and image.
-
-## Project files
-
-- `app/api/token/route.ts` performs the server-side token exchange.
-- `app/api/nano-banana/route.ts` performs the server-side image edit.
-- `app/api/orbis-prompt/route.ts` creates the image-grounded video prompt.
-- `components/orbis-demo.tsx` composes the provider, player, controls, and demo.
-- `components/orbis-player.tsx` renders the streamed video and audio.
-- `components/orbis-controls.tsx` renders the session controls.
-- `components/nano-banana-example.tsx` owns the kickoff example and source image.
-- `hooks/use-orbis-session.ts` contains the reusable Orbis command sequence and
-  session state.
-- `dog.png` is the Nano Banana source image.
-- `lib/orbis.ts` contains the public model configuration and message helpers.
-- `lib/orbis-prompt.ts` contains the plain-text Gemini grounding instruction.
-- `lib/nano-banana.ts` contains the model and kickoff prompt.
-- `.env.example` documents the required environment variables.
-
-For the complete command parameters, message schemas, tracks, and current model
-behavior, use the public Reactor documentation:
-
-- [Visko Orbis Stable API](https://www.reactor.inc/models/visko-orbis-stable/api)
-- [Visko Orbis Dynamic API](https://www.reactor.inc/models/visko-orbis-dynamic/api)
-- [Gemini image generation and editing](https://ai.google.dev/gemini-api/docs/image-generation)
+```
+.
+├── pokemon_live_server.py         # Async live server (Aiohttp + WebSockets + MJPEG stream)
+├── play_and_record_demo.py        # Automated test player and 1080p demo recorder
+├── demo_battle.mp4                # Master 1080p recording of the live Orbis battle
+├── demo_preview.gif               # Animated preview for README
+├── assets/
+│   └── pokemon.png                # Seed battle image (Pikachu left, Charizard right)
+└── pokemon-battle/
+    └── static/
+        ├── index.html             # Turn-based battle UI & retro audio synthesizer
+        └── demo_qc/               # Verified battle keyframes
+```
