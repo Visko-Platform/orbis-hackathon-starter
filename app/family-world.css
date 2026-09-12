@@ -127,6 +127,10 @@
 .fw-btn-primary { background: var(--color-accent); color: var(--color-bg); }
 .fw-btn-primary:hover { background: var(--color-accent-600); }
 .fw-btn-primary:active { background: var(--color-accent-700); }
+/* Anchor-rendered primaries need (0,3,0) specificity to outrank .family-world a (0,1,1) and
+   .family-world a:hover (0,2,1) — otherwise the link color rules repaint the button red-on-red,
+   at rest and especially on hover. */
+.family-world .fw-btn.fw-btn-primary { color: var(--color-bg); }
 .fw-btn-secondary { border-color: var(--color-divider); }
 .fw-btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
 .fw-btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
