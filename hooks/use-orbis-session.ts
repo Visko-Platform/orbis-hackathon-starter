@@ -10,11 +10,12 @@ import {
 } from "@/lib/orbis";
 
 export function useOrbisSession(onDisconnected: () => void) {
-  const { status, connect, disconnect, sendCommand, uploadFile } = useReactor(
+  const { status, connect, disconnect, reconnect, sendCommand, uploadFile } = useReactor(
     (state) => ({
       status: state.status,
       connect: state.connect,
       disconnect: state.disconnect,
+      reconnect: state.reconnect,
       sendCommand: state.sendCommand,
       uploadFile: state.uploadFile,
     }),
@@ -63,8 +64,10 @@ export function useOrbisSession(onDisconnected: () => void) {
     setError("");
     try {
       await action();
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -291,6 +294,7 @@ export function useOrbisSession(onDisconnected: () => void) {
     events,
     chunkCount,
     connectSession: () => runAction(() => connect()),
+    reconnectSession: () => runAction(() => reconnect({ maxAttempts: 8 })),
     disconnectSession,
     toggleMuted: () => setMuted((current) => !current),
     setPrompt,

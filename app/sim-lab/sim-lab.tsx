@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import type { ActionDefinition, RunRecord, ScenarioDefinition, StepRecord } from "@/lib/sim/types";
+import type { ActionDefinition, BellmanSolution, RunRecord, ScenarioDefinition, StepRecord } from "@/lib/sim/types";
 
 import { LiveSimRunner } from "./live-sim-runner";
 import styles from "./sim-lab.module.css";
@@ -14,6 +14,7 @@ export type ScenarioResponse = {
     edges: Array<{ from: string; to: string; actionId: string }>;
     truncated: boolean;
   };
+  solution?: BellmanSolution;
 };
 
 type RunResponse = {
@@ -39,11 +40,11 @@ export function SimLab({ initialScenarioData }: { initialScenarioData: ScenarioR
   const loadScenario = useCallback(async () => {
     try {
       setError("");
-      setScenarioData(await requestJson<ScenarioResponse>("/api/sim/scenarios/tiny-life"));
+      setScenarioData(await requestJson<ScenarioResponse>(`/api/sim/scenarios/${scenarioData.scenario.id}`));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load scenario.");
     }
-  }, []);
+  }, [scenarioData.scenario.id]);
 
   const createRun = async () => {
     setBusy(true);
@@ -51,7 +52,7 @@ export function SimLab({ initialScenarioData }: { initialScenarioData: ScenarioR
       const created = await requestJson<{ run: RunRecord }>("/api/sim/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenarioId: "tiny-life" }),
+        body: JSON.stringify({ scenarioId: scenarioData.scenario.id }),
       });
       const details = await requestJson<RunResponse>(`/api/sim/runs/${created.run.id}`);
       setRunData(details);
@@ -94,7 +95,7 @@ export function SimLab({ initialScenarioData }: { initialScenarioData: ScenarioR
       <header className={styles.header}>
         <a href="/" className={styles.back}>← Back to stream</a>
         <p>DEVELOPER TOOL · DETERMINISTIC MDP</p>
-        <h1>Tiny Life Simulation Lab</h1>
+        <h1>Simulation Lab</h1>
         <span>YAML state machine as truth. Live video is a renderer; Gemini judges its alignment.</span>
       </header>
 
@@ -104,6 +105,7 @@ export function SimLab({ initialScenarioData }: { initialScenarioData: ScenarioR
         <div><small>Scenario</small><strong>{scenarioData.scenario.title}</strong></div>
         <div><small>Action cadence</small><strong>{scenarioData.scenario.runtime.chunks_per_action} Orbis chunks</strong></div>
         <div><small>Graph coverage</small><strong>{scenarioData.graph.states.length} reachable states</strong></div>
+        <div><small>Bellman start value</small><strong>{scenarioData.solution ? scenarioData.solution.startValue.toFixed(2) : "—"}</strong></div>
       </section>
 
       <section className={styles.grid}>
@@ -115,6 +117,7 @@ export function SimLab({ initialScenarioData }: { initialScenarioData: ScenarioR
               <div className={styles.node} key={id}>
                 <span>#{index + 1}</span>
                 <code>{Object.entries(state).map(([key, value]) => `${key}: ${value}`).join(" · ")}</code>
+                {scenarioData.solution?.states[id]?.optimalActionId && <b>Optimal: {scenarioData.solution.states[id].optimalActionId} · V={scenarioData.solution.states[id].value.toFixed(2)}</b>}
                 <div>{(edgesByState.get(id) ?? []).map((action) => <i key={action}>{action}</i>)}</div>
               </div>
             ))}

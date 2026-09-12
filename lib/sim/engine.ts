@@ -1,5 +1,6 @@
 import type {
   ActionDefinition,
+  BellmanSolution,
   RenderIntent,
   ScenarioDefinition,
   SimState,
@@ -8,7 +9,13 @@ import type {
 
 export function allowedActions(scenario: ScenarioDefinition, state: SimState) {
   return scenario.actions.filter((action) =>
-    Object.entries(action.available_when ?? {}).every(([field, expected]) => state[field] === expected),
+    Object.entries(action.available_when ?? {}).every(([field, expected]) => state[field] === expected)
+      && Object.entries(action.requires ?? {}).every(([field, condition]) => {
+        const value = state[field];
+        return typeof value === "number"
+          && (condition.gte === undefined || value >= condition.gte)
+          && (condition.lte === undefined || value <= condition.lte);
+      }),
   );
 }
 
@@ -16,6 +23,7 @@ export function applyAction(
   scenario: ScenarioDefinition,
   state: SimState,
   actionId: string,
+  stepIndex = 0,
 ): TransitionResult {
   const action = allowedActions(scenario, state).find((candidate) => candidate.id === actionId);
   if (!action) throw new Error(`Action ${actionId} is not allowed in the current state.`);
@@ -30,18 +38,49 @@ export function applyAction(
     next[field] = current + delta;
   }
   validateState(scenario, next);
-  return { stateBefore: { ...state }, stateAfter: next, action, renderIntent: buildRenderIntent(action, next) };
+  const episode = evaluateEpisode(scenario, next, action.reward ?? 0, stepIndex);
+  return {
+    stateBefore: { ...state },
+    stateAfter: next,
+    action,
+    renderIntent: buildRenderIntent(action, next),
+    ...episode,
+  };
 }
 
-export function buildInitialRenderIntent(scenario: ScenarioDefinition, state: SimState): RenderIntent {
+export function evaluateEpisode(scenario: ScenarioDefinition, state: SimState, actionReward = 0, stepIndex = 0) {
+  const definition = scenario.episode;
+  if (!definition) return { reward: actionReward, done: false as const };
+  const success = stateMatches(state, definition.success_when);
+  const failure = !success && (stateMatches(state, definition.failure_when) || stepIndex >= definition.max_steps);
+  return {
+    reward: actionReward + definition.step_reward + (success ? definition.success_reward : failure ? definition.failure_reward : 0),
+    done: success || failure,
+    outcome: success ? "success" as const : failure ? "failure" as const : undefined,
+  };
+}
+
+const INITIAL_VISUAL_VARIANTS = [
+  "a sunlit Mission studio with warm wood, trailing plants, and a lived-in desk by the window",
+  "a fog-softened Inner Sunset apartment with cool daylight, bookshelves, and a neatly packed suitcase",
+  "a compact Richmond room with overcast window light, a bicycle helmet, and a hand-drawn neighborhood map",
+  "a bright South Beach apartment with clean lines, pale concrete, and a small view toward the Bay",
+  "a colorful shared apartment near Dolores Park with posters, thrifted furniture, and morning light",
+  "a quiet Noe Valley room with soft cream walls, houseplants, and a work bag ready by the door",
+  "a modest Tenderloin studio with practical furnishings, a transit card, and dramatic city light through blinds",
+  "a calm Outer Richmond apartment with coastal light, a rain jacket, and a simple breakfast setup",
+] as const;
+
+export function buildInitialRenderIntent(scenario: ScenarioDefinition, state: SimState, seed = 0): RenderIntent {
   const location = String(state.location ?? "the current location");
   const time = String(state.time ?? "daytime");
+  const visualVariant = INITIAL_VISUAL_VARIANTS[Math.abs(seed) % INITIAL_VISUAL_VARIANTS.length];
   return {
     scene: `${location} during ${time}`,
     event: "The protagonist begins a quiet moment in this state.",
-    visualFacts: [location, time, "one person"],
+    visualFacts: [location, time, "one person", visualVariant],
     camera: "stable medium-wide shot",
-    prompt: `A grounded, cinematic life-simulation scene. Show ${location} during ${time}. A single consistent protagonist is present. Keep the setting, character identity, lighting, and camera stable.`,
+    prompt: `A grounded, cinematic life-simulation scene. Show ${location} during ${time}: ${visualVariant}. A single consistent protagonist is present. Keep the setting, character identity, lighting, and camera stable.`,
   };
 }
 
@@ -64,6 +103,63 @@ export function enumerateReachableStates(scenario: ScenarioDefinition, limit = 8
     }
   }
   return { states: [...states.entries()].map(([id, state]) => ({ id, state })), edges, truncated: queue.length > 0 };
+}
+
+/** Solves an episodic, deterministic scenario exactly with Bellman optimality. */
+export function solveBellman(scenario: ScenarioDefinition, limit = 5_000): BellmanSolution {
+  if (!scenario.episode) throw new Error("Bellman solving requires an episodic scenario with terminal rules.");
+  const states = new Map<string, SimState>();
+  const transitions = new Map<string, Array<{ actionId: string; nextId: string; reward: number; done: boolean }>>();
+  const queue = [scenario.initial_state];
+  states.set(stateKey(scenario.initial_state), scenario.initial_state);
+
+  while (queue.length) {
+    const state = queue.shift()!;
+    const id = stateKey(state);
+    const edges = allowedActions(scenario, state).map((action) => {
+      const result = applyAction(scenario, state, action.id);
+      const nextId = stateKey(result.stateAfter);
+      if (!states.has(nextId)) {
+        if (states.size >= limit) throw new Error(`Bellman state limit (${limit}) reached.`);
+        states.set(nextId, result.stateAfter);
+        queue.push(result.stateAfter);
+      }
+      return { actionId: action.id, nextId, reward: result.reward, done: result.done };
+    });
+    transitions.set(id, edges);
+  }
+
+  const values = new Map<string, BellmanSolution["states"][string]>();
+  const visiting = new Set<string>();
+  const solveState = (id: string): BellmanSolution["states"][string] => {
+    const cached = values.get(id);
+    if (cached) return cached;
+    if (visiting.has(id)) throw new Error("Bellman solver found a cycle; add an episode clock to the scenario state.");
+    visiting.add(id);
+    const edges = transitions.get(id) ?? [];
+    if (!edges.length) {
+      const terminal = { value: 0, actionValues: {}, terminal: true };
+      values.set(id, terminal);
+      visiting.delete(id);
+      return terminal;
+    }
+    const actionValues = Object.fromEntries(edges.map((edge) => [edge.actionId, edge.reward + (edge.done ? 0 : solveState(edge.nextId).value)]));
+    const [optimalActionId, value] = Object.entries(actionValues).reduce((best, current) => current[1] > best[1] ? current : best);
+    const solved = { value, optimalActionId, actionValues, terminal: false };
+    values.set(id, solved);
+    visiting.delete(id);
+    return solved;
+  };
+
+  const startStateId = stateKey(scenario.initial_state);
+  const start = solveState(startStateId);
+  return {
+    stateCount: states.size,
+    startStateId,
+    startValue: start.value,
+    startActionId: start.optimalActionId,
+    states: Object.fromEntries(values),
+  };
 }
 
 function buildRenderIntent(action: ActionDefinition, state: SimState): RenderIntent {
@@ -94,4 +190,8 @@ function validateState(scenario: ScenarioDefinition, state: SimState) {
 
 export function stateKey(state: SimState) {
   return JSON.stringify(Object.keys(state).sort().map((key) => [key, state[key]]));
+}
+
+function stateMatches(state: SimState, expected: Partial<SimState>) {
+  return Object.entries(expected).every(([field, value]) => state[field] === value);
 }

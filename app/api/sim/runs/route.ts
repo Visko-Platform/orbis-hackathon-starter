@@ -21,10 +21,11 @@ export async function POST(request: Request) {
       seed: Number.isInteger(body.seed) ? body.seed! : Math.floor(Math.random() * 2 ** 31),
       state: scenario.initial_state,
       stepIndex: 0,
+      totalReward: 0,
       createdAt: now,
       updatedAt: now,
     });
-    return NextResponse.json({ run, initialRenderIntent: buildInitialRenderIntent(scenario, run.state), scenario });
+    return NextResponse.json({ run, initialRenderIntent: buildInitialRenderIntent(scenario, run.state, run.seed), scenario });
   } catch (caught) {
     return NextResponse.json({ error: caught instanceof Error ? caught.message : "Could not create run." }, { status: 400 });
   }

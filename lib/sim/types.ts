@@ -4,6 +4,8 @@ export type SimState = Record<string, Scalar>;
 export type EnumField = { type: "enum"; values: Scalar[] };
 export type IntegerField = { type: "integer"; min: number; max: number };
 export type StateField = EnumField | IntegerField;
+export type NumericCondition = { gte?: number; lte?: number };
+export type StateConditions = Partial<SimState> & Record<string, Scalar | NumericCondition>;
 
 export type RenderTemplate = {
   scene: string;
@@ -16,11 +18,22 @@ export type ActionDefinition = {
   id: string;
   label: string;
   available_when?: Partial<SimState>;
+  requires?: Record<string, NumericCondition>;
+  reward?: number;
   transition: {
     set?: Partial<SimState>;
     add?: Record<string, number>;
   };
   render: RenderTemplate;
+};
+
+export type EpisodeDefinition = {
+  max_steps: number;
+  step_reward: number;
+  success_when: Partial<SimState>;
+  success_reward: number;
+  failure_when: Partial<SimState>;
+  failure_reward: number;
 };
 
 export type ScenarioDefinition = {
@@ -34,6 +47,7 @@ export type ScenarioDefinition = {
   state: Record<string, StateField>;
   initial_state: SimState;
   actions: ActionDefinition[];
+  episode?: EpisodeDefinition;
 };
 
 export type RenderIntent = {
@@ -49,6 +63,24 @@ export type TransitionResult = {
   stateAfter: SimState;
   action: ActionDefinition;
   renderIntent: RenderIntent;
+  reward: number;
+  done: boolean;
+  outcome?: "success" | "failure";
+};
+
+export type BellmanStateValue = {
+  value: number;
+  optimalActionId?: string;
+  actionValues: Record<string, number>;
+  terminal: boolean;
+};
+
+export type BellmanSolution = {
+  stateCount: number;
+  startStateId: string;
+  startValue: number;
+  startActionId?: string;
+  states: Record<string, BellmanStateValue>;
 };
 
 export type Judgment = {
@@ -71,6 +103,8 @@ export type RunRecord = {
   seed: number;
   state: SimState;
   stepIndex: number;
+  totalReward: number;
+  outcome?: "success" | "failure";
   createdAt: string;
   updatedAt: string;
 };
@@ -84,6 +118,9 @@ export type StepRecord = {
   stateAfter: SimState;
   renderIntent: RenderIntent;
   judgment: Judgment;
+  reward: number;
+  done: boolean;
+  outcome?: "success" | "failure";
   framePath?: string;
   createdAt: string;
 };

@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "sim:smoke": "tsx scripts/sim-smoke.ts"
+    "sim:smoke": "tsx scripts/sim-smoke.ts",
+    "sim:collect": "tsx scripts/collect-episodes.ts"
   },
   "dependencies": {
     "@google/genai": "2.22.0",

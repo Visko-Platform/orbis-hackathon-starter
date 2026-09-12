@@ -50,11 +50,21 @@ function validateScenario(scenario: ScenarioDefinition) {
     for (const field of Object.keys(action.available_when ?? {})) {
       if (!scenario.state[field]) throw new Error(`Action ${action.id} checks unknown field ${field}.`);
     }
+    for (const field of Object.keys(action.requires ?? {})) {
+      if (!scenario.state[field] || scenario.state[field].type !== "integer") {
+        throw new Error(`Action ${action.id} requires a numeric unknown or non-integer field ${field}.`);
+      }
+    }
     for (const field of Object.keys(action.transition.set ?? {})) {
       if (!scenario.state[field]) throw new Error(`Action ${action.id} sets unknown field ${field}.`);
     }
     for (const field of Object.keys(action.transition.add ?? {})) {
       if (!scenario.state[field]) throw new Error(`Action ${action.id} adds unknown field ${field}.`);
+    }
+  }
+  if (scenario.episode) {
+    for (const [name, condition] of Object.entries({ success_when: scenario.episode.success_when, failure_when: scenario.episode.failure_when })) {
+      for (const field of Object.keys(condition)) if (!scenario.state[field]) throw new Error(`Episode ${name} checks unknown field ${field}.`);
     }
   }
 }

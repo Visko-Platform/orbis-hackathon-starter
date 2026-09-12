@@ -1,0 +1,143 @@
+id: new-in-sf-v2
+title: New in SF — Build a foothold
+version: 2
+runtime:
+  chunks_per_action: 15
+  judge_after_each_action: true
+
+episode:
+  max_steps: 15
+  step_reward: -0.25
+  success_when:
+    day: 6
+    money: 2
+    connections: 2
+  success_reward: 10
+  failure_when:
+    day: 6
+  failure_reward: -5
+
+state:
+  day:
+    type: integer
+    min: 1
+    max: 6
+  time:
+    type: enum
+    values: [day, night]
+  location:
+    type: enum
+    values: [room, park, office]
+  energy:
+    type: integer
+    min: 0
+    max: 3
+  money:
+    type: integer
+    min: 0
+    max: 3
+  connections:
+    type: integer
+    min: 0
+    max: 3
+
+initial_state:
+  day: 1
+  time: day
+  location: room
+  energy: 2
+  money: 1
+  connections: 0
+
+actions:
+  - id: go_to_office
+    label: Go to the office
+    available_when: { location: room, time: day }
+    transition:
+      set: { location: office }
+    render:
+      scene: a bright San Francisco office in daytime
+      event: The newcomer heads from their room to the office for a focused day of work.
+      visual_facts: [one person, office, daylight, San Francisco]
+      camera: continuous arrival, then a stable medium-wide shot
+
+  - id: take_waymo_to_park
+    label: Take a Waymo to the park
+    available_when: { location: room, time: day }
+    requires: { money: { gte: 1 } }
+    reward: -1
+    transition:
+      set: { location: park }
+      add: { money: -1 }
+    render:
+      scene: a San Francisco park in daytime after a Waymo drop-off
+      event: The newcomer takes an expensive Waymo from their room to the park to spend time around people.
+      visual_facts: [one person, park, daylight, autonomous car departure]
+      camera: gentle arrival, then a stable medium-wide shot
+
+  - id: rest_at_room
+    label: Rest overnight at the room
+    available_when: { location: room, time: day }
+    requires: { day: { lte: 5 } }
+    transition:
+      set: { time: day, energy: 3 }
+      add: { day: 1 }
+    render:
+      scene: a simple rented room in San Francisco in early daylight
+      event: The newcomer stays in, rests through the night, and wakes ready for a new day.
+      visual_facts: [one person, small room, morning daylight]
+      camera: quiet stable medium-wide shot
+
+  - id: work_at_office
+    label: Work at the office
+    available_when: { location: office, time: day }
+    requires: { energy: { gte: 1 }, money: { lte: 2 } }
+    reward: 1
+    transition:
+      set: { time: night }
+      add: { energy: -1, money: 1 }
+    render:
+      scene: a lively San Francisco office at nightfall
+      event: The newcomer completes a focused work shift and earns enough to keep building a life in the city.
+      visual_facts: [one person, office desk, laptop, city evening]
+      camera: observational medium-wide shot
+
+  - id: meet_people_at_park
+    label: Meet people at the park
+    available_when: { location: park, time: day }
+    requires: { energy: { gte: 1 }, connections: { lte: 2 } }
+    reward: 2
+    transition:
+      set: { time: night }
+      add: { energy: -1, connections: 1 }
+    render:
+      scene: a lively San Francisco park at golden hour
+      event: The newcomer joins a friendly conversation and makes a real local connection.
+      visual_facts: [small group of people, park, warm evening light]
+      camera: stable conversational medium shot
+
+  - id: go_home_from_office
+    label: Go home and rest overnight
+    available_when: { location: office }
+    requires: { day: { lte: 5 } }
+    transition:
+      set: { location: room, time: day, energy: 3 }
+      add: { day: 1 }
+    render:
+      scene: a simple rented room in San Francisco in early daylight
+      event: The newcomer goes home from the office, rests overnight, and wakes ready for tomorrow.
+      visual_facts: [one person, room, morning daylight]
+      camera: quiet stable wide shot
+
+  - id: go_home_from_park
+    label: Go home and rest overnight
+    available_when: { location: park }
+    requires: { day: { lte: 5 } }
+    transition:
+      set: { location: room, time: day, energy: 3 }
+      add: { day: 1 }
+    render:
+      scene: a simple rented room in San Francisco in early daylight
+      event: The newcomer leaves the park, rests overnight at home, and wakes ready for tomorrow.
+      visual_facts: [one person, room, morning daylight]
+      camera: quiet stable wide shot
