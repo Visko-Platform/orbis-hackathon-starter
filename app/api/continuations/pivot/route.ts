@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { recordPromptVersion } from "@/lib/knowledge/audit";
+import { afterPivot, contractClause, parseContract, type SceneContract } from "@/lib/knowledge/contract";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { isFactQuestion, retrieveFacts } from "@/lib/knowledge/retrieve";
@@ -21,6 +22,16 @@ export async function POST(request: Request) {
   const knowledge = await loadKnowledge(campaign.id);
   const direction: string = body.direction.trim();
 
+  // The scene contract the take is running under, if the client has one.
+  let contract: SceneContract | null = null;
+  if (body.contract !== undefined && body.contract !== null) {
+    try {
+      contract = parseContract(body.contract, knowledge);
+    } catch (caught: unknown) {
+      return NextResponse.json({ error: `Invalid contract: ${caught instanceof Error ? caught.message : String(caught)}` }, { status: 400 });
+    }
+  }
+
   // A question about the product is answered on screen from approved facts,
   // never turned into a prompt.
   if (isFactQuestion(direction)) {
@@ -35,6 +46,7 @@ export async function POST(request: Request) {
     engineered = await engineerPrompt(knowledge, direction, body.mode, {
       engine: hasGemini() ? new GeminiEngine() : undefined,
       keepProduct: body.preserveBrand,
+      contract: contract?.lines.map((line) => line.text) ?? [],
     });
   } catch (caught: unknown) {
     if (caught instanceof RefusedError) return NextResponse.json({ error: caught.message }, { status: 400 });
@@ -48,7 +60,9 @@ export async function POST(request: Request) {
     brand: campaign.brand,
     preserveBrand: body.preserveBrand,
     productAppearance: knowledge.product.appearance,
+    contractClause: contractClause(contract),
   });
-  const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt, outcome: "steer" });
-  return NextResponse.json({ outcome: "steer", prompt, mode: body.mode, engineered, promptVersionId: version.id }, { headers: NO_STORE });
+  const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt, outcome: "steer", contract });
+  const nextContract = contract ? afterPivot(contract, { mode: body.mode, keepProduct: body.preserveBrand }) : null;
+  return NextResponse.json({ outcome: "steer", prompt, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
 }

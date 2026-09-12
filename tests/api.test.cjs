@@ -17,7 +17,52 @@ test("prepare returns a no-store, asset-aware run", async () => {
   assert.match(result.prompt, /Product reference: A blue Pepsi can/);
   assert.equal(result.engineered.source, selection.sceneBrief);
   assert.ok(result.prompt.includes(result.engineered.text));
+  assert.ok(Array.isArray(result.contract.lines) && result.contract.lines.length >= 1);
+  assert.equal(result.contract.lines[0].kind, "product");
+  assert.ok(result.contract.lines[0].pinned);
 });
+
+const contract = { lines: [
+  { id: "prod", kind: "product", text: "One Pepsi stays in the scene: a blue can with the globe", pinned: true, source: "knowledge" },
+  { id: "who", kind: "person", text: "One man in a grey hoodie holds the can in his right hand", pinned: false, source: "frame" },
+  { id: "where", kind: "setting", text: "A rainy street at night", pinned: false, source: "brief" },
+] };
+
+test("a direction restates the scene contract and the pivot advances it", async () => {
+  const response = await post("/api/continuations/pivot", { ...pivot, contract });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.ok(result.prompt.includes("Keep true: One Pepsi stays in the scene"));
+  assert.ok(result.prompt.includes("grey hoodie"));
+  assert.deepEqual(result.contract.lines.map((line) => line.id), ["prod", "who"]);
+});
+
+test("a refinement keeps every contract line", async () => {
+  const result = await (await post("/api/continuations/pivot", { ...pivot, mode: "refine", contract })).json();
+  assert.deepEqual(result.contract.lines.map((line) => line.id), ["prod", "who", "where"]);
+});
+
+test("a contract line naming a competitor is refused", async () => {
+  const bad = { lines: [{ kind: "custom", text: "A Coca-Cola on the table" }] };
+  assert.equal((await post("/api/continuations/pivot", { ...pivot, contract: bad })).status, 400);
+});
+
+test("the contract endpoint drafts person and setting lines from a brief and keeps pinned lines", async () => {
+  const form = new FormData();
+  form.set("campaignId", "pepsi-thirsty-for-more");
+  form.set("brief", "A woman in a yellow raincoat waits at a bus stop at dusk, holding the can.");
+  form.set("contract", JSON.stringify({ lines: [{ id: "keep", kind: "setting", text: "Neon signs reflect on wet pavement", pinned: true, source: "operator" }] }));
+  const response = await fetch(baseUrl + "/api/continuations/contract", { method: "POST", body: form, signal: AbortSignal.timeout(20_000) });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.source, "brief");
+  const texts = result.contract.lines.map((line) => line.text);
+  assert.ok(texts[0].startsWith("One Pepsi stays in the scene"));
+  assert.ok(texts.includes("Neon signs reflect on wet pavement"));
+  assert.ok(result.contract.lines.some((line) => line.kind === "setting" && line.source === "brief"));
+  assert.equal((await fetch(baseUrl + "/api/continuations/contract", { method: "POST", body: new FormData() })).status, 400);
+});
+
 
 test("manual selection can choose Nike while auto mode enforces matching", async () => {
   const request = { ...selection, campaignId: "nike-move-through-it", assetId: "nike-logo" };
