@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { load } = require("./load.cjs");
 
-const { demoFlows, demoFlowFor, resolveDemoStep, demoChips, stepIndex, stepAssetIds, demoContinuity, ledgerLine, previousStep, watchIdentity, canFollow, followReason } = load("lib/demo/flows.ts");
+const { demoFlows, demoFlowFor, resolveDemoStep, demoChips, stepIndex, stepAssetIds, demoContinuity, ledgerLine, previousStep, watchIdentity, canFollow, followReason, fits, momentAsStep, findMoment, CHIP_COUNT } = load("lib/demo/flows.ts");
 const { demoContract } = load("lib/demo/contract.ts");
 const { parseContract, contractClause } = load("lib/knowledge/contract.ts");
 const { productNotesFor } = load("lib/product-cues.ts");
@@ -135,18 +135,73 @@ test("free text resolves to a beat by its longest cue; open directions resolve t
   assert.equal(resolveDemoStep(rolex, "walk out").id, "exit");
   assert.equal(resolveDemoStep(rolex, "Make it rain and slow the camera"), null);
   assert.equal(resolveDemoStep(rolex, "backdrop of mountains"), null);
+  assert.equal(resolveDemoStep(rolex, "catch the light on it").id, "glint", "moments resolve too");
+  assert.equal(resolveDemoStep(rolex, "zoom in closer on the watch").id, "closer");
+  assert.equal(resolveDemoStep(rolex, "show the dial").id, "dial");
+  assert.equal(resolveDemoStep(rolex, "look at the crown on the wall").id, "wall");
 });
 
-test("bubbles offer only beats the story can show from where it is", () => {
-  const ids = (current) => demoChips(rolex, current).map((step) => step.id);
-  assert.deepEqual(ids(null), ["street"]);
-  assert.deepEqual(ids("street"), ["boutique"], "no trying on or inspecting out on the street");
-  assert.deepEqual(ids("boutique"), ["swap"], "he still wears the Submariner, so no showing the Datejust's back yet");
-  assert.deepEqual(ids("swap"), ["inspect", "exit"]);
-  assert.deepEqual(ids("inspect"), ["wear"], "the watch is in his hands, so only putting it on follows");
-  assert.deepEqual(ids("wear"), ["exit", "inspect"], "he can look at the back again before leaving");
-  assert.deepEqual(ids("exit"), [], "the walk is over; nothing puts him back at a tray he left");
+test("bubbles offer the beats the story can show from where it is, then moments, always three", () => {
+  const ids = (current, last) => demoChips(rolex, current, undefined, last).map((step) => step.id);
+  assert.equal(CHIP_COUNT, 3);
+  assert.deepEqual(ids(null), ["street"], "before the walk starts there is only starting it");
+  assert.deepEqual(ids("street"), ["boutique", "closer", "glint"], "no trying on or inspecting out on the street");
+  assert.deepEqual(ids("boutique"), ["swap", "closer", "glint"], "he still wears the Submariner, so no showing the Datejust's back yet");
+  assert.deepEqual(ids("swap"), ["inspect", "exit", "closer"]);
+  assert.deepEqual(ids("inspect"), ["wear", "dial", "turn"], "the watch is in his hands: put it on, or look at it");
+  assert.deepEqual(ids("wear"), ["exit", "inspect", "closer"], "he can look at the back again before leaving");
+  assert.deepEqual(ids("exit"), ["closer", "glint", "time"], "the walk is over, but the watch on his wrist still has moments");
+  for (const step of rolex.steps) {
+    assert.equal(ids(step.id).length, CHIP_COUNT, `${step.id} offers three`);
+    for (const moment of rolex.moments) if (fits(step.state, moment.requires)) {
+      const after = ids(step.id, moment.id);
+      assert.equal(after.length, CHIP_COUNT, `${step.id} after ${moment.id} still offers three`);
+      assert.ok(!after.includes(moment.id), `${step.id} does not offer ${moment.id} again right away`);
+    }
+  }
+  assert.deepEqual(ids("inspect", "dial"), ["wear", "turn", "wall"], "the moment just run gives way to the next");
   assert.equal(stepIndex(rolex, "wear"), 4);
+});
+
+test("moments are small refinements that keep the story exactly where it is", () => {
+  const campaign = campaigns.find((item) => item.id === "rolex-perpetual-moment");
+  const knowledge = seedKnowledge("rolex-perpetual-moment");
+  const { MAX_INPUT_CHARS } = load("lib/knowledge/guard.ts");
+  assert.deepEqual(rolex.moments.map((moment) => moment.id), ["closer", "glint", "time", "dial", "turn", "wall", "glow"]);
+  const [street, , , inspect, wear] = rolex.steps;
+  for (const moment of rolex.moments) {
+    assert.ok(moment.scene.sequence.length >= 3 && moment.scene.never.length >= 3, `${moment.id} is a full moment`);
+    assert.ok(moment.cues.every((cue) => cue === cue.toLowerCase()), `${moment.id} cues are lower-case`);
+    for (const beat of rolex.steps) if (fits(beat.state, moment.requires)) {
+      const step = momentAsStep(moment, beat);
+      assert.equal(step.state, beat.state, `${moment.id} keeps ${beat.id}'s ledger`);
+      assert.equal(step.mode, "refine", `${moment.id} is a refinement, no action beat`);
+      assert.equal(step.scene.setting, beat.scene.setting, `${moment.id} keeps the setting`);
+      assert.equal(step.scene.product, beat.scene.product, `${moment.id} keeps the product`);
+      assert.ok(step.brief.startsWith("Camera: ") && step.brief.includes("What happens, in order: (1) ") && step.brief.includes("Never: "), `${moment.id} brief order`);
+      assert.ok(step.brief.length < MAX_INPUT_CHARS * 0.25, `${moment.id} is short (${step.brief.length})`);
+      assert.deepEqual(validateEngineered(knowledge, step.brief), { ok: true }, `${moment.id} from ${beat.id}`);
+      assert.ok(stepAssetIds(step).every((id) => campaign.assets.some((asset) => asset.id === id)), `${moment.id} assets`);
+    }
+  }
+  // Which moments fit where.
+  assert.deepEqual(rolex.moments.filter((moment) => fits(street.state, moment.requires)).map((moment) => moment.id), ["closer", "glint", "time", "glow"], "on the street: the watch on his wrist, no boutique wall");
+  assert.deepEqual(rolex.moments.filter((moment) => fits(inspect.state, moment.requires)).map((moment) => moment.id), ["dial", "turn", "wall", "glow"], "in his hands: no wrist moments");
+  assert.ok(fits(wear.state, findMoment(rolex, "wall").requires) && !fits(inspect.state, findMoment(rolex, "closer").requires));
+  // Showing the dial swaps the view to the watch itself; other moments keep the view the take shows.
+  assert.equal(momentAsStep(findMoment(rolex, "dial"), inspect).assetId, "rolex-datejust");
+  assert.equal(momentAsStep(findMoment(rolex, "turn"), inspect).assetId, "rolex-datejust-back");
+  assert.equal(momentAsStep(findMoment(rolex, "turn"), inspect, "rolex-datejust").assetId, "rolex-datejust", "after the dial was shown, turning keeps the dial up");
+  assert.equal(momentAsStep(findMoment(rolex, "dial"), inspect, "rolex-datejust-back").assetId, "rolex-datejust", "showing the dial always shows the dial");
+  const held = demoContinuity(rolex, momentAsStep(findMoment(rolex, "turn"), inspect), campaign, inspect);
+  assert.ok(held.includes("Still in his hands: the Datejust 41, held as in the previous shot, turned over so its flat steel case back faces the camera"));
+  assert.ok(held.includes("lying still and unchanged: the Submariner Date"));
+  const dialUp = demoContinuity(rolex, momentAsStep(findMoment(rolex, "dial"), inspect), campaign, inspect);
+  assert.ok(dialUp.includes("Still in his hands: the Datejust 41, held as in the previous shot;") && !dialUp.includes("case back faces the camera"));
+  assert.equal(canFollow(inspect, momentAsStep(findMoment(rolex, "closer"), inspect)), false);
+  assert.equal(followReason(momentAsStep(findMoment(rolex, "closer"), inspect), campaign), "“Closer on the watch” needs a watch on his wrist.");
+  assert.equal(followReason(momentAsStep(findMoment(rolex, "wall"), street), campaign), "“Look at the wall crown” needs inside the boutique.");
+  assert.equal(findMoment(rolex, "nope"), null);
 });
 
 test("a beat can only follow a state it fits, and the refusal says what it needs", () => {

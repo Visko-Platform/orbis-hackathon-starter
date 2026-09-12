@@ -11,6 +11,8 @@ export type DemoBeatRequest = {
   stepId?: string;
   /** The beat the take is on now, so the ledger is told as a change from it. */
   fromStepId?: string;
+  /** The view the take shows now, so a moment keeps that face of the watch. */
+  assetId?: string;
   direction?: string;
   currentPrompt: string;
   contract: SceneContract | null;
@@ -18,7 +20,8 @@ export type DemoBeatRequest = {
 
 export type DemoBeatResult = {
   outcome: "steer";
-  step: Pick<DemoStep, "id" | "chip" | "title" | "assetId"> & { index: number; total: number };
+  /** The beat or moment that ran; `beatId` is the beat the take is on afterwards (a moment keeps it). */
+  step: Pick<DemoStep, "id" | "chip" | "title" | "assetId"> & { kind: "beat" | "moment"; beatId: string; index: number; total: number };
   prompt: string;
   actionPrompt: string | null;
   // One-sentence sound caption for Orbis; empty when none was written.

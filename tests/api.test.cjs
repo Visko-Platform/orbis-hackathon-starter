@@ -148,7 +148,24 @@ test("the Rolex demo path resolves bubbles and free text into fixed beats", asyn
   assert.match(free.prompt, /The same man throughout: a Chinese man/);
   assert.match(free.prompt, /On the green leather tray, unchanged: the Submariner Date/);
   assert.ok(!free.prompt.includes("The product looks like this:"), "the clause carries the appearance once");
-  assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear"], "with the watch in his hands, only putting it on can follow");
+  assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear", "dial", "turn"], "with the watch in his hands: put it on, or a moment with it");
+  // A moment runs from the beat the take is on and leaves it there, with the next three bubbles.
+  const dial = await post("/api/continuations/demo", { ...base, stepId: "dial", fromStepId: "inspect", assetId: "rolex-datejust-back" });
+  assert.equal(dial.status, 200);
+  const shown = await dial.json();
+  assert.deepEqual([shown.step.kind, shown.step.beatId, shown.step.assetId, shown.actionPrompt], ["moment", "inspect", "rolex-datejust", null]);
+  assert.match(shown.prompt, /Director's latest adjustment.*Camera: Close on his hands/);
+  assert.match(shown.prompt, /Still in his hands: the Datejust 41, held as in the previous shot;/);
+  assert.ok(!shown.prompt.includes("case back faces the camera"), "the dial is up now");
+  assert.deepEqual(shown.nextChips.map((chip) => chip.id), ["wear", "turn", "wall"]);
+  const turned = await (await post("/api/continuations/demo", { ...base, stepId: "turn", fromStepId: "inspect", assetId: "rolex-datejust" })).json();
+  assert.ok(!turned.prompt.includes("case back faces the camera"), "turning keeps the face the viewer chose");
+  assert.equal(turned.step.assetId, "rolex-datejust");
+  assert.equal((await post("/api/continuations/demo", { ...base, stepId: "closer", fromStepId: "inspect" })).status, 409, "no wrist close-up while the watch is in his hands");
+  assert.equal((await post("/api/continuations/demo", { ...base, stepId: "glow" })).status, 400, "a moment needs the beat the take is on");
+  assert.equal((await post("/api/continuations/demo", { ...base, stepId: "glow", fromStepId: "exit", assetId: "nope" })).status, 400);
+  const late = await (await post("/api/continuations/demo", { ...base, stepId: "glow", fromStepId: "exit" })).json();
+  assert.deepEqual([late.step.beatId, late.nextChips.length], ["exit", 3], "after the walk there are still three");
   assert.ok(result.promptVersionId);
   const byText = await (await post("/api/continuations/demo", { ...base, direction: "can you show the back" })).json();
   assert.equal(byText.step.id, "inspect");

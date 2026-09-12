@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { demoContract } from "@/lib/demo/contract";
-import { canFollow, demoChips, demoContinuity, demoFlowFor, followReason, previousStep, resolveDemoStep, stepAssetIds, stepIndex } from "@/lib/demo/flows";
+import { canFollow, demoChips, demoContinuity, demoFlowFor, findMoment, followReason, momentAsStep, previousStep, resolveDemoStep, stepAssetIds, stepIndex, watchIdentity, type DemoMoment, type DemoStep } from "@/lib/demo/flows";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { parseContract, type SceneContract } from "@/lib/knowledge/contract";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
@@ -30,8 +30,20 @@ export async function POST(request: Request) {
   }
   const flow = demoFlowFor(campaign.id);
   if (!flow) return NextResponse.json({ error: "This campaign has no demo path." }, { status: 404 });
-  const step = body.stepId ? flow.steps.find((item) => item.id === body.stepId) : resolveDemoStep(flow, body.direction ?? "");
-  if (!step) return NextResponse.json({ error: "No demo step matches that direction." }, { status: 422 });
+  // A bubble or the viewer's words name a beat of the path or a moment (a small refinement that keeps the story where it is).
+  const named: DemoStep | DemoMoment | null = body.stepId
+    ? flow.steps.find((item) => item.id === body.stepId) ?? findMoment(flow, body.stepId)
+    : resolveDemoStep(flow, body.direction ?? "");
+  if (!named) return NextResponse.json({ error: "No demo step matches that direction." }, { status: 422 });
+  const isMoment = !("state" in named);
+  const beat = isMoment ? flow.steps.find((item) => item.id === body.fromStepId) ?? null : named;
+  if (isMoment && !beat) return NextResponse.json({ error: "A moment needs the beat the take is on (fromStepId)." }, { status: 400 });
+  if (body.assetId !== undefined && (typeof body.assetId !== "string" || !campaign.assets.some((asset) => asset.id === body.assetId))) {
+    return NextResponse.json({ error: "assetId must name a view of this campaign." }, { status: 400 });
+  }
+  // A moment keeps the face the take shows, as long as it is a view of the watch the beat shows.
+  const shown = beat && body.assetId && watchIdentity(campaign, body.assetId) === watchIdentity(campaign, beat.assetId) ? body.assetId : null;
+  const step: DemoStep = isMoment ? momentAsStep(named, beat as DemoStep, shown) : named;
 
   // A beat only runs from a state it can follow: no showing the back of a watch he is not wearing.
   const fromStep = body.fromStepId ? previousStep(flow, step, body.fromStepId) : null;
@@ -82,13 +94,14 @@ export async function POST(request: Request) {
   return NextResponse.json({
     audioPrompt,
     outcome: "steer",
-    step: { id: step.id, chip: step.chip, title: step.title, index: stepIndex(flow, step.id), total: flow.steps.length, assetId: step.assetId },
+    // A moment leaves the take on the beat it came from; the client keeps offering bubbles from there.
+    step: { id: step.id, chip: step.chip, title: step.title, kind: isMoment ? "moment" : "beat", beatId: (beat ?? step).id, index: stepIndex(flow, (beat ?? step).id), total: flow.steps.length, assetId: step.assetId },
     prompt: beats.settled,
     actionPrompt: beats.action,
     productNotes,
     engineered,
     promptVersionId: version.id,
     contract,
-    nextChips: demoChips(flow, step.id).map((item) => ({ id: item.id, chip: item.chip })),
+    nextChips: demoChips(flow, (beat ?? step).id, undefined, isMoment ? step.id : null).map((item) => ({ id: item.id, chip: item.chip })),
   }, { headers: NO_STORE });
 }

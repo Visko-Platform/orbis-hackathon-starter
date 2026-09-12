@@ -206,8 +206,11 @@ operator's own. Every direction restates the contract, and pinned lines survive 
 pivot ([`lib/knowledge/contract.ts`](lib/knowledge/contract.ts)).
 
 **Fixed demo path** — an authored six-beat Rolex walk (street, boutique, swap, inspect,
-wear, exit) that drives the interactive ad in the user demo: three bubbles plus free text,
-where "show the back" jumps to that beat. The studio itself stays a free-form director.
+wear, exit) that drives the interactive ad in the user demo: always three bubbles plus free
+text, where "show the back" jumps to that beat. When fewer than three beats can follow, the
+bubbles fill with **moments**: the easiest directions for the live model (a close-up on the
+watch, a highlight across the crystal, checking the time, showing the dial, warmer light),
+which keep the story exactly where it is. The studio itself stays a free-form director.
 
 **User demo** — a "User demo" button next to "Generate live" opens `/watch`, a fictional
 video site playing an open-movie trailer. Go fullscreen, and at 8 seconds the player pauses
@@ -253,7 +256,7 @@ production ad targeting.
 | Knowledge | [`lib/knowledge/`](lib/knowledge) | Types, seeds, store, guard, retrieval, engineer, validate, audit |
 | Scene contract | [`lib/knowledge/contract.ts`](lib/knowledge/contract.ts) | What must stay true for the whole take; restated every direction |
 | Frame capture | [`lib/frame-capture.ts`](lib/frame-capture.ts) | Pulls a real frame out of the running take |
-| Demo path | [`lib/demo/flows.ts`](lib/demo/flows.ts) | Authored beats, cue resolution, next-bubble selection |
+| Demo path | [`lib/demo/flows.ts`](lib/demo/flows.ts) | Authored beats and moments, cue resolution, three-bubble selection |
 | Demo path | [`lib/demo/client.ts`](lib/demo/client.ts) | Calls the beat and pivot routes from either surface |
 | Voiceover | [`lib/knowledge/dialogue.ts`](lib/knowledge/dialogue.ts) | Writes narrator lines from knowledge, speaks them with Gemini TTS |
 | Viewer page | [`components/watch/`](components/watch) | The video site, the player, and the interactive ad break |
@@ -268,7 +271,7 @@ production ad targeting.
 | `GET /api/continuations/eligible` | Picks the highest-affinity campaign for a profile and title |
 | `POST /api/continuations/prepare` | Validates the selection, engineers the opening prompt, returns a run ID |
 | `POST /api/continuations/pivot` | Guards, engineers, and validates a live direction — or answers a question as an overlay |
-| `POST /api/continuations/demo` | Runs one authored beat of a campaign's fixed demo path |
+| `POST /api/continuations/demo` | Runs one authored beat or moment of a campaign's fixed demo path |
 | `POST /api/continuations/contract` | Drafts the scene contract's person and setting lines |
 | `GET,PUT /api/campaigns/[id]/knowledge` | Reads and writes a campaign's product knowledge |
 | `POST /api/campaigns/[id]/knowledge/describe` | Drafts appearance and portrayal notes from a product image (Gemini vision) |
