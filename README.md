@@ -104,3 +104,8 @@ behavior, use the public Reactor documentation:
 - [Visko Orbis Stable API](https://www.reactor.inc/models/visko-orbis-stable/api)
 - [Visko Orbis Dynamic API](https://www.reactor.inc/models/visko-orbis-dynamic/api)
 - [Gemini image generation and editing](https://ai.google.dev/gemini-api/docs/image-generation)
+
+## Hackathon examples
+
+- [WonderBook](examples/wonderbook): an interactive fairy-tale storybook using GPT,
+  live Orbis video, and AI narration. Includes its own setup instructions and tests.
