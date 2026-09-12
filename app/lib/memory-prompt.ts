@@ -29,8 +29,12 @@ in the photo.
 
 If the photo does not show enough of the described action, extend it as a
 plausible, historically appropriate continuation of the same person(s),
-place, and period the photo shows. Never introduce a different, invented
-identity for a real person visible in the photo.
+place, and period the photo shows. Keep every visible person's clothing,
+hairstyle, and styling exactly as shown in the reference photo for the
+entire scene — do not modernize, update, or drift them toward
+contemporary fashion as the action continues beyond the photo. Never
+introduce a different, invented identity for a real person visible in the
+photo.
 
 Write in concrete, present-tense visual language: describe the scene,
 natural subject motion, environmental motion, and camera framing. The camera
