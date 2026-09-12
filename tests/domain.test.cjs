@@ -145,3 +145,16 @@ test("messages support both flat and SDK data envelopes", () => {
   assert.equal(unwrapOrbisMessage({ type: "prompt_accepted" }).type, "prompt_accepted");
   assert.equal(Object.keys(unwrapOrbisMessage(null)).length, 0);
 });
+
+const { isCapacityError, friendlyStartError, CAPACITY_RETRY_LIMIT } = load("hooks/use-live-continuation.ts");
+
+test("capacity refusals from Reactor are recognised and reworded", () => {
+  const quota = new Error('unexpected HTTP status 429 from create session: {"error":"quota_exceeded","limit":1}');
+  const capacity = new Error('unexpected HTTP status 429 from create session: {"error":"no available capacity: no available server"}');
+  assert.equal(isCapacityError(quota), true);
+  assert.equal(isCapacityError(capacity), true);
+  assert.equal(isCapacityError(new Error("The Reactor credential was not accepted.")), false);
+  assert.match(friendlyStartError(capacity).message, /at capacity/);
+  assert.equal(friendlyStartError(new Error("other")).message, "other");
+  assert.ok(CAPACITY_RETRY_LIMIT >= 3);
+});

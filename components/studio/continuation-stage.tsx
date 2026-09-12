@@ -144,7 +144,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
             <button className="button primary" type="button" onClick={onAddProduct}><Icon name="upload" size={16} /> Add a product image</button>
             <span className="empty-caption">PNG, JPEG or WebP · a reference frame is optional</span>
           </div>}
-        {busy && !live && <div className="render-overlay" role="status"><span className="spinner" /><strong>{preparing && !session.busy ? "Preparing your scene…" : session.phase || "Connecting to the live model…"}</strong><p>{session.phase === "Disconnecting" ? "Releasing your live session." : "The first frames may take a moment."}</p></div>}
+        {busy && !live && <div className="render-overlay" role="status"><span className="spinner" /><strong>{preparing && !session.busy ? "Preparing your scene…" : session.phase || "Connecting to the live model…"}</strong><p>{session.phase === "Disconnecting" ? "Releasing your live session." : session.phase.startsWith("Orbis is busy") ? "The model had no free session. Waiting for one; nothing to do." : "The first frames may take a moment."}</p></div>}
         {live && <div className="live-corner"><span className="state-dot live" />{session.paused ? "PAUSED" : "LIVE"}</div>}
         {overlay && <div className="fact-overlay" key={overlay.at} role="status" aria-live="polite"><span className="fact-overlay-label">{campaign.brand}</span><p>{overlay.text}</p></div>}
       </div>

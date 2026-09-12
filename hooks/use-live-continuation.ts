@@ -16,6 +16,24 @@ function cancelled() {
   return new DOMException("The live session was cancelled.", "AbortError");
 }
 
+// Reactor answers 429 when the account's one Orbis session is still winding
+// down or the model has no free server. Both clear within a minute, so a
+// start waits and retries instead of dumping the raw error on the operator.
+export const CAPACITY_RETRY_MS = 10_000;
+export const CAPACITY_RETRY_LIMIT = 6;
+const CAPACITY_PATTERN = /429|capacity|quota|concurrent_sessions|no available server/i;
+
+export function isCapacityError(error: unknown): boolean {
+  return error instanceof Error && CAPACITY_PATTERN.test(error.message);
+}
+
+export function friendlyStartError(error: unknown): Error {
+  if (isCapacityError(error)) {
+    return new Error("Orbis is at capacity right now. It usually frees up within a minute; try again shortly.");
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 function validatePrompt(prompt: string) {
   const trimmed = prompt.trim();
   if (!trimmed) throw new Error("Describe what should happen in the scene.");
@@ -260,6 +278,22 @@ export function useLiveContinuation(onDisconnected: () => void) {
     }
   }
 
+  // Retries a capacity refusal every CAPACITY_RETRY_MS, up to CAPACITY_RETRY_LIMIT
+  // times, showing the wait as a phase. Any other failure is thrown at once.
+  async function connectWithRetry(check: () => void) {
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        await connect();
+        return;
+      } catch (caught) {
+        if (!isCapacityError(caught) || attempt >= CAPACITY_RETRY_LIMIT) throw friendlyStartError(caught);
+        setPhase(`Orbis is busy, retrying (${attempt} of ${CAPACITY_RETRY_LIMIT - 1})`);
+        await new Promise<void>((resolve) => setTimeout(resolve, CAPACITY_RETRY_MS));
+        check();
+      }
+    }
+  }
+
   async function startContinuation({ image, prompt }: StartInput) {
     await runAction(async (check) => {
       const nextPrompt = validatePrompt(prompt);
@@ -269,7 +303,7 @@ export function useLiveContinuation(onDisconnected: () => void) {
       if (runStartedRef.current) throw new Error("Reset the current take before starting another.");
       acceptMessages.current = true;
       setPhase(status === "ready" ? "Preparing your scene" : "Connecting to Orbis");
-      if (status !== "ready") await connect();
+      if (status !== "ready") await connectWithRetry(check);
       check();
 
       setPhase("Uploading the handoff frame");
