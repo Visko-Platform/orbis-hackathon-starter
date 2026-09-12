@@ -12,6 +12,7 @@
   "jina": false,
   "git": {
     "branching_strategy": "none",
+    "base_branch": "romy-ilano-family-video-memories",
     "create_tag": true,
     "phase_branch_template": "gsd/phase-{phase}-{slug}",
     "milestone_branch_template": "gsd/{milestone}-{slug}",
