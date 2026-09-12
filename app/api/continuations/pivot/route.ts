@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { afterPivot, contractClause, type ContractLine, draftContractWithGemini, draftFromBrief, lineId, MAX_CONTRACT_LINES, parseContract, type SceneContract, validateLine } from "@/lib/knowledge/contract";
 import { writeSoundCaption } from "@/lib/knowledge/dialogue";
@@ -15,6 +17,9 @@ import { campaigns } from "@/lib/studio-data";
 const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function POST(request: Request) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const body = await request.json().catch(() => null);
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
   if (!body || typeof body.direction !== "string" || !body.direction.trim() || body.direction.trim().length > MAX_INPUT_CHARS ||

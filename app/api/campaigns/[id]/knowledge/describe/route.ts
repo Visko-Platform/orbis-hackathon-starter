@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { ALLOWED_IMAGE_TYPES, describeProductImage, MAX_IMAGE_BYTES } from "@/lib/knowledge/describe";
 import { hasGemini } from "@/lib/knowledge/llm";
 import { loadKnowledge, UnknownCampaignError } from "@/lib/knowledge/store";
@@ -8,6 +10,9 @@ const NO_STORE = { "Cache-Control": "no-store" };
 
 // Drafts appearance + visual notes from a product image. Nothing is saved.
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const { id } = await params;
   if (!hasGemini()) {
     return NextResponse.json({ error: "Drafting from an image needs GEMINI_API_KEY on the server." }, { status: 503 });

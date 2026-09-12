@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { demoContract } from "@/lib/demo/contract";
 import { canFollow, demoChips, demoContinuity, demoFlowFor, followReason, previousStep, resolveDemoStep, stepAssetIds, stepIndex } from "@/lib/demo/flows";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
@@ -20,6 +22,9 @@ const NO_STORE = { "Cache-Control": "no-store" };
 // matching the presenter's own words. The beat's brief is authored, so it is
 // validated against the product knowledge but never rewritten.
 export async function POST(request: Request) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const body = await request.json().catch(() => null);
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
   if (!body || !campaign || typeof body.currentPrompt !== "string" || body.currentPrompt.length > MAX_CURRENT_PROMPT_CHARS ||

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+import { forwardToHostedAi } from "@/lib/hosted-ai";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 
 import {
@@ -20,6 +22,9 @@ const NO_STORE = { "Cache-Control": "no-store" };
 // brief and, when attached, a frame of the take. Product lines are rebuilt from
 // the knowledge base; pinned and custom lines are kept.
 export async function POST(request: Request) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const form = await request.formData().catch(() => null);
   if (!form) return NextResponse.json({ error: "Send multipart form data." }, { status: 400 });
   const campaign = campaigns.find((item) => item.id === form.get("campaignId"));

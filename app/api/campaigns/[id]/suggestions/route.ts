@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { hasGemini } from "@/lib/knowledge/llm";
 import { loadKnowledge, UnknownCampaignError } from "@/lib/knowledge/store";
 import { defaultSuggestions, type SuggestionSet, suggestWithGemini } from "@/lib/knowledge/suggest";
@@ -9,7 +11,10 @@ import { defaultSuggestions, type SuggestionSet, suggestWithGemini } from "@/lib
 const cache = new Map<string, SuggestionSet>();
 const MIN_USEFUL = 3;
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const { id } = await params;
   let knowledge;
   try {

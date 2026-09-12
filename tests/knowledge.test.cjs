@@ -335,3 +335,24 @@ test("PCM is wrapped as a 24 kHz mono 16-bit WAV", () => {
   assert.equal(wav.readUInt16LE(22), 1);
   assert.equal(wav.readUInt32LE(40), 4800);
 });
+
+const { hostedAiBase, isRealKey, DEFAULT_HOSTED_AI_URL } = load("lib/hosted-ai.ts");
+
+test("placeholder Gemini keys are not keys", () => {
+  assert.equal(isRealKey(undefined), false);
+  assert.equal(isRealKey("  "), false);
+  assert.equal(isRealKey("replace_with_your_gemini_api_key"), false);
+  assert.equal(isRealKey("your_gemini_api_key"), false);
+  assert.equal(isRealKey("AIzaSyExampleExampleExampleExample123"), true);
+});
+
+test("local runs without a working key forward Gemini routes to the hosted site", () => {
+  assert.equal(hostedAiBase({}), DEFAULT_HOSTED_AI_URL);
+  assert.equal(hostedAiBase({ GEMINI_API_KEY: "replace_with_your_gemini_api_key" }), DEFAULT_HOSTED_AI_URL);
+  assert.equal(hostedAiBase({ GEMINI_API_KEY: "AIzaSyExampleExampleExampleExample123" }), null);
+  assert.equal(hostedAiBase({ GEMINI_API_KEY: "AIzaSyExampleExampleExampleExample123", ADTRACTIVE_HOSTED_AI: "always" }), DEFAULT_HOSTED_AI_URL);
+  assert.equal(hostedAiBase({ ADTRACTIVE_HOSTED_AI: "off" }), null);
+  assert.equal(hostedAiBase({ ADTRACTIVE_HOSTED_AI: "https://example.vercel.app/" }), "https://example.vercel.app");
+  assert.equal(hostedAiBase({ ADTRACTIVE_HOSTED_AI: "not a url" }), null);
+  assert.equal(hostedAiBase({ VERCEL: "1" }), null, "the hosted site never forwards to itself");
+});

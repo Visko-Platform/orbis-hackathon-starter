@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { speakLines, writeVoiceover, type VoiceoverRole } from "@/lib/knowledge/dialogue";
 import { hasGemini } from "@/lib/knowledge/llm";
@@ -12,6 +14,9 @@ const ROLES: VoiceoverRole[] = ["opening", "pivot", "refine"];
 // Narrator lines for the scene now on screen, spoken as a WAV. Nothing here
 // reaches the video model; the words play in the browser over the take.
 export async function POST(request: Request) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const body = await request.json().catch(() => null);
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
   const speakOnly = Boolean(body && Array.isArray(body.lines));

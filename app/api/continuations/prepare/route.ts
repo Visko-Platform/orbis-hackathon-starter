@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { forwardToHostedAi } from "@/lib/hosted-ai";
+
 import { buildContinuationPrompt } from "@/lib/continuation-prompt";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { draftContractWithGemini, draftFromBrief, mergeDraft, productLines } from "@/lib/knowledge/contract";
@@ -27,6 +29,9 @@ type PrepareBody = {
 };
 
 export async function POST(request: Request) {
+  // No working Gemini key here: let the hosted site answer (lib/hosted-ai.ts).
+  const hosted = await forwardToHostedAi(request);
+  if (hosted) return hosted;
   const body = (await request.json().catch(() => null)) as PrepareBody | null;
   const profile = audienceProfiles.find((item) => item.id === body?.profileId);
   const title = filmTitles.find((item) => item.id === body?.titleId);

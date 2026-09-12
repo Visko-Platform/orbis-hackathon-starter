@@ -123,6 +123,11 @@ GEMINI_API_KEY=your_gemini_api_key
 everything still runs, and operator text is used as written instead of being rewritten
 against the knowledge base.
 
+No Gemini key? Leave it out. Locally, every Gemini feature is served by the hosted site
+(https://orbis-ad.vercel.app), which holds the key on the server. Set `ADTRACTIVE_HOSTED_AI=off`
+to run fully offline, or `ADTRACTIVE_HOSTED_AI=always` if your own key fails (for example in a
+region Gemini doesn't serve).
+
 Open <http://localhost:3000>.
 
 Optional — fetch the Rolex reference assets from rolex.com:

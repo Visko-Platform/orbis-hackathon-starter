@@ -1,11 +1,13 @@
+import { isRealKey } from "@/lib/hosted-ai";
 import { GoogleGenAI } from "@google/genai";
 
 import type { Engine, EngineerContext } from "@/lib/knowledge/engineer";
 
 export const ENGINEER_MODEL = "gemini-3.5-flash";
 
+// A placeholder copied from .env.example is not a key.
 export function hasGemini(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY);
+  return isRealKey(process.env.GEMINI_API_KEY);
 }
 
 const SHARED_RULES = `Rules:
