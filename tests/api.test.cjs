@@ -276,7 +276,7 @@ test("the voiceover route writes grounded narrator lines for a scene", async () 
     assert.ok(typeof speech.audio === "string" && speech.audio.length > 1000, "phase two returns audio");
   }
   // Phase two without a scene or role is what the studio sends; it must still be accepted.
-  const bare = await post("/api/continuations/voiceover", { campaignId: "rolex-perpetual-moment", lines: ["He checks the time."] });
+  const bare = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", lines: ["He checks the time."] }), signal: AbortSignal.timeout(60_000) });
   assert.ok([200, 502, 503].includes(bare.status), `bare speech call status ${bare.status}`);
   assert.equal((await post("/api/continuations/voiceover", { campaignId: "nope", scene: "x", role: "pivot" })).status, 400);
 });
