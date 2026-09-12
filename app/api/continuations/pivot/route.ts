@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
-import { campaigns } from "@/lib/studio-data";
+
+import { recordPromptVersion } from "@/lib/knowledge/audit";
+import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
+import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
+import { isFactQuestion, retrieveFacts } from "@/lib/knowledge/retrieve";
+import { loadKnowledge } from "@/lib/knowledge/store";
 import { buildLiveDirection } from "@/lib/live-direction";
+import { campaigns } from "@/lib/studio-data";
+
+const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -10,5 +18,37 @@ export async function POST(request: Request) {
     typeof body.preserveBrand !== "boolean" || !campaign) {
     return NextResponse.json({ error: "Enter a direction between 1 and 1,200 characters and choose a valid campaign and direction mode." }, { status: 400 });
   }
-  return NextResponse.json({ prompt: buildLiveDirection({ ...body, brand: campaign.brand }), mode: body.mode }, { headers: { "Cache-Control": "no-store" } });
+  const knowledge = await loadKnowledge(campaign.id);
+  const direction: string = body.direction.trim();
+
+  // A question about the product is answered on screen from approved facts,
+  // never turned into a prompt.
+  if (isFactQuestion(direction)) {
+    const facts = retrieveFacts(knowledge, direction);
+    if (!facts.length) return NextResponse.json({ error: "No approved fact answers that question." }, { status: 422 });
+    await recordPromptVersion({ campaignId: campaign.id, role: "overlay", engineered: null, prompt: null, outcome: "overlay" });
+    return NextResponse.json({ outcome: "overlay", answer: facts.join(" "), mode: body.mode }, { headers: NO_STORE });
+  }
+
+  let engineered;
+  try {
+    engineered = await engineerPrompt(knowledge, direction, body.mode, {
+      engine: hasGemini() ? new GeminiEngine() : undefined,
+      keepProduct: body.preserveBrand,
+    });
+  } catch (caught: unknown) {
+    if (caught instanceof RefusedError) return NextResponse.json({ error: caught.message }, { status: 400 });
+    throw caught;
+  }
+
+  const prompt = buildLiveDirection({
+    direction: engineered.text,
+    mode: body.mode,
+    currentPrompt: body.currentPrompt,
+    brand: campaign.brand,
+    preserveBrand: body.preserveBrand,
+    productAppearance: knowledge.product.appearance,
+  });
+  const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt, outcome: "steer" });
+  return NextResponse.json({ outcome: "steer", prompt, mode: body.mode, engineered, promptVersionId: version.id }, { headers: NO_STORE });
 }
