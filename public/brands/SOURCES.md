@@ -21,6 +21,24 @@ Downloaded September 12, 2026 from the brands' own public websites and media lib
 
 The McDonald's SVG was inspected: it contains only paths, groups, a mask and a local fragment reference. It contains no scripts or external resource references.
 
+## BMW and Ray-Ban: sourced from Wikimedia Commons
+
+Unlike the campaigns above, these two were **not** taken from the brands' own media libraries. BMW and Ray-Ban do not publish open asset files, so the artwork below comes from Wikimedia Commons, where each file's licence and author are recorded. The logos are in the public domain (below the threshold of originality); the photographs are Creative Commons and are credited to their photographers as those licences require.
+
+| Campaign asset | Local file | Licence | Credit | Source |
+| --- | --- | --- | --- | --- |
+| BMW roundel | `bmw/logo.svg` | Public domain | BMW | [File:BMW.svg](https://commons.wikimedia.org/wiki/File:BMW.svg) |
+| BMW 3 Series sedan (G20) | `bmw/3-series.jpg` | CC BY-SA 4.0 | Dinkun Chen | [File:BMW 3 SERIES SEDAN (G20) China.jpg](https://commons.wikimedia.org/wiki/File:BMW_3_SERIES_SEDAN_(G20)_China.jpg) |
+| Ray-Ban signature | `ray-ban/logo.svg` | Public domain | Xeworlebi | [File:Ray-Ban logo.svg](https://commons.wikimedia.org/wiki/File:Ray-Ban_logo.svg) |
+| Ray-Ban Clubmaster sunglasses | `ray-ban/clubmaster.jpg` | CC BY-SA 4.0 | Jacek Halicki | [File:2023 Okulary przeciwsloneczne Ray-Ban (1).jpg](https://commons.wikimedia.org/wiki/File:2023_Okulary_przeciws%C5%82oneczne_Ray-Ban_(1).jpg) |
+| Ray-Ban temple and signature, close up | `ray-ban/wayfarer-detail.jpg` | CC BY-SA 4.0 | Amin | [File:Ray-Ban Classic Wayfarer RB5121 47-22.jpg](https://commons.wikimedia.org/wiki/File:Ray-Ban_Classic_Wayfarer_RB5121_47-22.jpg) |
+
+The photographs were downloaded at Wikimedia's scaled widths (1400 px, and 1200 px for the close up) rather than full resolution, to keep the repository small. The temple close up is a Wayfarer rather than a Clubmaster, so it is labelled as its own reference view and not described as the Clubmaster's own arm.
+
+Both new SVGs were inspected: each contains only path and shape elements with no scripts, event handlers, embedded images or external resource references.
+
+Brand names, logos and product designs remain the property of their owners. They are used here for a non-commercial hackathon demonstration, and no sponsorship or endorsement is implied.
+
 The Rolex SVG was inspected: it contains only paths, a circle, a group, and linear and radial gradients with local fragment references. It contains no scripts or external resource references. The Rolex raster files are fetched from the URLs above by `npm run assets:rolex` (`scripts/fetch-rolex-assets.sh`), which verifies each file's media type after download.
 
 The sample campaign names in the studio are demo briefs, not claims that these brands commissioned or approved the application. Product artwork reflects the market shown by each source.

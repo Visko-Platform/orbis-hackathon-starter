@@ -174,9 +174,12 @@ pivot ([`lib/knowledge/contract.ts`](lib/knowledge/contract.ts)).
 **Fixed demo path** — an authored six-beat Rolex walk offered as three bubbles, with free
 text resolved to beats by longest-cue match ([`lib/demo/flows.ts`](lib/demo/flows.ts)).
 
-**Real brand assets** — 14 original assets from **Pepsi, McDonald's, Nike, and Rolex**,
-stored locally with [official source links](public/brands/SOURCES.md). No generated brand
-artwork.
+**Real brand assets** — 19 original assets across six campaigns: **Pepsi, McDonald's,
+Nike, Rolex, BMW and Ray-Ban**, covering beverage, food, apparel, luxury, automotive and
+eyewear. Pepsi, McDonald's, Nike and Rolex come from the brands' own media libraries; BMW
+and Ray-Ban publish no open asset files, so those come from Wikimedia Commons with the
+licence and photographer recorded. Every file's origin is in
+[SOURCES.md](public/brands/SOURCES.md). No generated brand artwork.
 
 **Scene library** — three browser-ready clips from Blender Foundation open movies, each a
 different film and look: *Sintel* (fantasy animation), *Big Buck Bunny* (comedy animation)
@@ -186,9 +189,11 @@ useful starting frame for placement work). Poster frames, attribution, and CC BY
 frame, or a still (up to 10 MB).
 
 **Audience matching** — four sample profiles (Urban explorer, Family night, Culture runner,
-Collector) matched to campaigns by affinity, then priority, then a deterministic ID
+Collector) matched across six campaigns by affinity, then priority, then a deterministic ID
 tie-break ([`app/api/continuations/eligible`](app/api/continuations/eligible/route.ts)).
-Sample logic for the demo, not production ad targeting.
+BMW and Ray-Ban are eligible but deliberately ranked below Rolex and Nike, so the automatic
+match stays stable while both are available to pick by hand. Sample logic for the demo, not
+production ad targeting.
 
 ---
 

@@ -30,7 +30,7 @@ test("collectors are matched to Rolex on every title", () => {
 });
 
 test("every sourced campaign asset exists locally", () => {
-  assert.equal(campaigns.flatMap((campaign) => campaign.assets).length, 14);
+  assert.equal(campaigns.flatMap((campaign) => campaign.assets).length, 19);
   for (const campaign of campaigns) {
     assert.ok(existsSync(resolve(__dirname, "../public" + campaign.logo)));
     for (const asset of campaign.assets) {

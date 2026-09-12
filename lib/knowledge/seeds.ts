@@ -107,6 +107,58 @@ const seeds: Record<string, Omit<CampaignKnowledge, "campaignId">> = {
       "no other watch brand or logo appears anywhere in the scene",
     ],
   },
+  "bmw-the-drive-home": {
+    product: {
+      name: "BMW 3 Series",
+      aliases: ["the car", "the sedan", "the BMW"],
+      competitors: ["Mercedes-Benz", "Mercedes", "Audi", "Lexus", "Tesla", "Jaguar"],
+      appearance:
+        "A dark navy BMW 3 Series sedan with twin chrome-outlined kidney grilles, slim swept-back headlights, black alloy wheels and the blue-and-white BMW roundel on the bonnet.",
+    },
+    visualNotes: [
+      "The kidney grille is two tall rounded rectangles side by side, outlined in chrome.",
+      "The roundel sits flat on the bonnet above the grille and at the centre of each wheel.",
+      "Paint is a deep metallic navy that reads almost black in overcast light and picks up reflections of the street.",
+      "Parked at a kerb the car sits low, with the front wheels turned slightly toward the pavement.",
+    ],
+    facts: [
+      "The 3 Series has been BMW's compact executive saloon since 1975.",
+      "The blue and white roundel comes from the colours of the Bavarian flag.",
+      "BMW is headquartered in Munich, Germany.",
+    ],
+    forbiddenClaims: ["safest", "fastest", "cheapest", "better than"],
+    protectedChanges: [
+      "the BMW roundel keeps its blue and white quarters inside a black ring with BMW in white capitals, never redrawn or misspelled",
+      "the car keeps its twin kidney grille, its dark navy paint and its four doors for the whole scene",
+      "no other car brand or badge appears on the car",
+    ],
+  },
+  "ray-ban-long-light": {
+    product: {
+      name: "Ray-Ban Clubmaster",
+      aliases: ["the sunglasses", "the glasses", "the shades", "the frames"],
+      competitors: ["Oakley", "Persol", "Warby Parker", "Gentle Monster", "Maui Jim"],
+      appearance:
+        "Browline sunglasses with thick glossy black upper rims and temple tips, a thin gold lower rim and bridge, and dark green G-15 lenses, with the white Ray-Ban signature on the left lens.",
+    },
+    visualNotes: [
+      "The heavy black brow sits across the top of the frame while the lower half of each lens is rimmed only in thin gold.",
+      "The lenses are a deep green that reads near-black straight on and green at an angle.",
+      "Worn, the frame sits level and the gold bridge catches a highlight between the eyes.",
+      "Folded, the temple arms cross and the Ray-Ban name on the arm faces up.",
+    ],
+    facts: [
+      "Ray-Ban was founded in 1936, originally making glasses for United States Army Air Corps pilots.",
+      "The Clubmaster's browline shape dates from the 1950s and was reissued by Ray-Ban in the 1980s.",
+      "G-15 is Ray-Ban's original green lens tint, developed for the first Aviator.",
+    ],
+    forbiddenClaims: ["medical", "prescription", "protects your eyes", "better than"],
+    protectedChanges: [
+      "the Ray-Ban signature stays a small white script on the left lens and is never redrawn or misspelled",
+      "the frame keeps its black browline, gold lower rim and green lenses for the whole scene",
+      "no other eyewear brand or logo appears in the scene",
+    ],
+  },
 };
 
 export function seedKnowledge(campaignId: string): CampaignKnowledge | null {
