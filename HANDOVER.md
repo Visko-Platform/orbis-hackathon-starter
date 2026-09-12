@@ -23,7 +23,7 @@ image upload, Orbis start, a complete scene pivot, pause, resume, end, and
 disconnect.
 
 Repository: <https://github.com/mian-abd/Orbis-ad>
-Live deployment: TODO_VERCEL_URL
+Live deployment: <https://orbis-ad.vercel.app/>
 
 Built at the Live Models Hackathon (Visko x Reactor x Nebius). The live video is
 Visko's Orbis model, reached through the Reactor platform; see the README for what

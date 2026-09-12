@@ -27,6 +27,11 @@ type Composite = Upload & { artworkKey: string };
 // How long a product answer stays on the stage before it fades.
 const OVERLAY_MS = 9_000;
 
+/** The file extension a library asset is served with, so a .webm clip is not named .mp4. */
+function extensionOf(url: string, fallback: string): string {
+  return url.split("?")[0].split(".").pop()?.toLowerCase() || fallback;
+}
+
 export function StudioApp() {
   const token = useRef<Promise<string> | null>(null);
   const getJwt = useCallback(() => {
@@ -162,8 +167,9 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       ]);
       if (!videoResponse.ok || !posterResponse.ok) throw new Error("This library scene could not be loaded.");
       const [videoBlob, posterBlob] = await Promise.all([videoResponse.blob(), posterResponse.blob()]);
-      const videoFile = new File([videoBlob], `${next.id}.mp4`, { type: videoBlob.type || "video/mp4" });
-      const posterFile = new File([posterBlob], `${next.id}-frame.png`, { type: posterBlob.type || "image/png" });
+      // Library scenes are not all .mp4/.png, so the file keeps the extension it was served with.
+      const videoFile = new File([videoBlob], `${next.id}.${extensionOf(next.media.video, "mp4")}`, { type: videoBlob.type || "video/mp4" });
+      const posterFile = new File([posterBlob], `${next.id}-frame.${extensionOf(next.media.poster, "png")}`, { type: posterBlob.type || "image/png" });
       release(clip?.url);
       release(frame?.url);
       setClip({ file: videoFile, url: objectUrl(videoFile) });

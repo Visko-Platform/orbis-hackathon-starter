@@ -9,7 +9,7 @@ placement is part of the scene, and you can redirect that scene while it plays.
 
 | | |
 |---|---|
-| **Live demo** | TODO_VERCEL_URL |
+| **Live demo** | <https://orbis-ad.vercel.app/> |
 | **Source** | <https://github.com/mian-abd/Orbis-ad> |
 | **Built at** | Live Models Hackathon — Visko × Reactor × Nebius, Ferry Building, San Francisco |
 
@@ -178,10 +178,12 @@ text resolved to beats by longest-cue match ([`lib/demo/flows.ts`](lib/demo/flow
 stored locally with [official source links](public/brands/SOURCES.md). No generated brand
 artwork.
 
-**Scene library** — three browser-ready clips from Blender Foundation open movies (Sintel,
-Big Buck Bunny ×2) with poster frames, attribution, and CC BY 3.0 labels
-([sources](public/scenes/SOURCES.md)). Or upload your own clip (up to 250 MB) and scrub to
-a frame, or a still (up to 10 MB).
+**Scene library** — three browser-ready clips from Blender Foundation open movies, each a
+different film and look: *Sintel* (fantasy animation), *Big Buck Bunny* (comedy animation)
+and *Tears of Steel* (live action, two people on an Amsterdam canal bridge — the most
+useful starting frame for placement work). Poster frames, attribution, and CC BY 3.0 labels
+[here](public/scenes/SOURCES.md). Or upload your own clip (up to 250 MB) and scrub to a
+frame, or a still (up to 10 MB).
 
 **Audience matching** — four sample profiles (Urban explorer, Family night, Culture runner,
 Collector) matched to campaigns by affinity, then priority, then a deterministic ID
