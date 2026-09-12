@@ -1,0 +1,182 @@
+/* Family World front page — modernist design import from Claude Design.
+ * Scoped under .family-world so it never leaks into /session's dark theme
+ * (globals.css hard-sets html/body to a dark theme used by the rest of the app). */
+
+.family-world {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-2: #e15b47;
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-400: #ff9783;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-900: #4d170e;
+
+  --font-heading: var(--font-archivo), system-ui, sans-serif;
+  --font-heading-weight: 800;
+  --font-body: var(--font-archivo), system-ui, sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.family-world *,
+.family-world *::before,
+.family-world *::after {
+  box-sizing: border-box;
+}
+
+.family-world h1,
+.family-world h2,
+.family-world h3,
+.family-world h4,
+.family-world h5,
+.family-world h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 var(--space-2);
+}
+.family-world h1 { font-size: 42px; }
+.family-world h2 { font-size: 32px; }
+.family-world h3 { font-size: 25px; }
+.family-world h4 { font-size: 20px; }
+.family-world h5 { font-size: 16px; }
+.family-world h6 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.family-world p { margin: 0 0 var(--space-3); }
+.family-world a { color: var(--color-accent); text-underline-offset: 3px; }
+.family-world a:hover { color: var(--color-accent-600); }
+.family-world img { display: block; max-width: 100%; }
+.family-world :focus { outline: none; }
+.family-world :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.family-world ::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+
+.fw-grayscale { filter: grayscale(1) contrast(1.08); }
+
+.fw-hr {
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background: var(--color-divider);
+}
+
+/* — buttons — */
+.fw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+}
+.fw-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.fw-btn-primary { background: var(--color-accent); color: var(--color-bg); }
+.fw-btn-primary:hover { background: var(--color-accent-600); }
+.fw-btn-primary:active { background: var(--color-accent-700); }
+.fw-btn-secondary { border-color: var(--color-divider); }
+.fw-btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.fw-btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.fw-btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.fw-btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.fw-btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+
+/* — forms — */
+.fw-field > label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+}
+.fw-input {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  caret-color: var(--color-accent);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.fw-input:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+.fw-input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+textarea.fw-input { min-height: 90px; resize: vertical; }
+
+/* — tags — */
+.fw-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+}
+.fw-tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.fw-tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
+
+/* — navigation — */
+.fw-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 2px solid var(--color-divider);
+}
+.fw-nav-brand {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 18px;
+  margin-right: auto;
+}
+.fw-nav a { color: inherit; text-decoration: none; font-size: 14px; }
+.fw-nav a:hover { color: var(--color-accent); }

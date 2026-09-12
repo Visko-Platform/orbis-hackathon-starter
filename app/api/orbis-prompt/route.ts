@@ -2,13 +2,19 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
 import {
-  ORBIS_PROMPT_MODEL,
-  ORBIS_PROMPT_SYSTEM_INSTRUCTION,
-} from "@/lib/orbis-prompt";
+  MEMORY_PROMPT_MODEL,
+  MEMORY_PROMPT_SYSTEM_INSTRUCTION,
+  buildMemoryContext,
+} from "@/app/lib/memory-prompt";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export const runtime = "nodejs";
+
+function requireField(formData: FormData, name: string): string | null {
+  const value = formData.get(name);
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -21,7 +27,6 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const image = formData.get("image");
-  const prompt = formData.get("prompt");
 
   if (!(image instanceof File) || !image.type.startsWith("image/")) {
     return NextResponse.json(
@@ -35,9 +40,20 @@ export async function POST(request: Request) {
       { status: 413 },
     );
   }
-  if (typeof prompt !== "string" || !prompt.trim()) {
+
+  const relationship = requireField(formData, "relationship");
+  const city = requireField(formData, "city");
+  const country = requireField(formData, "country");
+  const year = requireField(formData, "year");
+  const memory = requireField(formData, "memory");
+  const age = requireField(formData, "age") ?? undefined;
+
+  if (!relationship || !city || !country || !year || !memory) {
     return NextResponse.json(
-      { error: "A user prompt is required" },
+      {
+        error:
+          "relationship, city, country, year, and memory are all required",
+      },
       { status: 400 },
     );
   }
@@ -45,10 +61,10 @@ export async function POST(request: Request) {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: ORBIS_PROMPT_MODEL,
+      model: MEMORY_PROMPT_MODEL,
       contents: [
         {
-          text: `Requested motion:\n${prompt.trim()}`,
+          text: buildMemoryContext({ relationship, age, city, country, year, memory }),
         },
         {
           inlineData: {
@@ -58,7 +74,7 @@ export async function POST(request: Request) {
         },
       ],
       config: {
-        systemInstruction: ORBIS_PROMPT_SYSTEM_INSTRUCTION,
+        systemInstruction: MEMORY_PROMPT_SYSTEM_INSTRUCTION,
         temperature: 0.2,
         maxOutputTokens: 1_024,
         thinkingConfig: {
@@ -97,7 +113,7 @@ export async function POST(request: Request) {
   } catch (caught) {
     console.error("Orbis prompt analysis failed", caught);
     return NextResponse.json(
-      { error: "Gemini could not analyze the image and user prompt" },
+      { error: "Gemini could not analyze the image and memory" },
       { status: 502 },
     );
   }

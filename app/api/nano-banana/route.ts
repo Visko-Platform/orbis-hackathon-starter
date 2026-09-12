@@ -1,10 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 
-import {
-  NANO_BANANA_MODEL,
-  NANO_BANANA_PROMPT,
-} from "@/lib/nano-banana";
+import { UPLOAD_ANCHOR_MODEL, UPLOAD_ANCHOR_PROMPT } from "@/app/lib/upload-anchor";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
@@ -34,9 +31,9 @@ export async function POST(request: Request) {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: NANO_BANANA_MODEL,
+      model: UPLOAD_ANCHOR_MODEL,
       contents: [
-        { text: NANO_BANANA_PROMPT },
+        { text: UPLOAD_ANCHOR_PROMPT },
         {
           inlineData: {
             mimeType: image.type,
