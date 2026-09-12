@@ -5,7 +5,7 @@ import { forwardToHostedAi } from "@/lib/hosted-ai";
 import { buildContinuationPrompt } from "@/lib/continuation-prompt";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { draftContractWithGemini, draftFromBrief, mergeDraft, productLines } from "@/lib/knowledge/contract";
-import { writeSoundCaption } from "@/lib/knowledge/dialogue";
+import { writeSoundCaption } from "@/lib/knowledge/sound";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";

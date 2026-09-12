@@ -23,14 +23,13 @@ video player.**
 ## Before you start
 
 - [ ] `REACTOR_API_KEY` set, with access to `reactor/visko-orbis-stable`.
-- [ ] `GEMINI_API_KEY` set on the server. Without it there are no on-screen answers, no
-      open-ended directions, and **no voiceover** — the ad plays silent.
+- [ ] `GEMINI_API_KEY` set on the server. Without it there are no on-screen answers and no
+      open-ended directions.
 - [ ] One live take run and **disconnected** today. Never let judges watch the day's first
       cold start.
 - [ ] Exactly one session open anywhere. One JWT is one live session; a second tab takes the
       slot or gets a `429`.
-- [ ] `/watch` loaded in its own tab and fullscreen tested, **with sound up and levels
-      checked** — the ad narrates itself now, and the voiceover is the only audio in it.
+- [ ] `/watch` loaded in its own tab and fullscreen tested.
 - [ ] `/watch?live=0` open in a spare tab. That is your parachute: the whole break plays from
       a still, every control still works, no provider session needed.
 - [ ] **Architecture** tab open and left on **Simple**. It is your slide. Only flip it to
@@ -112,13 +111,6 @@ make it rain
 
 > Not a beat, so it becomes an open direction. The path is a rail when you want one, not a
 > cage.
-
-**Let the narration land.** A line is written for each beat from the approved knowledge and
-spoken over the take, with the words captioned underneath.
-
-> That voice is not Orbis. Its audio is picture-driven and carries no reliable speech, so we
-> write the line from the same approved facts the rest of the ad is built on, and speak it.
-> The video model is never asked to say anything.
 
 **Ask it a question** — the moment to slow down on:
 
@@ -226,9 +218,6 @@ beacon fires, retry once.
 not rendered; it lands over the next chunks. Say so — it is an honest property of live
 generation.
 
-**No voiceover.** `GEMINI_API_KEY` is missing on the server, or the speech call timed out.
-The ad is unaffected apart from the silence — keep going and skip the narration beat.
-
 **The logo drifts after many chunks.** Also expected, and better named by you than by a
 judge: pixel-perfect logo lock over a long take is the placement-tracking work in
 [`DYNAMIC_AD_PLATFORM_PLAN.md`](DYNAMIC_AD_PLATFORM_PLAN.md).
@@ -272,10 +261,8 @@ a Skip button.
 
 - The viewer break is pinned to one campaign (Rolex) and one flow; the per-viewer selection
   runs in the studio, not in the break.
-- Orbis's own audio stays muted in the break; the narrator is the only sound. That keeps the
-  demo predictable, but there is no scene ambience under the voice.
-- A question is answered on screen and deliberately not spoken, so the reader is not talked
-  over.
+- Orbis's own audio stays muted in the break, so the ad plays without sound.
+- A question is answered on screen, never inside the video.
 - The watch page is a presentation of the viewer experience — fictional channel, comments and
   up-next. No ad auction, no real hosting.
 
