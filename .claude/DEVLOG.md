@@ -43,4 +43,4 @@
 
 ## Next
 - Live run; re-sample opening rewrites after the "no unasked product interaction" rule.
-- If tay wants it upstream: PR from feat/knowledge-director to main (never push without asking).
+- PR #2 opened 2026-09-12 on tay's "open it" (push + PR). Later doc commits stay local until asked.

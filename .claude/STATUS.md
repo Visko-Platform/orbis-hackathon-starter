@@ -1,6 +1,6 @@
 # Orbis-ad knowledge director (branch feat/knowledge-director, from origin/main) — 7/7  updated 2026-09-12 14:35
 
-Branch: feat/knowledge-director, local only, never push without tay. Ports the knowledge base and
+Branch: feat/knowledge-director, pushed with tay's permission 2026-09-12; PR #2 https://github.com/mian-abd/Orbis-ad/pull/2. Ports the knowledge base and
 prompt engineering into the teammate's studio prototype. The older feat/director branch is the
 full director (states, anchors, overlay) against the old starter UI; kept as reference.
 
@@ -23,5 +23,5 @@ full director (states, anchors, overlay) against the old starter UI; kept as ref
   tightened after one sample, not re-sampled.
 
 ## Needs from tay
-- decision: push this branch / open a PR to mian-abd/Orbis-ad?
+- review/merge PR #2 with the teammate
 - live run to see engineered prompts on Orbis
