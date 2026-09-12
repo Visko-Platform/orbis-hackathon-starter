@@ -1,20 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { readFileSync, existsSync } = require("node:fs");
+const { existsSync } = require("node:fs");
 const { resolve } = require("node:path");
-const { runInNewContext } = require("node:vm");
-const ts = require("typescript");
-
-// Compile pure TypeScript modules in memory; no browser or Reactor credits needed.
-function load(relativePath) {
-  const filename = resolve(__dirname, "..", relativePath);
-  const code = ts.transpileModule(readFileSync(filename, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText;
-  const exports = {};
-  runInNewContext(code, { exports }, { filename });
-  return exports;
-}
+const { load } = require("./load.cjs");
 
 const { campaigns, audienceProfiles, filmTitles, selectEligibleCampaign } = load("lib/studio-data.ts");
 const { buildLiveDirection } = load("lib/live-direction.ts");

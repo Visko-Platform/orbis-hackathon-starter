@@ -8,3 +8,5 @@ npm-debug.log*
 coverage/
 .DS_Store
 Thumbs.db
+data/runs/
+data/knowledge/

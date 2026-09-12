@@ -14,6 +14,9 @@ test("prepare returns a no-store, asset-aware run", async () => {
   const result = await response.json();
   assert.ok(result.runId);
   assert.match(result.prompt, /Pepsi original can/);
+  assert.match(result.prompt, /Product reference: A blue Pepsi can/);
+  assert.equal(result.engineered.source, selection.sceneBrief);
+  assert.ok(result.prompt.includes(result.engineered.text));
 });
 
 test("manual selection can choose Nike while auto mode enforces matching", async () => {
@@ -37,15 +40,59 @@ test("pivot drops old scene context and supports removing the brand", async () =
   const response = await post("/api/continuations/pivot", { ...pivot, preserveBrand: false });
   assert.equal(response.status, 200);
   const result = await response.json();
-  assert.ok(result.prompt.includes(pivot.direction));
+  // The direction is engineered before it is wrapped; the receipt keeps the original.
+  assert.equal(result.outcome, "steer");
+  assert.equal(result.engineered.source, pivot.direction);
+  assert.ok(result.prompt.includes(result.engineered.text));
   assert.ok(!result.prompt.includes("OLD_SCENE"));
   assert.ok(!result.prompt.includes("Pepsi"));
+  assert.ok(result.promptVersionId);
 });
 
-test("refine preserves current scene context", async () => {
+test("refine preserves current scene context and restates the product", async () => {
   const response = await post("/api/continuations/pivot", { ...pivot, mode: "refine" });
   assert.equal(response.status, 200);
-  assert.ok((await response.json()).prompt.includes("OLD_SCENE"));
+  const result = await response.json();
+  assert.ok(result.prompt.includes("OLD_SCENE"));
+  assert.ok(result.prompt.includes("The product looks like this:"));
+});
+
+test("a product question is answered from approved facts, not sent as a prompt", async () => {
+  const response = await post("/api/continuations/pivot", { ...pivot, direction: "how many calories in a can?" });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.outcome, "overlay");
+  assert.match(result.answer, /150 calories/);
+  assert.equal(result.prompt, undefined);
+});
+
+test("a question with no approved answer is refused", async () => {
+  assert.equal((await post("/api/continuations/pivot", { ...pivot, direction: "who is the CEO?" })).status, 422);
+});
+
+test("a direction naming a competitor is refused", async () => {
+  assert.equal((await post("/api/continuations/pivot", { ...pivot, direction: "swap the can for a Coca-Cola" })).status, 400);
+});
+
+test("knowledge is readable, writable, and validated", async () => {
+  const url = baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge";
+  const current = await (await fetch(url)).json();
+  assert.equal(current.product.name, "Pepsi");
+  const put = await fetch(url, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(current) });
+  assert.equal(put.status, 200);
+  assert.ok((await put.json()).updatedAt);
+  const bad = await fetch(url, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ product: { name: "" } }) });
+  assert.equal(bad.status, 400);
+  assert.match((await bad.json()).error, /product\.name/);
+  assert.equal((await fetch(baseUrl + "/api/campaigns/unknown/knowledge")).status, 404);
+});
+
+test("suggestions come from the knowledge", async () => {
+  const response = await fetch(baseUrl + "/api/campaigns/nike-move-through-it/suggestions");
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.ok(Array.isArray(result.suggestions) && result.suggestions.length >= 3);
+  assert.ok(["gemini", "default"].includes(result.source));
 });
 
 for (const [name, fields] of [
@@ -69,4 +116,20 @@ test("audience endpoint recommends Nike to culture runners", async () => {
   const response = await fetch(baseUrl + "/api/continuations/eligible?profileId=culture-runner&titleId=sintel-mountain");
   assert.equal(response.status, 200);
   assert.equal((await response.json()).campaign.brand, "Nike");
+});
+
+test("a product image can be described into draft product info", async () => {
+  const image = await fetch(baseUrl + "/brands/pepsi/pepsi-can.jpg").then((r) => r.blob());
+  const data = new FormData();
+  data.set("image", new File([image], "pepsi-can.jpg", { type: "image/jpeg" }));
+  const response = await fetch(baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge/describe", { method: "POST", body: data, signal: AbortSignal.timeout(40_000) });
+  // 503 when the server has no Gemini key; otherwise a draft with an appearance and notes.
+  assert.ok([200, 503].includes(response.status), `status ${response.status}`);
+  if (response.status === 200) {
+    const draft = await response.json();
+    assert.match(draft.appearance, /Pepsi/);
+    assert.ok(Array.isArray(draft.visualNotes) && draft.visualNotes.length >= 2);
+  }
+  const bad = await fetch(baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge/describe", { method: "POST", body: new FormData() });
+  assert.ok([400, 503].includes(bad.status));
 });

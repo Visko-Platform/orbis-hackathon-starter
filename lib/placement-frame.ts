@@ -30,3 +30,22 @@ export async function composePlacementFrame(frame: File, artwork: File | string,
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not encode the reference frame.")), "image/jpeg", .95));
   return new File([blob], "placement-reference.jpg", { type: "image/jpeg" });
 }
+
+// With no reference frame, the product image itself is the starting frame:
+// fitted inside 16:9 on black, never stretched or cropped.
+export async function composeProductFrame(artwork: File | string): Promise<File> {
+  const asset = await loadImage(artwork);
+  const canvas = document.createElement("canvas");
+  canvas.width = 1280;
+  canvas.height = 720;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare a reference frame.");
+  context.fillStyle = "#000000";
+  context.fillRect(0, 0, 1280, 720);
+  const scale = Math.min(1280 / asset.naturalWidth, 720 / asset.naturalHeight) * 0.82;
+  const width = asset.naturalWidth * scale;
+  const height = asset.naturalHeight * scale;
+  context.drawImage(asset, (1280 - width) / 2, (720 - height) / 2, width, height);
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not encode the reference frame.")), "image/jpeg", .95));
+  return new File([blob], "product-reference.jpg", { type: "image/jpeg" });
+}
