@@ -59,4 +59,4 @@
 
 ## Next
 - Live run; re-sample opening rewrites after the "no unasked product interaction" rule.
-- PR #2 opened 2026-09-12 on tay's "open it" (push + PR). Later doc commits stay local until asked.
+- PR #2 opened on tay's "open it", updated and merged into main on "push to main" (merge commit 10702ca).
