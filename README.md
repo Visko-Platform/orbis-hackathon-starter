@@ -35,7 +35,7 @@ JWT and the image returned by the Nano Banana route.
 ## Nano Banana kickoff example
 
 Connect to Orbis, expand **Livestreaming example**, and click
-**Edit and start stream**. The bundled `dog.png` is displayed as the source
+**Edit and start stream**. The bundled `street.png` is displayed as the source
 image. The server sends it with the displayed image-editing prompt to
 `gemini-2.5-flash-image`. Gemini then analyzes the edited image with the user
 prompt and returns a plain-text, image-grounded prompt. The
@@ -92,7 +92,7 @@ before it is sent to Orbis.
 - `components/nano-banana-example.tsx` owns the kickoff example and source image.
 - `hooks/use-orbis-session.ts` contains the reusable Orbis command sequence and
   session state.
-- `dog.png` is the Nano Banana source image.
+- `street.png` is the Nano Banana source image.
 - `lib/orbis.ts` contains the public model configuration and message helpers.
 - `lib/orbis-prompt.ts` contains the plain-text Gemini grounding instruction.
 - `lib/nano-banana.ts` contains the model and kickoff prompt.

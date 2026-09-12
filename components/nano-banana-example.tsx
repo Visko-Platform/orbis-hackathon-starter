@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import dogImage from "@/dog.png";
+import streetImage from "@/street.png";
 import { NANO_BANANA_PROMPT, ORBIS_KICKOFF_PROMPT } from "@/lib/nano-banana";
 
 type NanoBananaExampleProps = {
@@ -48,11 +48,11 @@ export function NanoBananaExample({
     setError("");
     setGroundedPrompt("");
     try {
-      const sourceResponse = await fetch(dogImage.src);
-      if (!sourceResponse.ok) throw new Error("Could not load dog.png");
+      const sourceResponse = await fetch(streetImage.src);
+      if (!sourceResponse.ok) throw new Error("Could not load street.png");
 
       const formData = new FormData();
-      formData.append("image", await sourceResponse.blob(), "dog.png");
+      formData.append("image", await sourceResponse.blob(), "street.png");
       const response = await fetch("/api/nano-banana", {
         method: "POST",
         body: formData,
@@ -111,13 +111,13 @@ export function NanoBananaExample({
           <figure className="nano-preview">
             <div className="nano-image-frame">
               <Image
-                src={dogImage}
-                alt="Golden retriever source image"
+                src={streetImage}
+                alt="Wooden village street source image"
                 fill
                 sizes="(max-width: 800px) 100vw, 50vw"
               />
             </div>
-            <figcaption>Source: dog.png</figcaption>
+            <figcaption>Source: street.png</figcaption>
           </figure>
 
           <figure className="nano-preview">
