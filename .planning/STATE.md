@@ -51,7 +51,7 @@ is still "not started" as the stale fields below still say.
 Phase: 1 of 3 (Auth + Seed-Contract Spike) — **stale, predates pivot; needs reconciliation**
 Plan: 0 of TBD in current phase
 Status: Needs reconciliation (see Repo Migration note above)
-Last activity: 2026-09-12 — Completed quick task 260912-m35: Add live-world buttons under each grandmother card (human-verify checkpoint pending PR review)
+Last activity: 2026-09-12 — Completed quick task 260912-mt7: Fix invisible red-on-red primary button text
 
 Progress: [░░░░░░░░░░] 0% (stale — see Repo Migration note)
 
@@ -106,6 +106,7 @@ None yet.
 | 260912-orb | Wire Add Family into the Orbis world model (restore -> ground -> start pipeline via `?memoryId=`) | 2026-09-12 | a1d654d | [260912-orb-wire-add-family-orbis-model](./quick/260912-orb-wire-add-family-orbis-model/) |
 | 260912-m35 | Add "Enter their live world" buttons under each grandmother card on /explore-grandmas-world, linking to /live-world?memoryId=seed-* | 2026-09-12 | e793bf5 | [260912-m35-add-buttons-to-go-to-the-live-view-on-ht](./quick/260912-m35-add-buttons-to-go-to-the-live-view-on-ht/) |
 | 6 | when tapping add someone it should go to "add your family" | 2026-09-12 | 169ca01 | — |
+| 260912-mt7 | Fix invisible red-on-red primary button text (CSS specificity fix, .family-world .fw-btn.fw-btn-primary) | 2026-09-12 | 9524dda | [260912-mt7-fix-button-font-color-buttons-using-fw-b](./quick/260912-mt7-fix-button-font-color-buttons-using-fw-b/) |
 
 ## Deferred Items
 
