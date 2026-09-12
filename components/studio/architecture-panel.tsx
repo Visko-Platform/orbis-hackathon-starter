@@ -40,9 +40,9 @@ const stages: Stage[] = [
         n: 3,
         title: "BRAND KNOWLEDGE",
         rows: [
-          { icon: "check", label: "Tech", value: "lib/knowledge/ · seeded per campaign" },
+          { icon: "check", label: "Tech", value: "lib/knowledge/ · seeded per campaign · Vercel Blob" },
           { icon: "layers", label: "Data", value: "Appearance · Visual notes · Facts · Never-say · Protections" },
-          { icon: "spark", label: "Functions", value: "Guard · Retrieve · Validate" },
+          { icon: "spark", label: "Brands", value: "Pepsi · McDonald's · Nike · Rolex · BMW · Ray-Ban" },
         ],
       },
       {
@@ -50,7 +50,7 @@ const stages: Stage[] = [
         title: "PROMPT ENGINEERING",
         rows: [
           { icon: "spark", label: "Model", value: "Gemini 3.5 Flash" },
-          { icon: "layers", label: "Tech", value: "/api/continuations/prepare · /pivot" },
+          { icon: "layers", label: "Tech", value: "guard → retrieve → engineer → validate" },
           { icon: "check", label: "Functions", value: "Rewrite · Reject competitors · You said → Sent receipt" },
         ],
       },
@@ -64,8 +64,8 @@ const stages: Stage[] = [
         n: 5,
         title: "SESSION AUTH",
         rows: [
-          { icon: "refresh", label: "Tech", value: "/api/token · Reactor REST" },
-          { icon: "check", label: "Functions", value: "Model-scoped JWT · 1 hour · 1 session" },
+          { icon: "refresh", label: "Tech", value: "/api/token · Reactor REST · /api/sessions/release" },
+          { icon: "check", label: "Functions", value: "Model-scoped JWT · 1 hour · 1 session · released on unload" },
           { icon: "layers", label: "Rule", value: "API key never leaves the server" },
         ],
       },
@@ -83,7 +83,7 @@ const stages: Stage[] = [
   },
   {
     id: "steer",
-    caption: "Direct and record — the scene keeps running",
+    caption: "Direct — the scene keeps running",
     boxes: [
       {
         n: 7,
@@ -97,11 +97,35 @@ const stages: Stage[] = [
       },
       {
         n: 8,
+        title: "NARRATOR VOICEOVER",
+        rows: [
+          { icon: "spark", label: "Model", value: "Gemini 3.5 Flash writes · Gemini TTS speaks (voice: Charon)" },
+          { icon: "audio", label: "Tech", value: "/api/continuations/voiceover · WAV played in the browser" },
+          { icon: "check", label: "Rule", value: "Orbis audio is picture-driven, so the words come from us — and never reach the model" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "deliver",
+    caption: "Deliver — where a viewer actually meets it",
+    boxes: [
+      {
+        n: 9,
+        title: "VIEWER AD BREAK",
+        rows: [
+          { icon: "play", label: "Tech", value: "/watch · lib/watch/schedule.ts · components/watch/" },
+          { icon: "clock", label: "Timing", value: "Warms 6 s early so the ad pops instantly · skippable after 5 s" },
+          { icon: "spark", label: "Functions", value: "The viewer steers the ad: bubbles, free text, product questions" },
+        ],
+      },
+      {
+        n: 10,
         title: "AUDIT & OUTPUT",
         rows: [
           { icon: "clock", label: "Tech", value: "PromptVersion log · browser activity history" },
           { icon: "check", label: "Functions", value: "Receipt · On-screen answers · JSON export" },
-          { icon: "play", label: "Output", value: "Streaming video + audio, steerable live" },
+          { icon: "download", label: "Output", value: "Streaming video + audio, steerable live" },
         ],
       },
     ],
@@ -111,7 +135,7 @@ const stages: Stage[] = [
 const principles = [
   { title: "The browser never authors a prompt", body: "Every prompt is built server-side from approved records and logged as a PromptVersion before it is sent." },
   { title: "The brand's own words win", body: "Forbidden claims, competitors, and protected details are enforced before send — not corrected afterwards." },
-  { title: "Questions never reach the model", body: "Product questions are answered on screen from approved facts, because generated video cannot be trusted with text." },
+  { title: "Words never reach the model", body: "Product answers and narrator lines are written from approved facts and played over the take. The video model is never asked to render speech or text." },
 ];
 
 export function ArchitecturePanel() {
