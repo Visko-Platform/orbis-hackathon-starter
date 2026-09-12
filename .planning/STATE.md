@@ -104,6 +104,7 @@ None yet.
 | 260912-keg | Add the "Add Family" page (Claude Design import: multi-photo intake + saved-list flow) | 2026-09-12 | 12c8ca1 | [260912-keg-add-the-family-page-import-claude-design](./quick/260912-keg-add-the-family-page-import-claude-design/) |
 | 5 | add these files to the working feature branch romy-ilano-family-video-memories | 2026-09-12 | bcf85ff | — |
 | 260912-orb | Wire Add Family into the Orbis world model (restore -> ground -> start pipeline via `?memoryId=`) | 2026-09-12 | a1d654d | [260912-orb-wire-add-family-orbis-model](./quick/260912-orb-wire-add-family-orbis-model/) |
+| 6 | when tapping add someone it should go to "add your family" | 2026-09-12 | 169ca01 | — |
 
 ## Deferred Items
 
