@@ -3,6 +3,7 @@
 import { ReactorView } from "@reactor-team/js-sdk";
 import { useEffect, useRef, useState } from "react";
 
+import { useFirstFrame } from "@/hooks/use-first-frame";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { useReleaseOnUnload } from "@/hooks/use-release-on-unload";
 import { useVoiceover } from "@/hooks/use-voiceover";
@@ -16,6 +17,9 @@ import { type AdPhase, formatClock, SKIP_AFTER_S } from "@/lib/watch/schedule";
 // The interactive ad break inside the viewer's player. While the video still
 // plays (prewarm) the Orbis take is prepared and started out of sight; when
 // the break arrives the live view takes over with the demo path's bubbles.
+// Until the live picture paints its first frame, the exact opening frame the
+// take starts from stays on screen as a poster, so there is never a black
+// stage between the film and the ad.
 
 const CAMPAIGN_ID = "rolex-perpetual-moment";
 const PROFILE_ID = "collector";
@@ -44,6 +48,8 @@ export function AdBreak({ phase, live, onFinished }: Props) {
   const [playing, setPlaying] = useState("");
   const [assetId, setAssetId] = useState(flow?.steps[0]?.assetId ?? "");
   const [prompt, setPrompt] = useState("");
+  /** Object URL of the composed opening frame, shown until the live video has a frame of its own. */
+  const [poster, setPoster] = useState("");
   const [contract, setContract] = useState<SceneContract | null>(null);
   const [answer, setAnswer] = useState("");
   const [caption, setCaption] = useState<{ text: string; at: number } | null>(null);
@@ -54,10 +60,13 @@ export function AdBreak({ phase, live, onFinished }: Props) {
   const showCaption = (lines: string[]) => setCaption({ text: lines.join(" "), at: Date.now() });
   const contractLines = (value: SceneContract | null) => value?.lines.map((line) => line.text) ?? [];
   const began = useRef(false);
+  const stage = useRef<HTMLDivElement>(null);
   const release = useRef<() => Promise<void>>(async () => {});
   const connected = useRef(false);
   release.current = session.disconnectSession;
   connected.current = session.connected;
+  const showingLive = status === "live" && session.runStarted;
+  const firstFrame = useFirstFrame(stage, showingLive);
 
   // Prewarm once: compose the opening frame, prepare the first beat verbatim, start the take.
   useEffect(() => {
@@ -65,13 +74,15 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     began.current = true;
     const first = flow.steps[0];
     const offer = (id: string) => setChips(demoChips(flow, id).map((item) => ({ id: item.id, chip: item.chip })));
-    if (!live) { setStatus("offline"); setStepId(first.id); offer(first.id); return; }
+    const artwork = campaign.assets.find((asset) => asset.id === first.assetId);
+    // The frame Orbis starts from doubles as the poster, so the first live frame continues it exactly.
+    const frame = async () => { const image = await composeProductFrame(artwork?.src ?? STILL); setPoster(URL.createObjectURL(image)); return image; };
+    if (!live) { setStatus("offline"); setStepId(first.id); offer(first.id); void frame().catch(() => {}); return; }
     const begin = async () => {
       setStatus("preparing");
       try {
-        const artwork = campaign.assets.find((asset) => asset.id === first.assetId);
         if (!artwork) throw new Error("The demo's opening product view is missing.");
-        const image = await composeProductFrame(artwork.src);
+        const image = await frame();
         const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId: PROFILE_ID, titleId: TITLE_ID, campaignId: CAMPAIGN_ID, assetId: first.assetId, selectionMode: "manual", sceneBrief: first.brief, engineer: false }), signal: AbortSignal.timeout(15_000) });
         const prepared = await response.json().catch(() => null);
         if (!response.ok || !prepared?.prompt) throw new Error(prepared?.error || "Could not prepare the ad.");
@@ -106,6 +117,8 @@ export function AdBreak({ phase, live, onFinished }: Props) {
 
   // Unmounting the ad (the viewer skipped, or the player left) also asks the SDK to disconnect.
   useEffect(() => () => { if (connected.current) void release.current(); }, []);
+  // The poster's object URL lives as long as the ad.
+  useEffect(() => () => { if (poster) URL.revokeObjectURL(poster); }, [poster]);
 
   if (!campaign || !flow) return null;
   const current = stepId ? flow.steps.find((step) => step.id === stepId) : null;
@@ -150,21 +163,20 @@ export function AdBreak({ phase, live, onFinished }: Props) {
     onFinished();
   }
 
-  const showingLive = status === "live" && session.runStarted;
   const skipReady = shownFor >= SKIP_AFTER_S;
+  const pictureUp = showingLive && firstFrame;
   return <div className="yt-ad" hidden={phase !== "show"} aria-live="polite" aria-label="Interactive ad">
-    <div className="yt-ad-stage">
-      {showingLive
-        ? <ReactorView track="main_video" audioTrack="main_audio" muted className="yt-ad-view" videoObjectFit="contain" />
-        : <img className="yt-ad-still" src={STILL} alt="" />}
-      {(status === "preparing" || (status === "live" && !session.runStarted)) && <div className="yt-ad-loading" role="status"><span className="yt-spinner" /><span>{session.phase || "Connecting…"}</span></div>}
+    <div className="yt-ad-stage" ref={stage}>
+      {showingLive && <ReactorView track="main_video" audioTrack="main_audio" muted className="yt-ad-view" videoObjectFit="contain" />}
+      {!pictureUp && (poster ? <img className="yt-ad-poster" src={poster} alt="" /> : <img className="yt-ad-still" src={STILL} alt="" />)}
+      {(status === "preparing" || (status === "live" && !pictureUp)) && <div className="yt-ad-loading" role="status"><span className="yt-spinner" /><span>{session.runStarted ? "Starting the live picture…" : session.phase || "Connecting…"}</span></div>}
       {status === "failed" && <div className="yt-ad-loading yt-ad-failed" role="alert"><strong>Live ad unavailable</strong><small>{error}</small></div>}
       {answer && <div className="yt-ad-answer" role="status"><span>{campaign.brand}</span><p>{answer}</p></div>}
     </div>
     <div className="yt-ad-top">
       <img src={campaign.logo} alt="" />
       <div><strong>{campaign.brand}</strong><span>Sponsored · Interactive</span></div>
-      {showingLive && <span className="yt-ad-live"><i />LIVE</span>}
+      {pictureUp && <span className="yt-ad-live"><i />LIVE</span>}
     </div>
     <div className="yt-ad-bottom">
       {caption && <p className="yt-ad-caption" key={caption.at}>{caption.text}</p>}
