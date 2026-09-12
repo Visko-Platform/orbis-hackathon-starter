@@ -1,25 +1,30 @@
 # Orbis Ad
 
-Orbis Ad is a continuity studio for dynamic product placement in licensed film
-moments. A studio operator selects a source clip and handoff frame, chooses a
-consented audience profile, and launches a sponsor-integrated live continuation
-through Visko Orbis on Reactor.
+A video-first workspace for dynamic, in-scene brand placements. Bring a film
+clip or reference image, choose real campaign artwork, and direct a live Orbis
+scene as it unfolds.
 
 ## What the hackathon build demonstrates
 
-- Browser-based licensed clip upload, scrubbing, and 16:9 handoff capture
-- A built-in synthetic handoff for rehearsals without source media
-- Three film moments and three consented sample audience profiles
-- Deterministic campaign eligibility for Pepsi, McDonald's, and Nike examples
-- Optional upload of approved brand artwork
-- Brand-conditioned handoff composition and continuity-safe prompt assembly
-- Live Orbis video/audio streaming, pause, reset, and approved prompt steering
-- Title library, campaign inventory, and an in-session audit ledger
-- Responsive studio interface for desktop and mobile
+- A responsive Studio, Campaigns gallery, Scene library, and Activity history.
+- Six original assets from Pepsi, McDonald's, and Nike, stored locally with
+  [official source links](public/brands/SOURCES.md). No generated brand assets.
+- Per-campaign artwork uploads and explicit asset selection.
+- Video upload (up to 250 MB), scrubbing, crop/fit controls, and 16:9 frame capture;
+  image uploads up to 10 MB are also supported.
+- Original/placement comparison and artwork position/size controls.
+- Manual campaign choice or optional matching against three sample audiences.
+- Live video/audio through Reactor, with acknowledged start, pause, resume,
+  reset, and disconnect controls.
+- A free-form director: **Change direction** replaces the old scene brief;
+  **Refine this scene** retains recent context. **Keep brand in scene** is optional.
+- Local creative history with JSON export and model diagnostics.
 
-The first version is a clip-to-live continuation product. It does not modify
-the encoded frames of the source clip. The selected frame becomes the visual
-anchor for a newly generated, continuous scene.
+This prototype generates a new continuation from a composed reference frame.
+It does **not** rewrite every encoded frame of an existing movie, guarantee
+pixel-perfect logos in generated frames, or include downloadable movie footage.
+Scene-library entries are creative briefs, not actual source clips. Upload your
+licensed footage to use it as the starting point.
 
 ## Run locally
 
@@ -45,38 +50,64 @@ Open <http://localhost:3000>.
 
 ## Demo flow
 
-1. Open **Studio** and select a licensed title moment.
-2. Upload a licensed clip and scrub to the handoff, or select **Use demo
-   handoff** for the synthetic rehearsal frame.
-3. Switch among the three consented audience profiles and observe the selected
-   eligible campaign.
-4. Optionally upload approved sponsor artwork. Without an upload, the demo
-   renders a typed brand treatment in the approved placement zone.
-5. Select **Start live continuation**. The server prepares the locked prompt,
-   mints a short-lived scoped Reactor token, uploads the conditioned frame, and
-   starts Orbis.
-6. Use one of the three approved story beats to steer the next live chunk.
-7. Open **Audit ledger** to show model and operator events.
+1. Select a campaign and its logo, product, or campaign artwork. You can also
+   add your own artwork; it stays associated with that campaign for the session.
+2. Upload a movie clip and capture a frame, or use a reference image.
+3. Review **Original** versus **Placement**. Expand **Scene brief & placement**
+   to describe the action and adjust the artwork position.
+4. Select **Generate live**. Startup can take time while the provider allocates
+   and warms the model; the UI shows the current phase.
+5. Type a new direction and select **Pivot live** (or press Ctrl/Cmd+Enter).
+   Try a new setting, lighting, camera movement, or action. Use **Refine this
+   scene** for smaller adjustments; uncheck **Keep brand in scene** when the
+   new direction should also be free to change the sponsor.
+6. Pause/resume or end the take. Disconnect when finished to release the session.
+7. Review **Activity** and export the local creative history.
+
+Directions are asynchronous. An acknowledgement means the model accepted the
+prompt, not that the requested visual result is guaranteed. Video evolves over
+subsequent generated chunks. See the
+[Reactor model API](https://www.reactor.inc/models/visko-orbis-stable/api).
 
 ## Architecture
 
 - `components/studio/` contains the product shell and focused workflow panels.
 - `hooks/use-live-continuation.ts` owns Reactor connection and command state.
-- `lib/studio-data.ts` defines the current film, campaign, placement, profile,
-  and story-beat domain model.
-- `lib/continuation-prompt.ts` builds the server-controlled continuity prompt.
+- `lib/studio-data.ts` defines campaigns, audience matching, scene briefs, and assets.
+- `lib/placement-frame.ts` composites the actual artwork onto the reference frame.
+- `lib/continuation-prompt.ts` builds the asset-aware opening prompt.
+- `lib/live-direction.ts` builds full-pivot and context-preserving refinement prompts.
 - `app/api/continuations/eligible` applies campaign selection rules.
-- `app/api/continuations/prepare` validates the locked selection and creates a
+- `app/api/continuations/prepare` validates the campaign/asset selection and creates a
   run identifier and prompt.
+- `app/api/continuations/pivot` validates and composes a new live direction.
 - `app/api/token` exchanges the server-held Reactor API key for a short-lived
   browser session token.
 
 The product and production data model are described in
 [`docs/DYNAMIC_AD_PLATFORM_PLAN.md`](docs/DYNAMIC_AD_PLATFORM_PLAN.md).
+This implementation adds free-form live direction and manual brand selection
+beyond that initial plan.
+
+## Verify
+
+```bash
+npm test
+npm run typecheck
+npm run build
+# With the app running on localhost:3000:
+npm run test:api
+```
 
 ## Security
 
 The Reactor API key remains server-side and `.env.local` is ignored by Git.
-The browser receives only a short-lived model-scoped JWT. Raw free-form prompt
-steering is not exposed in the operator UI; only predefined story beats can be
-sent during a run.
+The browser receives only a short-lived model-scoped JWT. Source clips are
+decoded locally; the composed starting frame and scene prompts are sent to
+Reactor when generating. Creative activity is stored in this browser's local
+storage, not a server audit database. Artwork uploads and source media stay in
+memory and must be reselected after a refresh.
+
+This is a local hackathon prototype, not a multi-tenant hosted service. Add user
+authentication, authorization, rate limits, persistent campaign/media storage,
+and server-side audit records before exposing the token endpoint publicly.

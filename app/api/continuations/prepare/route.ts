@@ -12,6 +12,9 @@ type PrepareBody = {
   profileId?: string;
   titleId?: string;
   campaignId?: string;
+  selectionMode?: "auto" | "manual";
+  sceneBrief?: string;
+  assetId?: string;
 };
 
 export async function POST(request: Request) {
@@ -27,8 +30,18 @@ export async function POST(request: Request) {
     );
   }
 
+  if (body?.selectionMode && !["auto", "manual"].includes(body.selectionMode)) {
+    return NextResponse.json({ error: "Invalid campaign selection mode." }, { status: 400 });
+  }
+  if (body?.sceneBrief !== undefined && (typeof body.sceneBrief !== "string" || !body.sceneBrief.trim() || body.sceneBrief.length > 1200)) {
+    return NextResponse.json({ error: "Scene brief must contain 1–1,200 characters." }, { status: 400 });
+  }
+  if (body?.assetId !== undefined && body.assetId !== "upload" && !campaign.assets.some((asset) => asset.id === body.assetId)) {
+    return NextResponse.json({ error: "Choose an asset belonging to the selected campaign." }, { status: 400 });
+  }
+
   const eligible = selectEligibleCampaign(profile.id, title.id);
-  if (!eligible || eligible.id !== campaign.id) {
+  if (!campaign.allowedTitles.includes(title.id) || (body?.selectionMode !== "manual" && (!eligible || eligible.id !== campaign.id))) {
     return NextResponse.json(
       { error: "The selected campaign is not eligible for this continuation." },
       { status: 409 },
@@ -38,7 +51,7 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       runId: crypto.randomUUID(),
-      prompt: buildContinuationPrompt({ title, campaign, profile }),
+      prompt: buildContinuationPrompt({ title, campaign, profile, sceneBrief: body?.sceneBrief, assetId: body?.assetId }),
       campaign,
       preparedAt: new Date().toISOString(),
     },

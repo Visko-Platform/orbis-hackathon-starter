@@ -1,489 +1,214 @@
 "use client";
 
 import { ReactorProvider } from "@reactor-team/js-sdk";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import { CampaignPanel } from "@/components/studio/campaign-panel";
-import { ContinuationStage } from "@/components/studio/continuation-stage";
-import { SourceClipPanel } from "@/components/studio/source-clip-panel";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CampaignPanel } from "./campaign-panel";
+import { ContinuationStage } from "./continuation-stage";
+import { SourceClipPanel } from "./source-clip-panel";
+import { Icon } from "./icon";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
-import {
-  audienceProfiles,
-  campaigns,
-  filmTitles,
-  storyBeats,
-  type Campaign,
-  type StoryBeat,
-} from "@/lib/studio-data";
+import { audienceProfiles, campaigns, filmTitles, selectEligibleCampaign, type Campaign, type PlacementZone } from "@/lib/studio-data";
+import { composePlacementFrame } from "@/lib/placement-frame";
+import type { DirectionMode } from "@/lib/live-direction";
 
-type WorkspaceSection = "studio" | "library" | "campaigns" | "audit";
-
-type PreparedRun = {
-  runId: string;
-  prompt: string;
-  preparedAt: string;
-};
+type Section = "studio" | "campaigns" | "library" | "activity";
+type PreparedRun = { runId: string; prompt: string; preparedAt: string; campaign: Campaign };
+type Activity = { id: string; label: string; detail: string; time: string };
+type Upload = { file: File; url: string };
 
 export function StudioApp() {
-  const jwtPromise = useRef<Promise<string> | null>(null);
+  const token = useRef<Promise<string> | null>(null);
   const getJwt = useCallback(() => {
-    jwtPromise.current ??= requestReactorJwt();
-    return jwtPromise.current;
+    token.current ??= requestReactorJwt().catch((error) => { token.current = null; throw error; });
+    return token.current;
   }, []);
-  const clearJwt = useCallback(() => {
-    jwtPromise.current = null;
-  }, []);
-
-  return (
-    <ReactorProvider
-      apiUrl="https://api.reactor.inc"
-      modelName={ORBIS_MODEL_NAME}
-      modelTracks={[...ORBIS_TRACKS]}
-      connectOptions={{ autoConnect: false }}
-      jwtToken={getJwt}
-    >
-      <StudioWorkspace clearJwt={clearJwt} />
-    </ReactorProvider>
-  );
+  const clearJwt = useCallback(() => { token.current = null; }, []);
+  return <ReactorProvider apiUrl="https://api.reactor.inc" modelName={ORBIS_MODEL_NAME} modelTracks={[...ORBIS_TRACKS]} connectOptions={{ autoConnect: false }} jwtToken={getJwt}><StudioWorkspace clearJwt={clearJwt} /></ReactorProvider>;
 }
 
 function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const session = useLiveContinuation(clearJwt);
-  const [section, setSection] = useState<WorkspaceSection>("studio");
-  const [titleId, setTitleId] = useState(filmTitles[0].id);
+  const [section, setSection] = useState<Section>("studio");
+  const [titleId, setTitleId] = useState(filmTitles[1].id);
   const [profileId, setProfileId] = useState(audienceProfiles[0].id);
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [rationale, setRationale] = useState("");
-  const [clipFile, setClipFile] = useState<File | null>(null);
-  const [clipUrl, setClipUrl] = useState("");
-  const [frameFile, setFrameFile] = useState<File | null>(null);
-  const [framePreview, setFramePreview] = useState("");
+  const [automatic, setAutomatic] = useState(false);
+  const [campaignId, setCampaignId] = useState(campaigns[0].id);
+  const campaign = campaigns.find((item) => item.id === campaignId) ?? campaigns[0];
+  const title = filmTitles.find((item) => item.id === titleId) ?? filmTitles[1];
+  const [sceneBrief, setSceneBrief] = useState("Continue the action from this frame. A slow cinematic tracking shot through the location, natural movement, realistic lighting. The product belongs naturally in the scene.");
+  const [clip, setClip] = useState<Upload | null>(null);
+  const [frame, setFrame] = useState<Upload | null>(null);
   const [handoffTime, setHandoffTime] = useState(0);
-  const [brandAsset, setBrandAsset] = useState<File | null>(null);
+  const [uploads, setUploads] = useState<Record<string, Upload>>({});
+  const [assetSelections, setAssetSelections] = useState<Record<string, string>>({});
+  const [zone, setZone] = useState<PlacementZone>(campaign.placement.zone);
+  const [composite, setComposite] = useState<Upload | null>(null);
+  const [compositing, setCompositing] = useState(false);
   const [preparedRun, setPreparedRun] = useState<PreparedRun | null>(null);
   const [preparing, setPreparing] = useState(false);
-  const [workspaceError, setWorkspaceError] = useState("");
-  const [activity, setActivity] = useState<
-    { id: string; label: string; detail: string; time: string }[]
-  >([]);
+  const [brandRetained, setBrandRetained] = useState(true);
+  const [error, setError] = useState("");
+  const [activity, setActivity] = useState<Activity[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const sourceDetails = useRef<HTMLDetailsElement>(null);
+  const urls = useRef(new Set<string>());
+  const locked = session.runStarted || session.busy || preparing;
+  const assetId = assetSelections[campaignId] ?? campaign.assets[0]?.id;
+  const upload = uploads[campaignId];
+  const asset = campaign.assets.find((item) => item.id === assetId) ?? campaign.assets[0];
+  const artwork = assetId === "upload" && upload ? upload.file : asset.src;
 
-  const title = useMemo(
-    () => filmTitles.find((item) => item.id === titleId) ?? filmTitles[0],
-    [titleId],
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setCampaign(null);
-    setRationale("");
-    setWorkspaceError("");
-    fetch(
-      `/api/continuations/eligible?profileId=${encodeURIComponent(profileId)}&titleId=${encodeURIComponent(titleId)}`,
-      { signal: controller.signal },
-    )
-      .then(async (response) => {
-        const result = (await response.json()) as {
-          campaign?: Campaign | null;
-          rationale?: string;
-          error?: string;
-        };
-        if (!response.ok) throw new Error(result.error ?? "Eligibility check failed.");
-        setCampaign(result.campaign ?? null);
-        setRationale(result.rationale ?? "");
-      })
-      .catch((caught) => {
-        if (caught instanceof DOMException && caught.name === "AbortError") return;
-        setWorkspaceError(caught instanceof Error ? caught.message : String(caught));
-      });
-    return () => controller.abort();
-  }, [profileId, titleId]);
+  const addActivity = useCallback((label: string, detail: string) => {
+    setActivity((current) => [{ id: crypto.randomUUID(), label, detail, time: new Date().toISOString() }, ...current].slice(0, 150));
+  }, []);
+  function objectUrl(file: File) { const url = URL.createObjectURL(file); urls.current.add(url); return url; }
+  function release(url?: string) { if (url) { URL.revokeObjectURL(url); urls.current.delete(url); } }
 
   useEffect(() => {
-    setBrandAsset(null);
-    setPreparedRun(null);
-  }, [campaign?.id]);
+    const allUrls = urls.current;
+    try {
+      const saved: unknown = JSON.parse(localStorage.getItem("orbis-ad-activity-v2") || "[]");
+      if (Array.isArray(saved)) setActivity(saved.filter((item) => item && typeof item.id === "string" && typeof item.label === "string" && typeof item.detail === "string" && typeof item.time === "string").slice(0, 150));
+    } catch { /* Local history is optional when storage is unavailable. */ }
+    setStorageReady(true);
+    return () => allUrls.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
+  useEffect(() => { if (storageReady) { try { localStorage.setItem("orbis-ad-activity-v2", JSON.stringify(activity)); } catch { /* Keep session history in memory. */ } } }, [activity, storageReady]);
 
   useEffect(() => {
-    return () => {
-      if (clipUrl) URL.revokeObjectURL(clipUrl);
-    };
-  }, [clipUrl]);
+    if (!frame) { setComposite(null); return; }
+    let cancelled = false;
+    let resultUrl = "";
+    setCompositing(true);
+    setComposite(null);
+    composePlacementFrame(frame.file, artwork, zone).then((file) => {
+      if (cancelled) return;
+      resultUrl = objectUrl(file);
+      setComposite({ file, url: resultUrl });
+      setError("");
+    }).catch((caught) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Could not prepare the placement preview."); })
+      .finally(() => { if (!cancelled) setCompositing(false); });
+    return () => { cancelled = true; release(resultUrl); };
+  }, [frame, artwork, zone]);
 
-  useEffect(() => {
-    return () => {
-      if (framePreview) URL.revokeObjectURL(framePreview);
-    };
-  }, [framePreview]);
-
-  function addActivity(label: string, detail: string) {
-    setActivity((current) => [
-      {
-        id: crypto.randomUUID(),
-        label,
-        detail,
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      },
-      ...current,
-    ]);
+  function chooseCampaign(id: string) {
+    if (locked) return;
+    const next = campaigns.find((item) => item.id === id);
+    if (!next) return;
+    setCampaignId(id); setZone(next.placement.zone); setPreparedRun(null); setError("");
   }
-
+  function chooseProfile(id: string) {
+    if (locked) return;
+    setProfileId(id);
+    if (automatic) { const selected = selectEligibleCampaign(id, titleId); if (selected) chooseCampaign(selected.id); }
+  }
+  function toggleAutomatic(value: boolean) {
+    if (locked) return;
+    setAutomatic(value);
+    if (value) { const selected = selectEligibleCampaign(profileId, titleId); if (selected) chooseCampaign(selected.id); }
+  }
+  function importScene() {
+    setSection("studio");
+    requestAnimationFrame(() => { if (sourceDetails.current) { sourceDetails.current.open = true; sourceDetails.current.scrollIntoView({ behavior: "smooth", block: "center" }); sourceDetails.current.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }); } });
+  }
+  function chooseTitle(id: string) {
+    if (locked) return;
+    const next = filmTitles.find((item) => item.id === id);
+    if (!next) return;
+    setTitleId(id);
+    setSceneBrief(`${next.continuity.setting}. ${next.continuity.camera}. ${next.continuity.lighting}. ${next.continuity.objective}.`);
+    setPreparedRun(null); setSection("studio");
+    addActivity("Scene preset selected", `${next.title} · ${next.moment}. Applies to the scene brief; source media is unchanged.`);
+  }
   function selectClip(file: File) {
-    if (clipUrl) URL.revokeObjectURL(clipUrl);
-    const nextUrl = URL.createObjectURL(file);
-    setClipFile(file);
-    setClipUrl(nextUrl);
-    setFrameFile(null);
-    setFramePreview("");
-    setHandoffTime(0);
-    setPreparedRun(null);
-    addActivity("Clip loaded", file.name);
+    if (locked) return;
+    release(clip?.url); release(frame?.url);
+    setClip({ file, url: objectUrl(file) }); setFrame(null); setHandoffTime(0); setPreparedRun(null);
+    addActivity("Clip imported", file.name);
   }
-
-  function selectTitle(nextTitleId: string) {
-    if (nextTitleId === titleId) return;
-    if (clipUrl) URL.revokeObjectURL(clipUrl);
-    if (framePreview) URL.revokeObjectURL(framePreview);
-    setTitleId(nextTitleId);
-    setClipFile(null);
-    setClipUrl("");
-    setFrameFile(null);
-    setFramePreview("");
-    setHandoffTime(0);
-    setPreparedRun(null);
+  function selectFrame(next: { file: File; previewUrl: string; time: number; sourceKind?: "image" | "video" }) {
+    if (locked) { URL.revokeObjectURL(next.previewUrl); return; }
+    release(frame?.url);
+    urls.current.add(next.previewUrl);
+    if (next.sourceKind === "image") { release(clip?.url); setClip(null); }
+    setFrame({ file: next.file, url: next.previewUrl }); setHandoffTime(next.time); setPreparedRun(null);
+    addActivity("Reference frame ready", next.sourceKind === "image" ? next.file.name : `Captured at ${next.time.toFixed(2)}s`);
   }
-
-  function selectFrame(frame: { file: File; previewUrl: string; time: number }) {
-    if (framePreview) URL.revokeObjectURL(framePreview);
-    setFrameFile(frame.file);
-    setFramePreview(frame.previewUrl);
-    setHandoffTime(frame.time);
-    setPreparedRun(null);
-    addActivity("Handoff captured", `${title.title} at ${frame.time.toFixed(2)}s`);
+  function selectArtwork(file: File) {
+    if (locked) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) { setError("Choose a PNG, JPEG, or WebP image under 10 MB."); return; }
+    release(uploads[campaignId]?.url);
+    setUploads((current) => ({ ...current, [campaignId]: { file, url: objectUrl(file) } }));
+    setAssetSelections((current) => ({ ...current, [campaignId]: "upload" }));
+    addActivity("Campaign artwork added", `${campaign.brand} · ${file.name}`);
   }
 
   async function startContinuation() {
-    if (!campaign || !frameFile) {
-      setWorkspaceError("Select a handoff frame and eligible campaign first.");
-      return;
-    }
-
-    setPreparing(true);
-    setWorkspaceError("");
+    if (!composite || locked) return;
+    if (!sceneBrief.trim()) { setError("Add a scene brief before generating."); return; }
+    setPreparing(true); setError("");
     try {
-      const response = await fetch("/api/continuations/prepare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId, titleId, campaignId: campaign.id }),
-      });
-      const result = (await response.json()) as PreparedRun & { error?: string };
-      if (!response.ok || !result.prompt || !result.runId) {
-        throw new Error(result.error ?? "Could not prepare the continuation.");
-      }
-
-      const conditionedFrame = await composePlacementFrame(
-        frameFile,
-        brandAsset,
-        campaign,
-      );
-      setPreparedRun(result);
-      addActivity("Run approved", `${campaign.brand} · ${campaign.placement.label}`);
-      await session.startContinuation({ image: conditionedFrame, prompt: result.prompt });
-      addActivity("Live continuation started", result.runId.slice(0, 8));
-    } catch (caught) {
-      setWorkspaceError(caught instanceof Error ? caught.message : String(caught));
-    } finally {
-      setPreparing(false);
-    }
+      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief }), signal: AbortSignal.timeout(15_000) });
+      const result = await response.json();
+      if (!response.ok || !result.prompt || !result.runId) throw new Error(result.error || "Could not prepare this scene.");
+      setPreparedRun(result); setBrandRetained(true);
+      await session.startContinuation({ image: composite.file, prompt: result.prompt });
+      addActivity("Live take started", `${campaign.brand} · ${assetId === "upload" ? upload?.file.name : asset.label} · ${result.runId.slice(0, 8)}`);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Generation failed."); addActivity("Take could not start", caught instanceof Error ? caught.message : "Unknown error"); }
+    finally { setPreparing(false); }
+  }
+  async function pivot(direction: string, mode: DirectionMode, preserveBrand: boolean) {
+    if (!preparedRun || !session.runStarted) return false;
+    setError("");
+    try {
+      const response = await fetch("/api/continuations/pivot", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, mode, preserveBrand, campaignId: preparedRun.campaign.id, currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun.prompt }), signal: AbortSignal.timeout(15_000) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not prepare this direction.");
+      await session.steer(result.prompt);
+      setBrandRetained(preserveBrand);
+      addActivity(mode === "pivot" ? "New direction accepted" : "Scene refinement accepted", direction);
+      return true;
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not send this direction. Your prompt is saved below."); return false; }
+  }
+  async function runAction(action: () => Promise<void>, label: string) {
+    setError("");
+    try { await action(); addActivity(label, preparedRun ? `Take ${preparedRun.runId.slice(0, 8)}` : "Studio session"); }
+    catch (caught) { setError(caught instanceof Error ? caught.message : "The action could not be completed."); }
+  }
+  function exportActivity() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(activity, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a"); anchor.href = url; anchor.download = "orbis-session-history.json"; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  async function steer(beat: StoryBeat) {
-    if (!preparedRun) return;
-    try {
-      await session.steer(`${preparedRun.prompt} ${beat.instruction}`);
-      addActivity("Story beat accepted", beat.label);
-    } catch {
-      // The session hook exposes the correlated Reactor error in the stage.
-    }
-  }
+  return <div className="app-shell">
+    <header className="app-header">
+      <button className="wordmark" type="button" onClick={() => setSection("studio")} aria-label="Orbis Ad Studio"><span className="orbit-mark" aria-hidden="true" /><strong>orbis<span>ad</span></strong><span className="beta-mark">STUDIO</span></button>
+      <nav aria-label="Main navigation">{([{ id: "studio", label: "Studio", icon: "film" }, { id: "campaigns", label: "Campaigns", icon: "layers" }, { id: "library", label: "Scene library", icon: "image" }, { id: "activity", label: "Activity", icon: "clock" }] as const).map((item) => <button key={item.id} type="button" className={section === item.id ? "active" : ""} aria-current={section === item.id ? "page" : undefined} onClick={() => setSection(item.id)}><Icon name={item.icon} size={16} />{item.label}</button>)}</nav>
+      <div className="header-status"><span className={`state-dot ${session.connected ? "connected" : ""}`} /><span>{session.runStarted ? "Live session" : session.connected ? "Connected" : "Workspace"}</span><span className="avatar">MA</span></div>
+    </header>
+    <main className="workspace">
+      <div className="page-heading"><div><div className="eyebrow">ORBIS AD / {section === "studio" ? "CREATIVE WORKSPACE" : section.toUpperCase()}</div><h1>{section === "studio" ? "A place in the story." : section === "campaigns" ? "Brands, ready for their close-up." : section === "library" ? "Set the scene." : "Every direction, in one place."}</h1><p>{section === "studio" ? "Real brands. Your footage. A scene you can direct as it unfolds." : section === "campaigns" ? "Real artwork from each brand, ready to use in your next placement." : section === "library" ? "Start with a creative brief, then bring your own footage." : "Review and export the creative decisions in this browser."}</p></div><div className="heading-actions">{session.connected && <button className="button subtle" type="button" onClick={() => runAction(session.disconnectSession, "Session disconnected")} disabled={session.busy && !session.runStarted}>Disconnect</button>}{section === "activity" ? <button className="button secondary" type="button" disabled={!activity.length} onClick={exportActivity}><Icon name="download" size={16} />Export history</button> : <button className="button secondary" type="button" disabled={locked} onClick={importScene}><Icon name="upload" size={16} />Import scene</button>}</div></div>
+      {(error || session.error) && <div className="global-error" role="alert"><span>{error || session.error}</span><button className="icon-button" aria-label="Dismiss error" type="button" onClick={() => { setError(""); session.clearError?.(); }}><Icon name="close" size={15} /></button></div>}
 
-  const auditEvents = [
-    ...session.events.map((event, index) => ({
-      id: `reactor-${index}-${event}`,
-      label: event.replaceAll("_", " "),
-      detail: "Reactor model event",
-      time: "live",
-    })),
-    ...activity,
-  ];
-
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <button className="brand-mark" type="button" onClick={() => setSection("studio")}>
-          <span className="brand-glyph" aria-hidden="true">O</span>
-          <span>
-            <strong>Orbis Ad</strong>
-            <small>Continuity Studio</small>
-          </span>
-        </button>
-
-        <nav aria-label="Primary navigation">
-          <NavButton active={section === "studio"} label="Studio" marker="01" onClick={() => setSection("studio")} />
-          <NavButton active={section === "library"} label="Title library" marker="02" onClick={() => setSection("library")} />
-          <NavButton active={section === "campaigns"} label="Campaigns" marker="03" onClick={() => setSection("campaigns")} />
-          <NavButton active={section === "audit"} label="Audit ledger" marker="04" onClick={() => setSection("audit")} />
-        </nav>
-
-        <div className="sidebar-foot">
-          <div className="system-state">
-            <span className={`connection-light ${session.connected ? "online" : ""}`} />
-            <span>
-              <strong>{session.connected ? "Reactor connected" : "Reactor standing by"}</strong>
-              <small>Visko Orbis Stable</small>
-            </span>
-          </div>
-          <p>Internal preview · authorized media only</p>
+      <div hidden={section !== "studio"} className="studio-screen">
+        <div className="studio-grid">
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} onStart={startContinuation} onPivot={pivot} onAction={runAction} onImport={importScene} />
+          <aside className="inspector" aria-label="Scene setup">
+            {locked && <div className="locked-notice"><Icon name="check" size={14} />Campaign and source are held for this take. Use the director to pivot live.</div>}
+            <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />
+            <details className="inspector-section source-details" ref={sourceDetails} open><summary><span><span className="panel-eyebrow">02 / SOURCE</span>Source & reference frame</span><span className={frame ? "ready-label" : "subtle-label"}>{frame ? "Ready" : "Import"}</span></summary><SourceClipPanel title={title} clipUrl={clip?.url || ""} clipName={clip?.file.name || ""} framePreview={frame?.url || ""} handoffTime={handoffTime} onClipSelected={selectClip} onFrameCaptured={selectFrame} disabled={locked} onError={setError} /></details>
+            <details className="inspector-section"><summary><span><span className="panel-eyebrow">03 / DIRECTION</span>Scene brief & placement</span><Icon name="chevron" size={15} /></summary><div className="placement-controls"><label className="field-label">What happens next?<textarea value={sceneBrief} maxLength={1200} disabled={locked} onChange={(event) => setSceneBrief(event.target.value)} rows={5} /></label><p>Describe the scene to generate. Your uploaded frame sets the visual starting point.</p><h3>Position the artwork</h3><p>Review the placement tab in the preview before generating.</p>{([{ key: "x", label: "Horizontal", max: 1 - zone.width }, { key: "y", label: "Vertical", max: 1 - zone.height }, { key: "width", label: "Size", max: .5 }] as const).map((control) => <label className="range-field" key={control.key}><span>{control.label}<output>{Math.round(zone[control.key] * 100)}%</output></span><input type="range" min={control.key === "width" ? .06 : 0} max={control.max} step={.01} value={zone[control.key]} disabled={locked} onChange={(event) => { const value = Number(event.target.value); setZone((previous) => control.key === "width" ? { ...previous, width: value, height: Math.min(value * 1.1, .55), x: Math.min(previous.x, 1-value), y: Math.min(previous.y, 1 - Math.min(value * 1.1, .55)) } : { ...previous, [control.key]: value }); }} /></label>)}</div></details>
+          </aside>
         </div>
-      </aside>
-
-      <main className="workspace">
-        <header className="topbar">
-          <div>
-            <span className="breadcrumb">HACKATHON / ORBIS-AD / {section.toUpperCase()}</span>
-            <h1>{sectionTitle(section)}</h1>
-          </div>
-          <div className="topbar-actions">
-            <span className="autosave">Local demo workspace</span>
-            {session.connected && (
-              <button className="button quiet" type="button" onClick={session.disconnectSession}>
-                Disconnect
-              </button>
-            )}
-            <div className="operator-avatar" aria-label="Operator Mian Abdullah">MA</div>
-          </div>
-        </header>
-
-        {section === "studio" && (
-          <>
-            <section className="title-strip" aria-label="Selected title">
-              <label>
-                Licensed title
-                <select value={titleId} onChange={(event) => selectTitle(event.target.value)}>
-                  {filmTitles.map((item) => (
-                    <option key={item.id} value={item.id}>{item.title} — {item.moment}</option>
-                  ))}
-                </select>
-              </label>
-              <div className="title-stat"><span>Handoff</span><strong>{title.timecode}</strong></div>
-              <div className="title-stat"><span>Continuity</span><strong>{title.genre}</strong></div>
-              <div className="title-stat"><span>Protected</span><strong>{title.continuity.protected.length} elements</strong></div>
-              <span className="rights-badge">Rights cleared</span>
-            </section>
-
-            {(workspaceError || session.error) && (
-              <p className="global-error" role="alert">{workspaceError || session.error}</p>
-            )}
-
-            <div className="studio-grid">
-              <div className="setup-column">
-                <SourceClipPanel
-                  title={title}
-                  clipUrl={clipUrl}
-                  clipName={clipFile?.name ?? ""}
-                  framePreview={framePreview}
-                  handoffTime={handoffTime}
-                  onClipSelected={selectClip}
-                  onFrameCaptured={selectFrame}
-                />
-                <CampaignPanel
-                  profiles={audienceProfiles}
-                  selectedProfileId={profileId}
-                  campaign={campaign}
-                  rationale={rationale}
-                  assetName={brandAsset?.name ?? ""}
-                  onProfileChange={setProfileId}
-                  onAssetSelected={(file) => {
-                    setBrandAsset(file);
-                    addActivity("Brand asset loaded", file.name);
-                  }}
-                />
-              </div>
-              <ContinuationStage
-                session={session}
-                campaign={campaign}
-                framePreview={framePreview}
-                preparing={preparing}
-                runId={preparedRun?.runId ?? ""}
-                prompt={preparedRun?.prompt ?? ""}
-                storyBeats={storyBeats}
-                onStart={startContinuation}
-                onSteer={steer}
-              />
-            </div>
-          </>
-        )}
-
-        {section === "library" && (
-          <LibraryView selectedId={titleId} onSelect={(id) => { selectTitle(id); setSection("studio"); }} />
-        )}
-        {section === "campaigns" && <CampaignsView />}
-        {section === "audit" && <AuditView events={auditEvents} />}
-      </main>
-    </div>
-  );
-}
-
-function NavButton({
-  active,
-  label,
-  marker,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  marker: string;
-  onClick: () => void;
-}) {
-  return (
-    <button className={`nav-button ${active ? "active" : ""}`} type="button" onClick={onClick}>
-      <span>{marker}</span>
-      {label}
-    </button>
-  );
-}
-
-function LibraryView({ selectedId, onSelect }: { selectedId: string; onSelect: (id: string) => void }) {
-  return (
-    <section className="index-view">
-      <div className="index-heading">
-        <div><span className="eyebrow">Licensed catalog</span><h2>Continuation-ready moments</h2></div>
-        <span>{filmTitles.length} approved clips</span>
+        <footer className="workspace-footer"><span><span className="state-dot" />Powered by Visko Orbis</span><span>Live generative video · placements begin from your reference frame</span></footer>
       </div>
-      <div className="library-grid">
-        {filmTitles.map((title) => (
-          <button key={title.id} className={`library-card ${selectedId === title.id ? "selected" : ""}`} type="button" onClick={() => onSelect(title.id)}>
-            <span className="library-art" style={{ "--scene-accent": title.palette } as React.CSSProperties}><span>{title.title.slice(0, 1)}</span></span>
-            <span className="library-copy"><small>{title.genre}</small><strong>{title.title}</strong><span>{title.moment} · {title.timecode}</span></span>
-            <span className="library-state">Ready</span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
-function CampaignsView() {
-  return (
-    <section className="index-view">
-      <div className="index-heading">
-        <div><span className="eyebrow">Brand inventory</span><h2>Approved campaigns</h2></div>
-        <span>{campaigns.length} active</span>
-      </div>
-      <div className="campaign-table-wrap">
-        <table className="campaign-table">
-          <thead><tr><th>Brand</th><th>Campaign</th><th>Placement</th><th>Priority</th><th>Status</th></tr></thead>
-          <tbody>
-            {campaigns.map((campaign) => (
-              <tr key={campaign.id}>
-                <td><span className="table-brand" style={{ background: campaign.accent, color: campaign.ink }}>{campaign.brand.slice(0, 1)}</span><strong>{campaign.brand}</strong></td>
-                <td>{campaign.campaign}</td><td>{campaign.placement.label}</td><td>{campaign.priority}</td><td><span className="table-status">Approved</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
+      {section === "campaigns" && <section className="campaign-library" aria-label="Campaign library">{campaigns.map((item) => <article className="campaign-card" key={item.id}><div className={`campaign-hero ${item.category}`}><img src={(item.assets.find((asset) => asset.kind !== "logo") || item.assets[0]).src} alt={`${item.brand} campaign artwork`} /><span className="hero-brand"><img src={item.logo} alt={item.brand} /></span></div><div className="campaign-card-body"><span className="eyebrow">{item.category} / {item.assets.length} ASSETS</span><h2>{item.campaign}</h2><p>{item.placement.label} · {item.brand}</p><div className="library-assets">{item.assets.map((asset) => <a href={asset.src} key={asset.id} target="_blank" rel="noreferrer" aria-label={`View ${asset.label}`}><img src={asset.src} alt={asset.label} /><span>{asset.label}</span></a>)}</div><button className="button secondary full-width" type="button" disabled={locked} onClick={() => { setAutomatic(false); chooseCampaign(item.id); setSection("studio"); }}>Use {item.brand}<Icon name="arrow" size={16} /></button><details className="asset-sources"><summary>Asset sources</summary>{item.assets.map((asset) => <a key={asset.id} href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.label} ↗</a>)}</details></div></article>)}</section>}
 
-function AuditView({ events }: { events: { id: string; label: string; detail: string; time: string }[] }) {
-  return (
-    <section className="index-view">
-      <div className="index-heading">
-        <div><span className="eyebrow">Immutable run history</span><h2>Audit ledger</h2></div>
-        <span>{events.length} events this session</span>
-      </div>
-      <div className="audit-list">
-        {events.length ? events.map((event) => (
-          <div className="audit-row" key={event.id}><span className="audit-node" /><div><strong>{event.label}</strong><small>{event.detail}</small></div><time>{event.time}</time></div>
-        )) : <div className="empty-ledger">No run events yet. Prepare a continuation in Studio.</div>}
-      </div>
-    </section>
-  );
-}
+      {section === "library" && <><div className="library-note"><Icon name="film" size={19} /><p>These are creative presets. Import a movie clip or still in Studio to work with actual footage.</p></div><div className="scene-library">{filmTitles.map((item, index) => <article className="scene-card" key={item.id}><div className={`scene-card-art scene-${index}`}><span className="scene-index">0{index + 1}</span><Icon name="film" size={42} /><span>CREATIVE PRESET</span></div><div className="scene-card-body"><span className="eyebrow">{item.genre}</span><h2>{item.title}</h2><h3>{item.moment}</h3><p>{item.continuity.setting}.</p><button className="button secondary" type="button" disabled={locked} onClick={() => chooseTitle(item.id)}>Use this brief<Icon name="arrow" size={16} /></button></div></article>)}</div></>}
 
-function sectionTitle(section: WorkspaceSection) {
-  if (section === "library") return "Title library";
-  if (section === "campaigns") return "Campaign inventory";
-  if (section === "audit") return "Audit ledger";
-  return "Activation studio";
-}
-
-async function composePlacementFrame(
-  frame: File,
-  asset: File | null,
-  campaign: Campaign,
-) {
-  const source = await createImageBitmap(frame);
-  const canvas = document.createElement("canvas");
-  canvas.width = 1280;
-  canvas.height = 720;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Could not prepare the placement frame.");
-
-  context.drawImage(source, 0, 0, canvas.width, canvas.height);
-  source.close();
-
-  const zone = campaign.placement.zone;
-  const x = zone.x * canvas.width;
-  const y = zone.y * canvas.height;
-  const width = zone.width * canvas.width;
-  const height = zone.height * canvas.height;
-  context.save();
-  context.fillStyle = campaign.accent;
-  context.globalAlpha = 0.9;
-  context.fillRect(x, y, width, height);
-  context.globalAlpha = 1;
-
-  if (asset) {
-    const artwork = await createImageBitmap(asset);
-    const scale = Math.min(width / artwork.width, height / artwork.height) * 0.78;
-    const drawWidth = artwork.width * scale;
-    const drawHeight = artwork.height * scale;
-    context.drawImage(
-      artwork,
-      x + (width - drawWidth) / 2,
-      y + (height - drawHeight) / 2,
-      drawWidth,
-      drawHeight,
-    );
-    artwork.close();
-  } else {
-    context.fillStyle = campaign.ink;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.font = `600 ${Math.max(22, Math.floor(width / 7))}px Arial`;
-    context.fillText(campaign.brand, x + width / 2, y + height / 2, width * 0.84);
-  }
-  context.restore();
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (value) => value ? resolve(value) : reject(new Error("Could not encode the placement frame.")),
-      "image/jpeg",
-      0.94,
-    );
-  });
-  return new File([blob], `${campaign.id}-conditioned-handoff.jpg`, { type: "image/jpeg" });
+      {section === "activity" && <section className="activity-panel"><div className="activity-heading"><h2>Creative history</h2><span>{activity.length} events · stored in this browser</span></div>{activity.length ? activity.map((event) => <div className="activity-row" key={event.id}><span className="activity-icon"><Icon name={event.label.includes("direction") || event.label.includes("refinement") ? "spark" : "check"} size={16} /></span><div><strong>{event.label}</strong><p>{event.detail}</p></div><time dateTime={event.time}>{new Date(event.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>) : <div className="activity-empty"><Icon name="clock" size={36} /><h3>Your creative trail starts here.</h3><p>Import a scene or start a take to see your decisions appear.</p><button className="button secondary" type="button" onClick={() => setSection("studio")}>Open Studio<Icon name="arrow" size={16} /></button></div>}<details className="technical-events"><summary>Latest model events</summary>{session.events.length ? session.events.map((event, index) => <code key={`${index}-${event}`}>{event}</code>) : <p>No connected session.</p>}<pre className="model-snapshot">{session.modelSnapshot}</pre></details></section>}
+    </main>
+  </div>;
 }

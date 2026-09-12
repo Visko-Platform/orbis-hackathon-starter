@@ -32,6 +32,14 @@ export type AudienceProfile = {
 export type Campaign = {
   id: string;
   brand: string;
+  logo: string;
+  assets: {
+    id: string;
+    label: string;
+    src: string;
+    kind: "logo" | "product" | "campaign";
+    sourceUrl: string;
+  }[];
   campaign: string;
   category: string;
   accent: string;
@@ -130,6 +138,24 @@ export const campaigns: Campaign[] = [
   {
     id: "pepsi-thirsty-for-more",
     brand: "Pepsi",
+    logo: "/brands/pepsi/logo.png",
+    assets: [
+      {
+        id: "pepsi-logo",
+        label: "Pepsi globe",
+        src: "/brands/pepsi/logo.png",
+        kind: "logo",
+        sourceUrl: "https://www.pepsico.com/en/media",
+      },
+      {
+        id: "pepsi-can",
+        label: "Pepsi original can",
+        src: "/brands/pepsi/pepsi-can.jpg",
+        kind: "product",
+        sourceUrl:
+          "https://www.pepsicopartners.com/pepsico/en/USD/BEVERAGES/Soft-Drinks/Pepsi-(4-6-Packs)/p/1-HYK-24769",
+      },
+    ],
     campaign: "Thirsty for More",
     category: "beverage",
     accent: "#2456d8",
@@ -148,6 +174,23 @@ export const campaigns: Campaign[] = [
   {
     id: "mcdonalds-shared-moment",
     brand: "McDonald's",
+    logo: "/brands/mcdonalds/logo.svg",
+    assets: [
+      {
+        id: "mcdonalds-logo",
+        label: "Golden arches",
+        src: "/brands/mcdonalds/logo.svg",
+        kind: "logo",
+        sourceUrl: "https://www.mcdonalds.co.jp/",
+      },
+      {
+        id: "mcdonalds-big-mac",
+        label: "Big Mac",
+        src: "/brands/mcdonalds/big-mac.png",
+        kind: "product",
+        sourceUrl: "https://www.mcdonalds.co.jp/products/1210/",
+      },
+    ],
     campaign: "A Shared Moment",
     category: "food",
     accent: "#d31d26",
@@ -166,6 +209,23 @@ export const campaigns: Campaign[] = [
   {
     id: "nike-move-through-it",
     brand: "Nike",
+    logo: "/brands/nike/logo.jpg",
+    assets: [
+      {
+        id: "nike-logo",
+        label: "Nike Swoosh",
+        src: "/brands/nike/logo.jpg",
+        kind: "logo",
+        sourceUrl: "https://about.nike.com/en/newsroom/collections/nike-inc-logos",
+      },
+      {
+        id: "nike-air-max-campaign",
+        label: "Air Max 90 Tiempo campaign",
+        src: "/brands/nike/air-max-campaign.jpg",
+        kind: "campaign",
+        sourceUrl: "https://www.nike.com/air-max/",
+      },
+    ],
     campaign: "Move Through It",
     category: "apparel",
     accent: "#151515",
@@ -210,6 +270,8 @@ export const storyBeats: StoryBeat[] = [
 export function selectEligibleCampaign(profileId: string, titleId: string) {
   const profile = audienceProfiles.find((item) => item.id === profileId);
   if (!profile) return null;
+  const affinityScore = (campaign: Campaign) =>
+    campaign.segments.filter((segment) => profile.affinities.includes(segment)).length;
 
   return (
     campaigns
@@ -220,7 +282,9 @@ export function selectEligibleCampaign(profileId: string, titleId: string) {
       )
       .sort(
         (left, right) =>
-          right.priority - left.priority || left.id.localeCompare(right.id),
+          affinityScore(right) - affinityScore(left) ||
+          right.priority - left.priority ||
+          left.id.localeCompare(right.id),
       )[0] ?? null
   );
 }
