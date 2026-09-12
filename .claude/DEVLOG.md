@@ -57,6 +57,21 @@
   frame, draft button fills the fields, library shows the paused note.
 - Not verified: a live take started from a product-only frame (no Orbis session this phase).
 
+## Vercel deploy prep (2026-09-12 ~15:40–16:10)
+- Blockers found before deploying: (1) product info saved to data/knowledge/ — Vercel functions have a
+  read-only disk, so saves would 500; (2) drafting uploads up to 10 MB — Vercel function bodies cap at 4.5 MB;
+  (3) the CLI might upload .env.local without a .vercelignore.
+- Decisions: Vercel Blob behind the existing store API, selected only when BLOB_READ_WRITE_TOKEN is present and
+  the default directory is used (tests keep disk). Public-access store, overwrite in place, reads bypass the CDN
+  cache with the upload timestamp. Rejected: /tmp (per-instance, loses saves), Supabase (new secrets and
+  schema for one JSON doc per brand). Client re-encodes the drafting image to ≤1280 px JPEG (also makes SVG
+  logos describable). Prompt versions: console only on Vercel (runtime logs are the record).
+- Keys: the agent does not enter API keys anywhere; tay adds them with `vercel env add` or the dashboard.
+- Risk carried: a public production URL with REACTOR_API_KEY set lets anyone start paid Orbis sessions (no
+  auth or rate limit on /api/token). Raised with tay before the deploy request.
+- Landmines: `vercel` is not on PATH (use npx); the saved CLI token is invalid; `list_teams` via the Vercel
+  MCP returns []; zsh does not word-split `$v args`, so don't put a command in a variable.
+
 ## Next
 - Live run; re-sample opening rewrites after the "no unasked product interaction" rule.
 - PR #2 opened on tay's "open it", updated and merged into main on "push to main" (merge commit 10702ca).
