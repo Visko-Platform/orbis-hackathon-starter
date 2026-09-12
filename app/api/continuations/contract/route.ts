@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 
 import {
   draftContractWithGemini,
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   const campaign = campaigns.find((item) => item.id === form.get("campaignId"));
   const brief = String(form.get("brief") ?? "").trim();
   const keepProduct = form.get("keepProduct") !== "false";
-  if (!campaign || !brief || brief.length > 1200) {
+  if (!campaign || !brief || brief.length > MAX_INPUT_CHARS) {
     return NextResponse.json({ error: "A valid campaign and a brief of 1–1,200 characters are required." }, { status: 400 });
   }
   let knowledge;

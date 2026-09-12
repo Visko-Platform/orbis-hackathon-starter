@@ -18,7 +18,11 @@ export function matchProductNotes(campaign: Campaign, direction: string, assetId
   const ofRunningProduct = assetId
     ? cued.filter((asset) => asset.id === assetId || asset.variantOf === assetId)
     : [];
-  return (ofRunningProduct.length > 0 ? ofRunningProduct : cued).map((asset) => `${asset.label}: ${asset.appearance}`);
+  const chosen = ofRunningProduct.length > 0 ? ofRunningProduct : cued;
+  // With nothing cued, the product the take is running with still rides along,
+  // so an open direction ("make it rain") keeps the same model on the wrist.
+  const running = chosen.length === 0 && assetId ? campaign.assets.find((asset) => asset.id === assetId && asset.appearance) : undefined;
+  return (running ? [running] : chosen).map((asset) => `${asset.label}: ${asset.appearance}`);
 }
 
 /** Appearance notes for named reference views, in the order given. */

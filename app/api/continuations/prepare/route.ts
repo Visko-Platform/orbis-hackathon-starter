@@ -4,6 +4,7 @@ import { buildContinuationPrompt } from "@/lib/continuation-prompt";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { draftContractWithGemini, draftFromBrief, mergeDraft, productLines } from "@/lib/knowledge/contract";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
+import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { loadKnowledge } from "@/lib/knowledge/store";
 import {
@@ -20,6 +21,8 @@ type PrepareBody = {
   selectionMode?: "auto" | "manual";
   sceneBrief?: string;
   assetId?: string;
+  // false sends an authored brief as written (guarded and validated, never rewritten).
+  engineer?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -38,8 +41,11 @@ export async function POST(request: Request) {
   if (body?.selectionMode && !["auto", "manual"].includes(body.selectionMode)) {
     return NextResponse.json({ error: "Invalid campaign selection mode." }, { status: 400 });
   }
-  if (body?.sceneBrief !== undefined && (typeof body.sceneBrief !== "string" || !body.sceneBrief.trim() || body.sceneBrief.length > 1200)) {
+  if (body?.sceneBrief !== undefined && (typeof body.sceneBrief !== "string" || !body.sceneBrief.trim() || body.sceneBrief.length > MAX_INPUT_CHARS)) {
     return NextResponse.json({ error: "Scene brief must contain 1–1,200 characters." }, { status: 400 });
+  }
+  if (body?.engineer !== undefined && typeof body.engineer !== "boolean") {
+    return NextResponse.json({ error: "engineer must be true or false." }, { status: 400 });
   }
   if (body?.assetId !== undefined && body.assetId !== "upload" && !campaign.assets.some((asset) => asset.id === body.assetId)) {
     return NextResponse.json({ error: "Choose an asset belonging to the selected campaign." }, { status: 400 });
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
   const brief = body?.sceneBrief?.trim() || `Setting: ${continuity.setting}. Camera: ${continuity.camera}. Lighting: ${continuity.lighting}. Story action: ${continuity.objective}.`;
   let engineered;
   try {
-    engineered = await engineerPrompt(knowledge, brief, "opening", hasGemini() ? { engine: new GeminiEngine() } : {});
+    engineered = await engineerPrompt(knowledge, brief, "opening", hasGemini() && body?.engineer !== false ? { engine: new GeminiEngine() } : {});
   } catch (caught: unknown) {
     if (caught instanceof RefusedError) return NextResponse.json({ error: caught.message }, { status: 400 });
     throw caught;

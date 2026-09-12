@@ -98,7 +98,18 @@ back**, **Put it back on**, **Walk out**); typing a matching phrase such as
 `lib/demo/flows.ts`, served by `POST /api/continuations/demo`, validated
 against the Rolex knowledge (never rewritten by Gemini), and sent as an action
 beat followed by the settled scene. Each beat carries the appearance notes of
-its reference views (for example the plain, unengraved case back), and the
+its reference views (for example the flat, mirror-polished stainless steel
+case back) plus a rigid-body rule, and beats that handle the watch use an
+authored physical action ("his hands turn it over in one smooth rotation")
+instead of the scene-transform wording, so the object turns rather than
+warps. The flow names one cast member (a Chinese man in a charcoal overcoat)
+and a watch ledger per beat (on the wrist, in his hands, on the tray); both
+are restated as "Continuity:" in every beat, brand marks are declared static
+printed graphics, and the demo's opening brief is sent verbatim
+(`engineer: false`) rather than rewritten by Gemini. Each beat also returns
+the scene contract it leaves the take under (cast, ledger and marks as pinned
+lines), so a free direction typed after a beat still carries the same man and
+the same watch. The
 Rolex knowledge seed (`lib/knowledge/seeds.ts`) keeps every boutique interior
 showing the word ROLEX with the gold crown and only Rolex watches.
 

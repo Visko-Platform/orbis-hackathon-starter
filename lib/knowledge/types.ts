@@ -20,9 +20,10 @@ export type CampaignKnowledge = {
   updatedAt?: string;
 };
 
+// Generous: a product rule or an appearance can be as long as it needs to be exact.
 const MAX_ITEMS = 40;
-const MAX_ITEM_CHARS = 300;
-const MAX_APPEARANCE_CHARS = 600;
+export const MAX_ITEM_CHARS = 1_000;
+export const MAX_APPEARANCE_CHARS = 2_000;
 const MAX_NAME_CHARS = 80;
 
 function stringList(value: unknown, field: string): string[] {

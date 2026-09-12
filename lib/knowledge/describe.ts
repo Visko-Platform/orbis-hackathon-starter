@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 import { ENGINEER_MODEL } from "@/lib/knowledge/llm";
 import { sanitizeSuggestions } from "@/lib/knowledge/suggest";
-import type { CampaignKnowledge } from "@/lib/knowledge/types";
+import { MAX_APPEARANCE_CHARS, type CampaignKnowledge } from "@/lib/knowledge/types";
 
 // Drafts the appearance and visual notes from a product image so the operator
 // can add a product with one upload and then correct the words. Drafts only:
@@ -34,7 +34,7 @@ export function buildDescribeContent(knowledge: CampaignKnowledge): string {
 // Keeps the draft inside the same limits the knowledge parser enforces.
 export function sanitizeDraft(knowledge: CampaignKnowledge, raw: unknown): ProductDraft {
   const body = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  const appearance = typeof body.appearance === "string" ? body.appearance.trim().replace(/\s+/g, " ").slice(0, 600) : "";
+  const appearance = typeof body.appearance === "string" ? body.appearance.trim().replace(/\s+/g, " ").slice(0, MAX_APPEARANCE_CHARS) : "";
   const notes = Array.isArray(body.visualNotes) ? body.visualNotes.filter((n): n is string => typeof n === "string") : [];
   return { appearance, visualNotes: sanitizeSuggestions(knowledge, notes).slice(0, 4) };
 }

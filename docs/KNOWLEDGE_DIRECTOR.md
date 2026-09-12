@@ -81,7 +81,9 @@ product and place carry across chunks. Lines have a kind (`product`, `person`, `
 - **Carried by every direction.** The client sends the contract with each pivot; the
   server validates every line like operator input (guard, forbidden claims, caps), gives
   the lines to the engineer as "keep every line true", and appends
-  `Keep true: …` (capped at 600 characters, whole lines) to the live direction. The
+  `Keep true: …` to the live direction. The caps are sanity ceilings, not a budget
+  (24 lines of up to 1,000 characters; the clause up to 6,000), so a full product
+  description, every product rule and the cast all ride along. The
   response returns the advanced contract: a full pivot drops unpinned setting lines,
   dropping the brand drops the product lines, a refinement keeps everything.
 - **Read from a frame.** `POST /api/continuations/contract` (multipart: campaignId, brief,
@@ -91,6 +93,11 @@ product and place carry across chunks. Lines have a kind (`product`, `person`, `
   preview frame before a take.
 - **Operator control.** The "Scene contract" card under the director panel lists the
   lines with pin, remove, and add; custom lines are pinned by default.
+- **Demo beats.** `POST /api/continuations/demo` returns the contract the beat leaves the
+  take under (`lib/demo/contract.ts`): the product lines, then the cast, the watch ledger
+  and the brand marks as pinned lines, then the operator's own lines. The beat's prompt
+  restates these as its continuity line rather than as the clause; free directions after
+  the beat carry the contract as usual.
 
 Not included: watching the video for violations or repairing automatically. The contract
 is the record those would act on.

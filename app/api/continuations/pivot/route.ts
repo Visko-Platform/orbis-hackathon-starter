@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { recordPromptVersion } from "@/lib/knowledge/audit";
 import { afterPivot, contractClause, type ContractLine, draftContractWithGemini, draftFromBrief, lineId, MAX_CONTRACT_LINES, parseContract, type SceneContract, validateLine } from "@/lib/knowledge/contract";
 import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
+import { MAX_INPUT_CHARS } from "@/lib/knowledge/guard";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { isFactQuestion, retrieveFacts } from "@/lib/knowledge/retrieve";
 import { loadKnowledge } from "@/lib/knowledge/store";
-import { buildLiveDirectionBeats } from "@/lib/live-direction";
+import { buildLiveDirectionBeats, MAX_CURRENT_PROMPT_CHARS } from "@/lib/live-direction";
 import { matchProductNotes } from "@/lib/product-cues";
 import { campaigns } from "@/lib/studio-data";
 
@@ -15,8 +16,8 @@ const NO_STORE = { "Cache-Control": "no-store" };
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
-  if (!body || typeof body.direction !== "string" || !body.direction.trim() || body.direction.trim().length > 1200 ||
-    !["refine", "pivot"].includes(body.mode) || typeof body.currentPrompt !== "string" || body.currentPrompt.length > 4000 ||
+  if (!body || typeof body.direction !== "string" || !body.direction.trim() || body.direction.trim().length > MAX_INPUT_CHARS ||
+    !["refine", "pivot"].includes(body.mode) || typeof body.currentPrompt !== "string" || body.currentPrompt.length > MAX_CURRENT_PROMPT_CHARS ||
     typeof body.preserveBrand !== "boolean" || !campaign ||
     (body.assetId !== undefined && (typeof body.assetId !== "string" || body.assetId.length > 100))) {
     return NextResponse.json({ error: "Enter a direction between 1 and 1,200 characters and choose a valid campaign and direction mode." }, { status: 400 });

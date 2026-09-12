@@ -319,7 +319,7 @@ export const campaigns: Campaign[] = [
         integration:
           "The Submariner is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
         appearance:
-          "Seen from behind: a plain, polished Oystersteel screw-down case back with no engraving, window, or markings; brushed three-link Oyster bracelet; a folding Oysterlock clasp with a small raised Rolex crown at its centre.",
+          "Seen from behind, one solid stainless steel (Oystersteel) object: a flat, mirror-polished screw-down case back with a finely fluted edge and no engraving, window, or text; brushed steel lugs; the three-link Oyster bracelet attached at the lugs; a folding Oysterlock clasp with a small raised Rolex crown at its centre.",
       },
       {
         id: "rolex-datejust-back",
@@ -332,7 +332,7 @@ export const campaigns: Campaign[] = [
         integration:
           "The Datejust is turned over so its case back faces the camera, resting in the protagonist's palm, exactly as shown in the reference.",
         appearance:
-          "Seen from behind: a plain, polished Oystersteel screw-down case back with no engraving or markings, the fluted bezel edge just visible around it; five-link Jubilee bracelet; a folding clasp with a small raised Rolex crown at its centre.",
+          "Seen from behind, one solid stainless steel (Oystersteel) object: a flat, mirror-polished screw-down case back with a finely fluted edge and no engraving, window, or text, the fluted white-gold bezel edge just visible around it; brushed steel lugs; the five-link Jubilee bracelet attached at the lugs; a folding clasp with a small raised Rolex crown at its centre.",
       },
       {
         id: "rolex-submariner-open",
@@ -345,7 +345,7 @@ export const campaigns: Campaign[] = [
         integration:
           "The Submariner lies turned over with its Oyster bracelet unfolded flat, the Glidelock clasp open exactly as in the reference, so the plain polished case back is fully exposed.",
         appearance:
-          "Oystersteel Oyster bracelet opened out flat: the folding Oysterlock safety clasp unfolded, its polished cover and the Glidelock extension blade visible, brushed three-piece links either side; at the centre the plain polished screw-down case back with no engraving.",
+          "Stainless steel Oyster bracelet opened out flat: the folding Oysterlock safety clasp unfolded, its polished cover and the Glidelock extension blade visible, brushed three-piece links either side; at the centre the flat, mirror-polished stainless steel screw-down case back with a fluted edge and no engraving, window, or text. Every part stays a solid metal piece.",
       },
       {
         id: "rolex-datejust-open",
@@ -358,7 +358,7 @@ export const campaigns: Campaign[] = [
         integration:
           "The Datejust lies turned over with its Jubilee bracelet unfolded flat and the Oysterclasp open as in the reference, so the plain polished case back is fully exposed. On this watch the whole bracelet is Oystersteel.",
         appearance:
-          "Five-link Jubilee bracelet opened out flat with the folding Oysterclasp unfolded, polished clasp cover with a small raised Rolex crown; all Oystersteel on this reference, never two-tone; at the centre the plain polished screw-down case back with no engraving, fluted bezel edge just visible.",
+          "Five-link Jubilee bracelet opened out flat with the folding Oysterclasp unfolded, polished clasp cover with a small raised Rolex crown; all stainless steel on this reference, never two-tone; at the centre the flat, mirror-polished stainless steel screw-down case back with a fluted edge and no engraving, window, or text, the fluted bezel edge just visible. Every part stays a solid metal piece.",
       },
       {
         id: "rolex-submariner-campaign",

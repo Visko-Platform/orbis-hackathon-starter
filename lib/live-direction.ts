@@ -12,14 +12,25 @@ type DirectionInput = {
   productNotes?: string[];
   // Scene contract clause ("Keep true: …"); when present it carries the appearance too.
   contractClause?: string;
+  /** An authored physical action for the action beat, used instead of "the scene transforms into" wording. */
+  actionDirection?: string;
+  /** What carries over unchanged from the previous shot (cast, which watch is where, fixed brand marks). */
+  continuity?: string;
 };
+
+const RIGID_BODY_RULE =
+  "Rigid-body rule: the product is one solid object. When it is handled, turned over, or put on, it rotates as a single piece, keeps its exact proportions, and never bends, stretches, melts, doubles, or merges with hands, clothing, or the background.";
 
 /** Orbis applies a prompt at the next chunk boundary (~1.8 s); the action beat gets two chunks. */
 export const TRANSITION_BEAT_MS = 3_600;
 
+/** Ceiling for the running prompt a route accepts back from the client; a sanity check, not a budget. */
+export const MAX_CURRENT_PROMPT_CHARS = 16_000;
+
 function fidelityLine(input: DirectionInput) {
   const notes = input.productNotes ?? [];
-  return notes.length > 0 ? `Product fidelity, exactly as in the brand's reference views: ${notes.join(" ")}` : null;
+  if (notes.length === 0) return null;
+  return `Product view in this shot, exactly as in the brand's reference photos; this view takes precedence over the general product description: ${notes.join(" ")} ${RIGID_BODY_RULE}`;
 }
 
 // Used by both beats, so the scene contract is restated in the action beat as well as the settled prompt.
@@ -33,10 +44,13 @@ function brandLine(input: DirectionInput) {
 
 export function buildLiveDirection(input: DirectionInput) {
   const direction = input.direction.trim();
+  const continuity = input.continuity?.trim();
   const scene = input.mode === "pivot"
-    ? `New creative direction. Transition the running video into this scene: ${direction}. This replaces the previous setting, narrative, lighting, and camera instructions. Let the visual transition unfold continuously.`
+    ? continuity
+      ? `New creative direction. Transition the running video into this scene: ${direction}. This replaces the previous setting, lighting, and camera instructions; the continuity below carries over unchanged. Let the visual transition unfold continuously.`
+      : `New creative direction. Transition the running video into this scene: ${direction}. This replaces the previous setting, narrative, lighting, and camera instructions. Let the visual transition unfold continuously.`
     : `Current scene context: ${input.currentPrompt.slice(-2000)}\nDirector's latest adjustment, which takes precedence over earlier conflicting details: ${direction}. Maintain continuity for elements not changed by this adjustment.`;
-  return [scene, fidelityLine(input), brandLine(input),
+  return [scene, continuity ? `Continuity: ${continuity}` : null, fidelityLine(input), brandLine(input),
   "Photorealistic cinematic motion. Respond to the director's request in the next generated sequence."].filter(Boolean).join("\n");
 }
 
@@ -50,9 +64,17 @@ export function buildLiveDirectionBeats(input: DirectionInput) {
   const settled = buildLiveDirection(input);
   if (input.mode !== "pivot") return { action: null, settled };
   const direction = input.direction.trim();
+  const motion = input.actionDirection?.trim();
+  const opening = motion
+    // A handled object: describe the physical motion, never a scene "transforming".
+    ? [`Right now, in one continuous take, ${motion.charAt(0).toLowerCase()}${motion.slice(1)}${/[.!?]$/.test(motion) ? "" : "."}`,
+      "The motion is physical and already under way: every object keeps its solid shape and proportions while it moves, and the camera follows it smoothly."]
+    : [`Right now, in one continuous camera move, the scene transforms into: ${direction}.`,
+      `The change is large and clearly visible within the next moments: the environment, light, and framing are already becoming ${direction}.`];
+  const continuity = input.continuity?.trim();
   const action = [
-    `Right now, in one continuous camera move, the scene transforms into: ${direction}.`,
-    `The change is large and clearly visible within the next moments: the environment, light, and framing are already becoming ${direction}.`,
+    ...opening,
+    continuity ? `Continuity: ${continuity}` : null,
     fidelityLine(input),
     brandLine(input),
     "Photorealistic cinematic motion, one continuous take, no cuts.",

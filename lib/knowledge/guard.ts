@@ -1,7 +1,8 @@
 import { containsPhrase } from "@/lib/knowledge/text";
 import type { CampaignKnowledge } from "@/lib/knowledge/types";
 
-export const MAX_INPUT_CHARS = 1200;
+// Generous: a full authored beat or a long operator brief fits; a sanity ceiling, not a budget.
+export const MAX_INPUT_CHARS = 4_000;
 
 const INJECTION_PATTERNS = [
   /ignore (all |the )?(previous|prior|above) (instructions|prompts?)/i,

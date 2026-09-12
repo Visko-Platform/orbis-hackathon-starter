@@ -101,6 +101,14 @@ test("prepare accepts the Rolex campaign with a wrist-worn product", async () =>
   const result = await response.json();
   assert.match(result.prompt, /wrist/);
   assert.equal(result.assetId, "rolex-submariner");
+  const verbatim = await (await post("/api/continuations/prepare", { ...selection, campaignId: "rolex-perpetual-moment", assetId: "rolex-submariner", sceneBrief: "A Chinese man walks down the street", engineer: false })).json();
+  assert.equal(verbatim.engineered.model, "passthrough");
+  assert.ok(verbatim.prompt.includes("A Chinese man walks down the street"));
+  // The prepared contract round-trips into a pivot even with Rolex's long product lines.
+  const carried = await post("/api/continuations/pivot", { direction: "Move to a rooftop at dusk", mode: "pivot", preserveBrand: true, campaignId: "rolex-perpetual-moment", assetId: "rolex-submariner", currentPrompt: verbatim.prompt, contract: verbatim.contract });
+  assert.equal(carried.status, 200);
+  assert.match((await carried.json()).prompt, /Keep true: One Rolex stays in the scene/);
+  assert.equal((await post("/api/continuations/prepare", { ...selection, engineer: "no" })).status, 400);
 });
 
 
@@ -111,8 +119,22 @@ test("the Rolex demo path resolves bubbles and free text into fixed beats", asyn
   const result = await byId.json();
   assert.equal(result.step.id, "inspect");
   assert.match(result.prompt, /case back/);
-  assert.match(result.actionPrompt, /Right now/);
+  assert.match(result.actionPrompt, /Right now, in one continuous take, his hands unfasten the Datejust 41/);
+  assert.match(result.actionPrompt, /Rigid-body rule/);
+  assert.ok(!result.actionPrompt.includes("the scene transforms into"));
   assert.ok(result.productNotes.some((note) => /no engraving/.test(note)));
+  assert.match(result.prompt, /Continuity: The same person throughout: a Chinese man/);
+  assert.match(result.prompt, /On the green leather tray, lying still and unchanged: the Submariner Date/);
+  assert.ok(!result.prompt.includes("The product looks like this:"), "demo beats leave out the general appearance");
+  assert.ok(!result.prompt.includes("Keep true:"), "the beat's continuity line stands in for the clause");
+  assert.ok(result.contract.lines.some((line) => line.kind === "person" && line.text.includes("a Chinese man")));
+  // A free direction typed after the beat carries the beat's contract.
+  const free = await (await post("/api/continuations/pivot", { direction: "He steps out into heavy rain", mode: "pivot", preserveBrand: true, campaignId: "rolex-perpetual-moment", assetId: "rolex-datejust", currentPrompt: result.prompt, contract: result.contract })).json();
+  assert.equal(free.outcome, "steer");
+  assert.match(free.prompt, /Keep true: One Rolex stays in the scene: A Rolex Oyster Perpetual/);
+  assert.match(free.prompt, /The same man throughout: a Chinese man/);
+  assert.match(free.prompt, /On the green leather tray, unchanged: the Submariner Date/);
+  assert.ok(!free.prompt.includes("The product looks like this:"), "the clause carries the appearance once");
   assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear", "exit", "boutique"]);
   assert.ok(result.promptVersionId);
   const byText = await (await post("/api/continuations/demo", { ...base, direction: "can you show the back" })).json();
@@ -127,7 +149,7 @@ for (const [name, fields] of [
   ["cross-campaign asset", { assetId: "nike-logo" }],
   ["invalid asset type", { assetId: {} }],
   ["empty scene brief", { sceneBrief: " " }],
-  ["oversized scene brief", { sceneBrief: "x".repeat(1201) }],
+  ["oversized scene brief", { sceneBrief: "x".repeat(4001) }],
   ["invalid selection mode", { selectionMode: "other" }],
 ]) {
   test(`prepare rejects ${name}`, async () => assert.equal((await post("/api/continuations/prepare", { ...selection, ...fields })).status, 400));
@@ -194,12 +216,12 @@ test("suggestions come from the knowledge", async () => {
 
 for (const [name, fields] of [
   ["empty direction", { direction: " " }],
-  ["oversized direction", { direction: "x".repeat(1201) }],
+  ["oversized direction", { direction: "x".repeat(4001) }],
   ["invalid direction type", { direction: [] }],
   ["invalid mode", { mode: "other" }],
   ["invalid boolean", { preserveBrand: "false" }],
   ["unknown campaign", { campaignId: "unknown" }],
-  ["oversized context", { currentPrompt: "x".repeat(4001) }],
+  ["oversized context", { currentPrompt: "x".repeat(16001) }],
 ]) {
   test(`pivot rejects ${name}`, async () => assert.equal((await post("/api/continuations/pivot", { ...pivot, ...fields })).status, 400));
 }

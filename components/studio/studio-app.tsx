@@ -126,7 +126,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     if (!stepAsset || composite.artworkKey !== stepAsset.src) return;
     const step = pendingDemoStart;
     setPendingDemoStart(null);
-    void startContinuation({ sceneBrief: step.brief }).then((started) => { if (started) setDemoStepId(step.id); });
+    void startContinuation({ sceneBrief: step.brief, verbatim: true }).then((started) => { if (started) setDemoStepId(step.id); });
   }); // eslint-disable-line react-hooks/exhaustive-deps -- runs after every render until the pending start is consumed
 
   function chooseCampaign(id: string) {
@@ -207,13 +207,13 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     addActivity("Product image added", `${campaign.brand} · ${file.name}`);
   }
 
-  async function startContinuation(overrides: { sceneBrief?: string } = {}): Promise<boolean> {
+  async function startContinuation(overrides: { sceneBrief?: string; verbatim?: boolean } = {}): Promise<boolean> {
     const brief = (overrides.sceneBrief ?? sceneBrief).trim();
     if (!composite || locked) return false;
     if (!brief) { setError("Add a scene brief before generating."); return false; }
     setPreparing(true); setError("");
     try {
-      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief: brief }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/prepare", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ profileId, titleId, campaignId, assetId, selectionMode: automatic ? "auto" : "manual", sceneBrief: brief, engineer: overrides.verbatim ? false : undefined }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok || !result.prompt || !result.runId) throw new Error(result.error || "Could not prepare this scene.");
       setPreparedRun(result); setBrandRetained(true);
@@ -245,11 +245,12 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     const target = preparedRun?.campaign ?? campaign;
     setError("");
     try {
-      const response = await fetch("/api/continuations/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: target.id, stepId: step.id, direction: source ?? "", currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "" }), signal: AbortSignal.timeout(15_000) });
+      const response = await fetch("/api/continuations/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: target.id, stepId: step.id, direction: source ?? "", currentPrompt: session.pendingPrompt || session.activePrompt || preparedRun?.prompt || "", contract }), signal: AbortSignal.timeout(15_000) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not run this demo step.");
       await session.steer(result.prompt, result.actionPrompt ?? null);
       setDemoStepId(step.id); setLiveAssetId(step.assetId); setBrandRetained(true);
+      if (result.contract) setContract(result.contract);
       addActivity(`Demo step · ${step.chip}`, source ? `“${source}” → ${step.title}` : step.title);
       return { ok: true, engineered: result.engineered as Engineered, actionPrompt: result.actionPrompt ?? null };
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not run this demo step."); return { ok: false }; }
@@ -325,7 +326,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
             <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />
             <KnowledgePanel campaignId={campaignId} disabled={locked} productImage={artwork} onSaved={(knowledge) => { setKnowledgeVersion((version) => version + 1); addActivity("Product info saved", `${knowledge.product.name} · ${knowledge.visualNotes.length} notes · ${knowledge.facts.length} facts`); }} onError={setError} />
             <details className="inspector-section source-details" ref={sourceDetails}><summary><span><span className="panel-eyebrow">03 / REFERENCE FRAME</span>Reference frame <small className="optional-tag">optional</small></span><span className={frame ? "ready-label" : "subtle-label"}>{frame ? "Ready" : "Product image"}</span></summary><SourceClipPanel title={title} clipUrl={clip?.url || ""} clipName={clip?.file.name || ""} framePreview={frame?.url || ""} handoffTime={handoffTime} onClipSelected={selectClip} onFrameCaptured={selectFrame} disabled={locked} onError={setError} /></details>
-            <details className="inspector-section"><summary><span><span className="panel-eyebrow">04 / SCENE BRIEF</span>Scene brief & placement</span><Icon name="chevron" size={15} /></summary><div className="placement-controls"><label className="field-label">What happens in the scene?<textarea value={sceneBrief} maxLength={1200} disabled={locked} onChange={(event) => setSceneBrief(event.target.value)} rows={5} /></label><p>Rewritten with the product info before it reaches the model.</p>{frame && <><h3>Position the product</h3><p>Only used with a reference frame. Review the placement tab in the preview.</p></>}{frame && ([{ key: "x", label: "Horizontal", max: 1 - zone.width }, { key: "y", label: "Vertical", max: 1 - zone.height }, { key: "width", label: "Size", max: .5 }] as const).map((control) => <label className="range-field" key={control.key}><span>{control.label}<output>{Math.round(zone[control.key] * 100)}%</output></span><input type="range" min={control.key === "width" ? .06 : 0} max={control.max} step={.01} value={zone[control.key]} disabled={locked} onChange={(event) => { const value = Number(event.target.value); setZone((previous) => control.key === "width" ? { ...previous, width: value, height: Math.min(value * 1.1, .55), x: Math.min(previous.x, 1-value), y: Math.min(previous.y, 1 - Math.min(value * 1.1, .55)) } : { ...previous, [control.key]: value }); }} /></label>)}</div></details>
+            <details className="inspector-section"><summary><span><span className="panel-eyebrow">04 / SCENE BRIEF</span>Scene brief & placement</span><Icon name="chevron" size={15} /></summary><div className="placement-controls"><label className="field-label">What happens in the scene?<textarea value={sceneBrief} maxLength={4000} disabled={locked} onChange={(event) => setSceneBrief(event.target.value)} rows={5} /></label><p>Rewritten with the product info before it reaches the model.</p>{frame && <><h3>Position the product</h3><p>Only used with a reference frame. Review the placement tab in the preview.</p></>}{frame && ([{ key: "x", label: "Horizontal", max: 1 - zone.width }, { key: "y", label: "Vertical", max: 1 - zone.height }, { key: "width", label: "Size", max: .5 }] as const).map((control) => <label className="range-field" key={control.key}><span>{control.label}<output>{Math.round(zone[control.key] * 100)}%</output></span><input type="range" min={control.key === "width" ? .06 : 0} max={control.max} step={.01} value={zone[control.key]} disabled={locked} onChange={(event) => { const value = Number(event.target.value); setZone((previous) => control.key === "width" ? { ...previous, width: value, height: Math.min(value * 1.1, .55), x: Math.min(previous.x, 1-value), y: Math.min(previous.y, 1 - Math.min(value * 1.1, .55)) } : { ...previous, [control.key]: value }); }} /></label>)}</div></details>
           </aside>
         </div>
         <footer className="workspace-footer"><span><span className="state-dot" />Powered by Visko Orbis</span><span>Live generative video · starts from your product image or a reference frame</span></footer>

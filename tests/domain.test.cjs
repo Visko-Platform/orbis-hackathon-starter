@@ -89,7 +89,10 @@ test("a back-of-watch direction pulls the case-back view of the running product 
   assert.equal(notes.length, 1);
   assert.ok(notes[0].startsWith("Submariner Date, case back:"));
   assert.ok(notes[0].includes("no engraving"));
-  assert.equal(matchProductNotes(rolex, "Move to a rooftop at dusk", "rolex-submariner").length, 0);
+  const open = matchProductNotes(rolex, "Move to a rooftop at dusk", "rolex-submariner");
+  assert.equal(open.length, 1);
+  assert.ok(open[0].startsWith("Submariner Date:"), "an open direction keeps the running watch");
+  assert.equal(matchProductNotes(rolex, "Move to a rooftop at dusk").length, 0);
   assert.equal(matchProductNotes(rolex, "show the caseback", "upload").length, 2);
   const opened = matchProductNotes(rolex, "Open the strap and show me the back", "rolex-datejust");
   assert.equal(opened.map((note) => note.split(":")[0]).join(" | "), "Datejust 41, case back | Datejust 41, Oysterclasp open");
@@ -103,6 +106,21 @@ test("product notes ride along in both pivot beats and in a refinement", () => {
   assert.ok(beats.settled.includes("plain steel case back"));
   assert.ok(buildLiveDirection({ ...withNotes, mode: "refine" }).includes("plain steel case back"));
   assert.ok(!buildLiveDirection(base).includes("Product fidelity"));
+});
+
+test("an authored action beat describes physical motion instead of a scene transform, with the rigid-body rule", () => {
+  const notes = ["Datejust 41, case back: flat mirror-polished stainless steel back"];
+  const beats = buildLiveDirectionBeats({ ...base, productNotes: notes, actionDirection: "His hands turn the watch over in one smooth rotation" });
+  assert.ok(beats.action.startsWith("Right now, in one continuous take, his hands turn the watch over in one smooth rotation."));
+  assert.ok(!beats.action.includes("the scene transforms into"));
+  assert.ok(beats.action.includes("Rigid-body rule") && beats.settled.includes("Rigid-body rule"));
+  assert.ok(beats.settled.includes("this view takes precedence over the general product description"));
+  assert.ok(buildLiveDirectionBeats(base).action.includes("the scene transforms into"));
+  assert.ok(!buildLiveDirection(base).includes("Rigid-body rule"));
+  const carried = buildLiveDirectionBeats({ ...base, continuity: "the same man; the Datejust 41 stays on his wrist" });
+  assert.ok(carried.action.includes("Continuity: the same man") && carried.settled.includes("Continuity: the same man"));
+  assert.ok(carried.settled.includes("the continuity below carries over unchanged") && !carried.settled.includes("narrative"));
+  assert.ok(!buildLiveDirection(base).includes("Continuity:"));
 });
 
 test("Rolex products carry their wrist integration and appearance into the opening prompt", () => {

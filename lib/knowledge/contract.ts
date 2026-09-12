@@ -15,10 +15,12 @@ export type ContractLine = { id: string; kind: ContractKind; text: string; pinne
 export type SceneContract = { lines: ContractLine[] };
 export type ContractDraft = { person: string[]; setting: string[] };
 
-export const MAX_CONTRACT_LINES = 12;
-export const MAX_LINE_CHARS = 200;
-// Keeps the restated clause well inside the live prompt budget.
-export const MAX_CLAUSE_CHARS = 600;
+// Generous by design: a full product description, every product rule, the
+// cast and the operator's lines all fit, so nothing is silently dropped.
+// These are sanity ceilings against runaway input, not a prompt budget.
+export const MAX_CONTRACT_LINES = 24;
+export const MAX_LINE_CHARS = 1_000;
+export const MAX_CLAUSE_CHARS = 6_000;
 
 const KINDS: ContractKind[] = ["product", "person", "setting", "custom"];
 const SOURCES: ContractSource[] = ["knowledge", "brief", "frame", "operator"];
@@ -82,7 +84,7 @@ export function parseContract(raw: unknown, knowledge: CampaignKnowledge): Scene
   return { lines };
 }
 
-// The sentence every direction carries. Truncated by whole lines.
+// The sentence every direction carries. Truncated by whole lines only past the ceiling.
 export function contractClause(contract: SceneContract | null | undefined): string {
   if (!contract?.lines.length) return "";
   const parts: string[] = [];
