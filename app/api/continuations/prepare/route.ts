@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid campaign selection mode." }, { status: 400 });
   }
   if (body?.sceneBrief !== undefined && (typeof body.sceneBrief !== "string" || !body.sceneBrief.trim() || body.sceneBrief.length > MAX_INPUT_CHARS)) {
-    return NextResponse.json({ error: "Scene brief must contain 1–1,200 characters." }, { status: 400 });
+    return NextResponse.json({ error: `Scene brief must contain 1–${MAX_INPUT_CHARS.toLocaleString()} characters.` }, { status: 400 });
   }
   if (body?.engineer !== undefined && typeof body.engineer !== "boolean") {
     return NextResponse.json({ error: "engineer must be true or false." }, { status: 400 });
