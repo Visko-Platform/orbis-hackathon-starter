@@ -1,0 +1,10 @@
+# Never upload local secrets or per-machine data.
+.env*
+!.env.example
+data/knowledge/
+data/runs/
+.claude/
+.next/
+node_modules/
+coverage/
+*.tsbuildinfo

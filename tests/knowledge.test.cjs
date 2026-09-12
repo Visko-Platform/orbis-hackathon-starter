@@ -176,3 +176,22 @@ test("image drafts are sanitized like knowledge: capped, guarded, no competitors
   assert.ok(buildDescribeContent(pepsi).includes("Product name: Pepsi"));
   assert.ok(DESCRIBE_INSTRUCTION.includes("no other\nbrands") || DESCRIBE_INSTRUCTION.includes("no other brands"));
 });
+
+const { usesBlobStorage, blobPathname, KNOWLEDGE_DIR } = load("lib/knowledge/store.ts");
+
+test("hosted Blob storage is used only with a Blob token and the default directory", () => {
+  const previous = process.env.BLOB_READ_WRITE_TOKEN;
+  try {
+    delete process.env.BLOB_READ_WRITE_TOKEN;
+    assert.equal(usesBlobStorage(), false);
+    process.env.BLOB_READ_WRITE_TOKEN = "test-token";
+    assert.equal(usesBlobStorage(), true);
+    assert.equal(usesBlobStorage(KNOWLEDGE_DIR), true);
+    assert.equal(usesBlobStorage("/tmp/elsewhere"), false);
+    assert.equal(blobPathname("pepsi-thirsty-for-more"), "knowledge/pepsi-thirsty-for-more.json");
+    assert.throws(() => blobPathname("../etc"), /Invalid campaign id/);
+  } finally {
+    if (previous === undefined) delete process.env.BLOB_READ_WRITE_TOKEN;
+    else process.env.BLOB_READ_WRITE_TOKEN = previous;
+  }
+});

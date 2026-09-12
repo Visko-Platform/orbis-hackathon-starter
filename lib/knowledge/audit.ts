@@ -28,12 +28,16 @@ export function runsFile(campaignId: string, dir = RUNS_DIR): string {
 
 export async function recordPromptVersion(input: PromptVersionInput, dir = RUNS_DIR): Promise<PromptVersion> {
   const record: PromptVersion = { id: randomUUID(), at: new Date().toISOString(), ...input };
-  try {
-    await mkdir(dir, { recursive: true });
-    await appendFile(runsFile(record.campaignId, dir), `${JSON.stringify(record)}\n`, "utf8");
-  } catch (caught: unknown) {
-    // The live path must not depend on disk; the record is still returned and logged.
-    console.error("prompt version not persisted", caught);
+  // Hosted serverless functions have a read-only disk; there the log line below is the record
+  // (it lands in the platform's runtime logs).
+  if (!process.env.VERCEL) {
+    try {
+      await mkdir(dir, { recursive: true });
+      await appendFile(runsFile(record.campaignId, dir), `${JSON.stringify(record)}\n`, "utf8");
+    } catch (caught: unknown) {
+      // The live path must not depend on disk; the record is still returned and logged.
+      console.error("prompt version not persisted", caught);
+    }
   }
   console.info(JSON.stringify(record));
   return record;

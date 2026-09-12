@@ -42,12 +42,32 @@ function toKnowledge(form: Form, campaignId: string): CampaignKnowledge {
 }
 const savedLabel = (updatedAt: string) => `Saved ${new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
+// Longest side sent for drafting. Enough for the model to read the packaging, and keeps
+// the upload well under the 4.5 MB request limit of hosted serverless functions.
+const DRAFT_IMAGE_MAX_PX = 1280;
+
+// Re-encodes any product image (uploaded file, bundled JPEG/PNG, or SVG logo) as a
+// JPEG no larger than DRAFT_IMAGE_MAX_PX on its longest side.
 async function imageFile(productImage: File | string): Promise<File> {
-  if (productImage instanceof File) return productImage;
-  const response = await fetch(productImage);
-  if (!response.ok) throw new Error("Could not read the product image.");
-  const blob = await response.blob();
-  return new File([blob], productImage.split("/").pop() || "product.jpg", { type: blob.type || "image/jpeg" });
+  const url = productImage instanceof File ? URL.createObjectURL(productImage) : productImage;
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode().catch(() => { throw new Error("Could not read the product image."); });
+    const scale = Math.min(1, DRAFT_IMAGE_MAX_PX / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round((image.naturalWidth || DRAFT_IMAGE_MAX_PX) * scale));
+    canvas.height = Math.max(1, Math.round((image.naturalHeight || DRAFT_IMAGE_MAX_PX) * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Your browser could not prepare the product image.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not encode the product image.")), "image/jpeg", 0.9));
+    return new File([blob], "product.jpg", { type: "image/jpeg" });
+  } finally {
+    if (productImage instanceof File) URL.revokeObjectURL(url);
+  }
 }
 
 export function KnowledgePanel({ campaignId, disabled, productImage, onSaved, onError }: Props) {
