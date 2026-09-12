@@ -1,16 +1,29 @@
-// Session-local handoff between the "Add Family" intake flow and the live
+// Browser-local handoff between the "Add Family" intake flow and a live
 // Orbis session. /add-family runs the photo through groundFamilyMemory()
 // (memory-pipeline.ts) at save time — restoring/reframing it (Nano Banana)
-// and grounding an Orbis prompt in it (Gemini) — and stores the full
-// FamilyPhotoInput, prompt included, here, keyed by photo id. /session's
-// MemoryAutostart (see app/components/MemoryAutostart.tsx) reads it back
-// from the `?memoryId=` query param and just starts the stream: no more
-// Gemini calls needed at that point.
+// and grounding an Orbis prompt in it (Gemini) — and stores the grounded
+// result here, keyed by photo id. MemoryAutostart (see
+// app/components/MemoryAutostart.tsx) reads it back from the `?memoryId=`
+// query param and just starts the stream: no more Gemini calls needed at
+// that point.
 //
-// sessionStorage (not a server-side store) is enough: it only needs to
-// survive the same-tab navigation from /add-family to /session, and
-// clearing on tab close is the right lifetime for a real family photo's
-// base64 bytes.
+// Scoping decision: family worlds stay browser-LOCAL — the photo bytes are
+// never uploaded to our server — but a saved memory must survive a new tab,
+// a reopened link, and a closed tab, not just the one tab that created it
+// (a shared/reopened `/live-world?memoryId=` link is the whole point of the
+// feature). That rules out sessionStorage, which only survives the tab that
+// wrote it — the earlier choice here is exactly what broke a reopened link.
+// localStorage is the right lifetime instead. A cross-DEVICE share still
+// cannot work (nothing is stored anywhere but this device) — that's accepted
+// for this demo, not a bug, and MemoryAutostart's "missing" copy says so
+// honestly.
+//
+// localStorage is ~5MB per origin, and the record used to carry the raw
+// uploaded photo (`image`) as well as the restored `anchorImage` — two
+// base64 data URLs. Only the anchor is needed to run the world, so
+// saveFamilyMemory strips `image` before writing; AddFamily's own
+// thumbnails read component state (`p.src`), not the store, so nothing on
+// screen regresses.
 export type ParsedTime = {
   userText: string;
   approximateYear?: number;
@@ -44,24 +57,29 @@ export type GroundedFamilyMemory = FamilyPhotoInput & {
 
 const STORAGE_PREFIX = "family-world:memory:";
 
-export function saveFamilyMemory(input: GroundedFamilyMemory): void {
-  if (typeof window === "undefined") return;
+/** Returns true on a successful write. A disabled/full store still won't
+ * throw (private mode, quota exceeded) — but the caller now finds out
+ * instead of the failure only surfacing later as a dead /live-world page. */
+export function saveFamilyMemory(input: GroundedFamilyMemory): boolean {
+  if (typeof window === "undefined") return false;
+  // Trim the raw upload before persisting — see file header. `image` is
+  // never read back by anything that loads from this store.
+  const { image: _image, ...trimmed } = input;
   try {
-    window.sessionStorage.setItem(
+    window.localStorage.setItem(
       STORAGE_PREFIX + input.id,
-      JSON.stringify(input),
+      JSON.stringify(trimmed),
     );
+    return true;
   } catch {
-    // sessionStorage can throw (private mode, storage full, or disabled) —
-    // the memory just won't survive navigation to /session; MemoryAutostart's
-    // "expired" fallback covers that instead of crashing the save.
+    return false;
   }
 }
 
 export function loadFamilyMemory(id: string): FamilyPhotoInput | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(STORAGE_PREFIX + id);
+    const raw = window.localStorage.getItem(STORAGE_PREFIX + id);
     return raw ? (JSON.parse(raw) as FamilyPhotoInput) : null;
   } catch {
     return null;
