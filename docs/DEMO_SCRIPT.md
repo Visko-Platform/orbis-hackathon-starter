@@ -33,7 +33,8 @@ video player.**
       checked** — the ad narrates itself now, and the voiceover is the only audio in it.
 - [ ] `/watch?live=0` open in a spare tab. That is your parachute: the whole break plays from
       a still, every control still works, no provider session needed.
-- [ ] **Architecture** tab open. It is your slide.
+- [ ] **Architecture** tab open and left on **Simple**. It is your slide. Only flip it to
+      **Technical** if someone asks how it is built.
 
 ---
 
@@ -47,6 +48,30 @@ video player.**
 >
 > Orbis generates video live and responds while it runs. So we built the obvious thing that
 > was never possible before: an ad break the viewer can actually direct.
+
+---
+
+## The map (20 seconds)
+
+**Open the Architecture tab, on Simple.** Do not read it out. Point at three things and move
+on — this exists so the room knows what it is about to watch.
+
+> Here is the whole thing on one page, in four steps.
+>
+> *(point at 01)* The advertiser hands us a product and the rules around it — what it looks
+> like, what is true, what may never be said.
+>
+> *(point at the highlighted box, 06)* That is Orbis. It is the only thing here that makes
+> video, and it makes it while you watch.
+>
+> *(point at 03 and 07)* And this is the part that matters commercially. The viewer directs
+> the ad — but everything they say goes through the brand's rules first.
+>
+> Every box is real. Nothing on this page is a roadmap.
+
+If a technical judge leans in, tap **Technical** — the same ten boxes gain the models, the
+routes and the guarantees. Do not open it unprompted; it is forty lines of jargon and it will
+cost you the room.
 
 ---
 
@@ -140,11 +165,32 @@ Mention in passing, do not tour: six campaigns are loaded — Pepsi, McDonald's,
 BMW, Ray-Ban — with real assets from the brands' own libraries, and audience matching that
 picks the sponsor server-side.
 
-**Architecture tab** to close.
+> Go back to the map for a second — step 01 and step 03. That is what you just saw enforced.
+> The ad was improvised. The brand was not.
 
-> Ten boxes. Everything left of centre happens before the model sees anything. The centre is
-> Visko's Orbis through Reactor — the only thing generating video. Everything right of it is
-> steering, narrating and logging, ending in the break you just watched.
+---
+
+## The close — what this becomes (20 seconds)
+
+End on where it goes, not on what it does. Judges fund the second thing.
+
+> Three things follow from this, and none of them need a new model.
+>
+> **The sponsor becomes a variable.** Selection already runs server-side against an audience
+> profile. Swap our synthetic profiles for consented real ones and the same ad break renders
+> a different advertiser for a different viewer — same slot, same second.
+>
+> **The metric changes.** Today an advertiser buys impressions and infers interest. Here a
+> viewer asked what it costs, or asked to see the back. That is intent, stated out loud, and
+> nobody has ever been able to sell it.
+>
+> **And the economics move.** One viewer is one live session, so this is premium inventory
+> today — a launch, a flagship product, a sponsorship. Every month live generation gets
+> cheaper, that line moves down the market.
+>
+> The ad break has been a thirty-second wall since television. It is the last part of the
+> internet nobody could talk to. We think it becomes a conversation, and this is what the
+> first one looks like.
 
 ---
 
