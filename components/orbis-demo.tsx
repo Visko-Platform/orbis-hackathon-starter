@@ -3,6 +3,7 @@
 import { ReactorProvider } from "@reactor-team/js-sdk";
 import { useCallback, useRef } from "react";
 
+import { HeartWorld } from "@/components/heart-world";
 import { NanoBananaExample } from "@/components/nano-banana-example";
 import { OrbisControls } from "@/components/orbis-controls";
 import { OrbisPlayer } from "@/components/orbis-player";
@@ -48,6 +49,8 @@ function OrbisSession({ clearJwt }: { clearJwt: () => void }) {
         />
         <OrbisControls session={session} />
       </div>
+
+      <HeartWorld session={session} />
 
       <NanoBananaExample
         disabled={

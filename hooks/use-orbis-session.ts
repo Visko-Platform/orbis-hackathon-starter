@@ -246,6 +246,19 @@ export function useOrbisSession(onDisconnected: () => void) {
       await sendCommand("set_prompt", { prompt: prompt.trim() });
     });
 
+  // Steer with an explicit prompt, without touching the prompt input or the
+  // busy flag. Used by automatic sources (heart rate, sensors) that steer on
+  // their own cadence.
+  const steerWith = async (nextPrompt: string) => {
+    const trimmed = nextPrompt.trim();
+    if (!trimmed) return;
+    try {
+      await sendCommand("set_prompt", { prompt: trimmed });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught));
+    }
+  };
+
   const disconnectSession = async () => {
     disconnecting.current = true;
     setRunStarted(false);
@@ -286,6 +299,7 @@ export function useOrbisSession(onDisconnected: () => void) {
     startFromNanoOutput,
     setNanoBusy,
     steer,
+    steerWith,
     pause: () => runAction(() => sendCommand("pause", {})),
     resume: () => runAction(() => sendCommand("resume", {})),
     reset: () => runAction(() => sendCommand("reset", {})),

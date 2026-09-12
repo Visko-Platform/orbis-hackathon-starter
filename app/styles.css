@@ -335,3 +335,74 @@ aside code {
     grid-template-columns: 1fr;
   }
 }
+
+.heart-world {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #2b2823;
+  border-radius: 14px;
+  background: #131211;
+  display: grid;
+  gap: 14px;
+}
+
+.heart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.auto-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #b8b2a6;
+}
+
+.bpm-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  transition: color 400ms ease;
+}
+
+.bpm-readout strong {
+  font-size: 72px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bpm-readout span {
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.zone-track {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.zone {
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: #1d1b18;
+  color: #6f6a61;
+  font-size: 12px;
+  text-align: center;
+  transition: background 300ms ease, color 300ms ease;
+}
+
+.zone.on {
+  color: #0a0a0b;
+  font-weight: 600;
+}
+
+.heart-world input[type="range"] {
+  width: 100%;
+  accent-color: #f87171;
+}
