@@ -2,7 +2,7 @@
 
 Current branch: feat/scene-contract from origin/main (1541c3e, which includes the teammate's real-footage scene library). Not pushed.
 
-Branch: feat/knowledge-director, pushed with tay's permission 2026-09-12; PR #2 https://github.com/mian-abd/orbis-hackathon-adtractive/pull/2. Ports the knowledge base and
+Branch: feat/knowledge-director, pushed with tay's permission 2026-09-12; PR #2 https://github.com/mian-abd/Orbis-ad/pull/2. Ports the knowledge base and
 prompt engineering into the teammate's studio prototype. The older feat/director branch is the
 full director (states, anchors, overlay) against the old starter UI; kept as reference.
 
