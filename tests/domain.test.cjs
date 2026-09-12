@@ -5,7 +5,8 @@ const { resolve } = require("node:path");
 const { load } = require("./load.cjs");
 
 const { campaigns, audienceProfiles, filmTitles, selectEligibleCampaign } = load("lib/studio-data.ts");
-const { buildLiveDirection } = load("lib/live-direction.ts");
+const { buildLiveDirection, buildLiveDirectionBeats } = load("lib/live-direction.ts");
+const { matchProductNotes } = load("lib/product-cues.ts");
 const { buildContinuationPrompt } = load("lib/continuation-prompt.ts");
 const { unwrapOrbisMessage } = load("lib/orbis.ts");
 
@@ -22,8 +23,14 @@ test("unknown profiles and titles have no eligible campaign", () => {
   assert.equal(selectEligibleCampaign(audienceProfiles[0].id, "unknown"), null);
 });
 
-test("all six sourced campaign assets exist locally", () => {
-  assert.equal(campaigns.flatMap((campaign) => campaign.assets).length, 6);
+test("collectors are matched to Rolex on every title", () => {
+  for (const title of filmTitles) {
+    assert.equal(selectEligibleCampaign("collector", title.id)?.brand, "Rolex");
+  }
+});
+
+test("every sourced campaign asset exists locally", () => {
+  assert.equal(campaigns.flatMap((campaign) => campaign.assets).length, 14);
   for (const campaign of campaigns) {
     assert.ok(existsSync(resolve(__dirname, "../public" + campaign.logo)));
     for (const asset of campaign.assets) {
@@ -64,6 +71,48 @@ test("starting prompt follows the selected physical product", () => {
   assert.ok(prompt.includes("physical product"));
   assert.ok(prompt.includes("A cafe table at dawn"));
   assert.ok(!prompt.includes("refreshment kiosk"));
+});
+
+test("a pivot gets an action beat with no continuity language; a refinement does not", () => {
+  const beats = buildLiveDirectionBeats(base);
+  assert.ok(beats.action.includes(base.direction));
+  assert.ok(beats.action.includes("Right now"));
+  assert.ok(!beats.action.includes("Maintain continuity"));
+  assert.ok(beats.action.includes("Keep Pepsi"));
+  assert.equal(beats.settled, buildLiveDirection(base));
+  assert.equal(buildLiveDirectionBeats({ ...base, mode: "refine" }).action, null);
+});
+
+test("a back-of-watch direction pulls the case-back view of the running product only", () => {
+  const rolex = campaigns.find((campaign) => campaign.brand === "Rolex");
+  const notes = matchProductNotes(rolex, "Turn the watch over and show me the back", "rolex-submariner");
+  assert.equal(notes.length, 1);
+  assert.ok(notes[0].startsWith("Submariner Date, case back:"));
+  assert.ok(notes[0].includes("no engraving"));
+  assert.equal(matchProductNotes(rolex, "Move to a rooftop at dusk", "rolex-submariner").length, 0);
+  assert.equal(matchProductNotes(rolex, "show the caseback", "upload").length, 2);
+  const opened = matchProductNotes(rolex, "Open the strap and show me the back", "rolex-datejust");
+  assert.equal(opened.map((note) => note.split(":")[0]).join(" | "), "Datejust 41, case back | Datejust 41, Oysterclasp open");
+  assert.ok(opened[1].includes("never two-tone"));
+});
+
+test("product notes ride along in both pivot beats and in a refinement", () => {
+  const withNotes = { ...base, productNotes: ["Submariner Date, case back: plain steel case back"] };
+  const beats = buildLiveDirectionBeats(withNotes);
+  assert.ok(beats.action.includes("plain steel case back"));
+  assert.ok(beats.settled.includes("plain steel case back"));
+  assert.ok(buildLiveDirection({ ...withNotes, mode: "refine" }).includes("plain steel case back"));
+  assert.ok(!buildLiveDirection(base).includes("Product fidelity"));
+});
+
+test("Rolex products carry their wrist integration and appearance into the opening prompt", () => {
+  const rolex = campaigns.find((campaign) => campaign.brand === "Rolex");
+  const prompt = buildContinuationPrompt({ title: filmTitles[2], campaign: rolex, profile: audienceProfiles[3], assetId: "rolex-submariner", sceneBrief: "A rain-slick metro exit at night" });
+  assert.ok(prompt.includes("worn on the protagonist's wrist"));
+  assert.ok(prompt.includes("Cerachrom bezel"));
+  assert.ok(!prompt.includes("boutique window"));
+  const logoPrompt = buildContinuationPrompt({ title: filmTitles[2], campaign: rolex, profile: audienceProfiles[3], assetId: "rolex-crown" });
+  assert.ok(logoPrompt.includes("crown emblem"));
 });
 
 test("starting prompt supports custom artwork and photo campaigns", () => {

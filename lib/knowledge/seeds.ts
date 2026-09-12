@@ -67,6 +67,42 @@ const seeds: Record<string, Omit<CampaignKnowledge, "campaignId">> = {
     forbiddenClaims: ["medical", "cures", "prevents injury"],
     protectedChanges: ["the Nike poster keeps its approved artwork and Swoosh"],
   },
+  "rolex-perpetual-moment": {
+    product: {
+      name: "Rolex",
+      aliases: ["the watch", "the Rolex", "the Submariner", "the Datejust", "the boutique", "the store", "the shop"],
+      competitors: ["Omega", "Patek Philippe", "Audemars Piguet", "Cartier", "TAG Heuer", "Tudor", "Breitling", "IWC", "Seiko", "Apple Watch"],
+      appearance:
+        "A Rolex Oyster Perpetual wristwatch in Oystersteel, worn flat on the wrist with the bracelet closed: the Submariner Date has a black dial with luminous round markers, a black Cerachrom rotating bezel and a three-link Oyster bracelet; the Datejust 41 has a slate dial, a fluted white-gold bezel, a Cyclops date window at three o'clock and a five-link Jubilee bracelet. Every dial reads ROLEX under a small five-point crown at twelve o'clock.",
+    },
+    visualNotes: [
+      "A Rolex boutique storefront has a dark green facade, a gold five-point crown emblem and the word ROLEX in gold capitals above the window.",
+      "Inside a Rolex boutique the walls are cream and beige with dark green accents, the display cases are illuminated glass, and the back wall shows the word ROLEX in green serif capitals under a gold crown.",
+      "Every display case in the boutique holds only Rolex watches on green leather cushions.",
+      "A sales associate in a dark suit presents a watch on a green leather tray, handling it calmly with clean hands.",
+      "The watch is worn on the left wrist with the winding crown facing outward and the bracelet closed and sitting flat.",
+      "Turning the watch over shows a plain, polished, unmarked screw-down case back and a folding clasp with a small raised crown.",
+      "Opening the clasp lets the bracelet unfold flat around the case so the case back is fully exposed.",
+      "The dial always reads ROLEX with the crown at twelve o'clock; hands and hour markers glow softly in low light.",
+      "Soft, directional light lets the polished bezel and case catch one clean highlight without glare.",
+      "Walking through the city, the cuff rides up as the arm swings and the watch catches the light for a moment.",
+    ],
+    facts: [
+      "Rolex was founded in 1905 by Hans Wilsdorf and has been based in Geneva since 1919.",
+      "The Rolex Oyster case, introduced in 1926, was the first waterproof wristwatch case.",
+      "The Submariner was introduced in 1953 and the Submariner Date is waterproof to 300 metres.",
+      "The Datejust, launched in 1945, was the first self-winding wristwatch to show the date in a window on the dial.",
+      "The Cyclops lens over the date window magnifies the date about two and a half times.",
+      "Rolex watches are assembled in Switzerland and every movement is a certified Superlative Chronometer.",
+    ],
+    forbiddenClaims: ["discount", "sale price", "cheap", "fake", "replica", "counterfeit", "knockoff", "gold-plated", "investment", "guaranteed", "display case back", "exhibition case back", "engraved case back"],
+    protectedChanges: [
+      "the Rolex crown and the word ROLEX appear exactly as on the real watch and boutique, never redrawn or misspelled",
+      "every Rolex boutique interior shows the word ROLEX with the gold crown on the back wall and only Rolex watches in its cases",
+      "the watch dial keeps its real markings and the case back stays plain polished steel with no engraving or window",
+      "no other watch brand or logo appears anywhere in the scene",
+    ],
+  },
 };
 
 export function seedKnowledge(campaignId: string): CampaignKnowledge | null {

@@ -70,6 +70,52 @@ test("manual selection can choose Nike while auto mode enforces matching", async
   assert.equal((await post("/api/continuations/prepare", { ...request, selectionMode: "auto" })).status, 409);
 });
 
+test("a pivot returns an action beat ahead of the settled prompt; a refinement has none", async () => {
+  const response = await post("/api/continuations/pivot", pivot);
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.ok(result.actionPrompt.includes("Right now"));
+  assert.ok(result.prompt.includes("New creative direction"));
+  const refine = await (await post("/api/continuations/pivot", { ...pivot, mode: "refine" })).json();
+  assert.equal(refine.actionPrompt, null);
+});
+
+test("a back-of-watch pivot carries the case-back appearance of the running Rolex", async () => {
+  const response = await post("/api/continuations/pivot", { ...pivot, campaignId: "rolex-perpetual-moment", assetId: "rolex-submariner", direction: "Turn the watch over and show me the back" });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.match(result.prompt, /Submariner Date, case back/);
+  assert.match(result.actionPrompt, /no engraving/);
+  assert.equal((await post("/api/continuations/pivot", { ...pivot, assetId: 42 })).status, 400);
+});
+
+test("prepare accepts the Rolex campaign with a wrist-worn product", async () => {
+  const response = await post("/api/continuations/prepare", { ...selection, campaignId: "rolex-perpetual-moment", assetId: "rolex-submariner" });
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.match(result.prompt, /wrist/);
+  assert.equal(result.assetId, "rolex-submariner");
+});
+
+
+test("the Rolex demo path resolves bubbles and free text into fixed beats", async () => {
+  const base = { campaignId: "rolex-perpetual-moment", currentPrompt: "OLD_SCENE" };
+  const byId = await post("/api/continuations/demo", { ...base, stepId: "inspect" });
+  assert.equal(byId.status, 200);
+  const result = await byId.json();
+  assert.equal(result.step.id, "inspect");
+  assert.match(result.prompt, /case back/);
+  assert.match(result.actionPrompt, /Right now/);
+  assert.ok(result.productNotes.some((note) => /no engraving/.test(note)));
+  assert.deepEqual(result.nextChips.map((chip) => chip.id), ["wear", "exit", "boutique"]);
+  assert.ok(result.promptVersionId);
+  const byText = await (await post("/api/continuations/demo", { ...base, direction: "can you show the back" })).json();
+  assert.equal(byText.step.id, "inspect");
+  assert.equal(byText.engineered.source, "can you show the back");
+  assert.equal((await post("/api/continuations/demo", { ...base, direction: "make it rain" })).status, 422);
+  assert.equal((await post("/api/continuations/demo", { campaignId: "pepsi-thirsty-for-more", currentPrompt: "", stepId: "inspect" })).status, 404);
+  assert.equal((await post("/api/continuations/demo", { ...base, stepId: 7 })).status, 400);
+});
 for (const [name, fields] of [
   ["invalid profile", { profileId: "unknown" }],
   ["cross-campaign asset", { assetId: "nike-logo" }],

@@ -19,13 +19,16 @@ export function buildContinuationPrompt({
 }) {
   const continuity = title.continuity;
   const asset = campaign.assets.find((item) => item.id === assetId);
+  const appearance = asset?.appearance ? ` ${asset.label}: ${asset.appearance}` : "";
   const placement = assetId === "upload"
     ? `Integrate the supplied ${campaign.brand} artwork into a plausible surface in this environment. Preserve its recognizable design as part of the scene.`
-    : asset?.kind === "product"
-      ? `Integrate the ${asset.label} shown in the reference as a physical product naturally present in the scene. Preserve its recognizable packaging or appearance, with realistic scale and lighting.`
-      : asset?.kind === "campaign"
-        ? `Integrate the supplied ${asset.label} artwork as a background poster on an existing surface. Keep it secondary to the action.`
-        : campaign.placement.instruction;
+    : asset?.integration
+      ? `${asset.integration}${appearance}`
+      : asset?.kind === "product"
+        ? `Integrate the ${asset.label} shown in the reference as a physical product naturally present in the scene. Preserve its recognizable packaging or appearance, with realistic scale and lighting.${appearance}`
+        : asset?.kind === "campaign"
+          ? `Integrate the supplied ${asset.label} artwork as a background poster on an existing surface. Keep it secondary to the action.`
+          : campaign.placement.instruction;
   const productReference = knowledge?.product.appearance
     ? `Product reference: ${knowledge.product.appearance}`
     : "";

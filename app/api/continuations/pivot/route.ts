@@ -6,7 +6,8 @@ import { engineerPrompt, RefusedError } from "@/lib/knowledge/engineer";
 import { GeminiEngine, hasGemini } from "@/lib/knowledge/llm";
 import { isFactQuestion, retrieveFacts } from "@/lib/knowledge/retrieve";
 import { loadKnowledge } from "@/lib/knowledge/store";
-import { buildLiveDirection } from "@/lib/live-direction";
+import { buildLiveDirectionBeats } from "@/lib/live-direction";
+import { matchProductNotes } from "@/lib/product-cues";
 import { campaigns } from "@/lib/studio-data";
 
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -16,7 +17,8 @@ export async function POST(request: Request) {
   const campaign = campaigns.find((item) => item.id === body?.campaignId);
   if (!body || typeof body.direction !== "string" || !body.direction.trim() || body.direction.trim().length > 1200 ||
     !["refine", "pivot"].includes(body.mode) || typeof body.currentPrompt !== "string" || body.currentPrompt.length > 4000 ||
-    typeof body.preserveBrand !== "boolean" || !campaign) {
+    typeof body.preserveBrand !== "boolean" || !campaign ||
+    (body.assetId !== undefined && (typeof body.assetId !== "string" || body.assetId.length > 100))) {
     return NextResponse.json({ error: "Enter a direction between 1 and 1,200 characters and choose a valid campaign and direction mode." }, { status: 400 });
   }
   const knowledge = await loadKnowledge(campaign.id);
@@ -53,16 +55,20 @@ export async function POST(request: Request) {
     throw caught;
   }
 
-  const prompt = buildLiveDirection({
+  // Product views the director's own words call up ("show the back") come
+  // from the campaign's reference assets and ride along in both beats.
+  const productNotes = matchProductNotes(campaign, direction, body.assetId);
+  const beats = buildLiveDirectionBeats({
     direction: engineered.text,
     mode: body.mode,
     currentPrompt: body.currentPrompt,
     brand: campaign.brand,
     preserveBrand: body.preserveBrand,
     productAppearance: knowledge.product.appearance,
+    productNotes,
     contractClause: contractClause(contract),
   });
-  const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt, outcome: "steer", contract });
+  const version = await recordPromptVersion({ campaignId: campaign.id, role: body.mode, engineered, prompt: beats.settled, outcome: "steer", contract });
   const nextContract = contract ? afterPivot(contract, { mode: body.mode, keepProduct: body.preserveBrand }) : null;
-  return NextResponse.json({ outcome: "steer", prompt, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
+  return NextResponse.json({ outcome: "steer", prompt: beats.settled, actionPrompt: beats.action, productNotes, mode: body.mode, engineered, promptVersionId: version.id, contract: nextContract }, { headers: NO_STORE });
 }

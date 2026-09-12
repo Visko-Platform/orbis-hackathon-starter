@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/domain.test.cjs tests/knowledge.test.cjs",
-    "test:api": "node --test tests/api.test.cjs"
+    "test": "node --test tests/domain.test.cjs tests/knowledge.test.cjs tests/demo.test.cjs",
+    "test:api": "node --test tests/api.test.cjs",
+    "assets:rolex": "bash scripts/fetch-rolex-assets.sh"
   },
   "dependencies": {
     "@google/genai": "^2.22.0",
