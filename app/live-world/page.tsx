@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 import "../family-world.css";
-import { LiveWorld, isSeedMemoryId } from "../components/LiveWorld";
+import { LiveWorld } from "../components/LiveWorld";
 import { LiveWorldSession } from "../components/LiveWorldSession";
+import { isSeedMemoryId } from "../lib/live-world-scenes";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -21,15 +22,20 @@ export const metadata: Metadata = {
 // gated). The grandmother example cards on / link here with
 // ?memoryId=<seed id> to steer that person's panorama scene.
 //
-// `memoryId` picks which experience renders: one of LiveWorld.tsx's 3
-// curated seeds (or none at all) gets the local-timer simulation with its
-// hand-written historical narration; anything else — an AddFamily-created
-// memory — gets <LiveWorldSession>, a real Visko Orbis Stable session seeded
-// from that memory's restored photo + grounded prompt. No proxy.ts change
-// needed for the real path: it mints its Reactor token via the
-// already-gated /api/reactor/token, and sessionStorage's per-browser
-// locality means only the presenter's own browser (via the gated
-// /add-family) ever has a memory to autostart from.
+// `memoryId` picks which experience renders: one of the 3 curated seeds in
+// lib/live-world-scenes.ts (or none at all) gets LiveWorld.tsx's local-timer
+// simulation with its hand-written historical narration; anything else — an
+// AddFamily-created memory — gets <LiveWorldSession>, a real Visko Orbis
+// Stable session seeded from that memory's restored photo + grounded
+// prompt. isSeedMemoryId lives in that plain lib module rather than in
+// LiveWorld.tsx itself because LiveWorld.tsx is "use client" — a Server
+// Component page can render a client component but can't call a plain
+// function exported from one (that 500s in production: "Attempted to call
+// isSeedMemoryId() from the server but isSeedMemoryId is on the client").
+// No proxy.ts change needed for the real path: it mints its Reactor token
+// via the already-gated /api/reactor/token, and sessionStorage's
+// per-browser locality means only the presenter's own browser (via the
+// gated /add-family) ever has a memory to autostart from.
 export default async function LiveWorldPage({
   searchParams,
 }: {

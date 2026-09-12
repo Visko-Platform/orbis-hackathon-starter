@@ -81,7 +81,7 @@ function plural(n: number, word: string) {
 // so the presenter sees the actual grounded prompt on this page before ever
 // leaving it. The result (photo + prompt) is stashed in sessionStorage
 // (family-memory-store.ts) keyed by photo id; "Enter their world" links to
-// /live-world?memoryId=..., which (per LiveWorld.tsx's isSeedMemoryId check)
+// /live-world?memoryId=..., which (per lib/live-world-scenes.ts's isSeedMemoryId check)
 // renders <LiveWorldSession> for this id — a real Visko Orbis Stable session
 // that just uploads the anchor and starts (no Gemini calls left to make
 // there). This page is gated behind Google sign-in (proxy.ts) since saving
