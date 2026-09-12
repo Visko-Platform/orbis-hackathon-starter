@@ -83,7 +83,7 @@ export const filmTitles: FilmTitle[] = [
   },
   {
     id: "bunny-forest",
-    title: "Big Buck Bunny",
+    title: "Big Buck Bunny — Forest",
     moment: "Forest reckoning",
     genre: "Animated comedy",
     palette: "#88a56a",
@@ -103,7 +103,7 @@ export const filmTitles: FilmTitle[] = [
   },
   {
     id: "bunny-meadow",
-    title: "Big Buck Bunny",
+    title: "Big Buck Bunny — Meadow",
     moment: "Meadow encounter",
     genre: "Animated short",
     palette: "#b6b06f",
