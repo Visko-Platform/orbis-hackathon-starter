@@ -1,4 +1,8 @@
-# Orbis hackathon starter
+# Orbis Ad
+
+Dynamic product placement for licensed film moments, powered by Visko Orbis.
+
+## Starter integration
 
 A minimal Next.js example for the public Reactor-hosted Visko Orbis Stable API.
 It demonstrates server-side token minting, WebRTC video and audio, text-to-video,
