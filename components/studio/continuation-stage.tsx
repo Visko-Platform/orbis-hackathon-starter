@@ -27,13 +27,13 @@ type Props = {
   onStart: () => void;
   onPivot: (direction: string, mode: DirectionMode, preserveBrand: boolean) => Promise<PivotResult>;
   onAction: (action: () => Promise<void>, label: string) => void;
-  onImport: () => void;
+  onAddProduct: () => void;
 };
 
 // Mirrors the server's question check: a trailing "?" is answered on screen, not sent to Orbis.
 const QUESTION = /\?\s*$/;
 
-export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, onStart, onPivot, onAction, onImport }: Props) {
+export function ContinuationStage({ session, campaign, framePreview, originalPreview, preparing, runId, brandRetained, overlay, knowledgeVersion, onStart, onPivot, onAction, onAddProduct }: Props) {
   const player = useRef<HTMLDivElement>(null);
   const [compare, setCompare] = useState(false);
   const [direction, setDirection] = useState("");
@@ -85,14 +85,14 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
       </div>
       <div className="cinema-stage" ref={player}>
         {live ? <ReactorView track="main_video" audioTrack="main_audio" muted={session.muted} className="reactor-view" videoObjectFit="contain" />
-          : framePreview ? <img src={compare ? originalPreview : framePreview} alt={compare ? "Original reference frame" : "Preview of actual campaign artwork placed in the reference frame"} />
+          : framePreview ? <img src={compare ? originalPreview : framePreview} alt={compare ? "Original reference frame" : "Preview of the product in the starting frame"} />
           : <div className="cinema-empty">
             <div className="empty-aperture" aria-hidden="true"><Icon name="film" size={30} /></div>
-            <span className="eyebrow">YOUR NEXT SCENE STARTS HERE</span>
-            <h3>Bring your brand<br />into the story.</h3>
-            <p>Import a film clip or reference frame.<br />Choose a campaign. Direct what happens next.</p>
-            <button className="button primary" type="button" onClick={onImport}><Icon name="upload" size={16} /> Import a scene</button>
-            <span className="empty-caption">MP4, WebM, MOV or a still image</span>
+            <span className="eyebrow">YOUR PRODUCT, LIVE</span>
+            <h3>Put your product<br />in the scene.</h3>
+            <p>Add a product image and what is true about it.<br />Then direct what happens around it.</p>
+            <button className="button primary" type="button" onClick={onAddProduct}><Icon name="upload" size={16} /> Add a product image</button>
+            <span className="empty-caption">PNG, JPEG or WebP · a reference frame is optional</span>
           </div>}
         {busy && !live && <div className="render-overlay" role="status"><span className="spinner" /><strong>{preparing && !session.busy ? "Preparing your scene…" : session.phase || "Connecting to the live model…"}</strong><p>{session.phase === "Disconnecting" ? "Releasing your live session." : "The first frames may take a moment."}</p></div>}
         {live && <div className="live-corner"><span className="state-dot live" />{session.paused ? "PAUSED" : "LIVE"}</div>}
@@ -109,11 +109,11 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
     </section>
 
     <section className="director-panel" aria-labelledby="director-heading">
-      <div className="director-heading"><div><span className="eyebrow">YOU’RE IN THE DIRECTOR’S CHAIR</span><h2 id="director-heading">Where should the story go?</h2></div><span className={`subtle-badge ${live ? "live-badge" : ""}`}><span className="state-dot" />{live ? "Live control" : "Ready when you are"}</span></div>
+      <div className="director-heading"><div><span className="eyebrow">DIRECT THE SCENE</span><h2 id="director-heading">What should change around the product?</h2></div><span className={`subtle-badge ${live ? "live-badge" : ""}`}><span className="state-dot" />{live ? "Live control" : "Ready when you are"}</span></div>
       <div className="direction-modes" role="group" aria-label="Direction mode"><button type="button" disabled={submitting} aria-pressed={mode === "pivot"} className={mode === "pivot" ? "selected" : ""} onClick={() => setMode("pivot")}><Icon name="spark" size={16} />Change direction</button><button type="button" disabled={submitting} aria-pressed={mode === "refine"} className={mode === "refine" ? "selected" : ""} onClick={() => setMode("refine")}><Icon name="refresh" size={15} />Refine this scene</button></div>
       <div className="prompt-box">
         <label className="sr-only" htmlFor="live-direction">Live direction prompt</label>
-        <textarea id="live-direction" value={direction} disabled={submitting} maxLength={1200} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void submit(); } }} placeholder={mode === "pivot" ? "Take us somewhere else. A rooftop in Tokyo, neon rain, the camera moves around the product…" : "Make the lighting warmer, move closer to the storefront, slow the camera down…"} />
+        <textarea id="live-direction" value={direction} disabled={submitting} maxLength={1200} onChange={(event) => setDirection(event.target.value)} onKeyDown={(event) => { if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); void submit(); } }} placeholder={mode === "pivot" ? "A new setting for the product. A rooftop at night, neon rain, the camera circles it…" : "Warmer light, move closer to the product, slow the camera down…"} />
         <div className="prompt-toolbar"><label className="switch-label"><input type="checkbox" disabled={submitting} checked={preserveBrand} onChange={(event) => setPreserveBrand(event.target.checked)} /><span className="switch-track" />Keep {campaign.brand} in scene</label><button className="button primary" type="button" disabled={!canSubmit} onClick={submit}>{submitting ? <span className="spinner" /> : <Icon name="arrow" size={17} />}{isQuestion ? "Ask" : mode === "pivot" ? "Pivot live" : "Apply direction"}</button></div>
       </div>
       <div className="director-foot"><span>{footCopy}</span><span>{direction.length}/1200 · ⌘/Ctrl ↵</span></div>

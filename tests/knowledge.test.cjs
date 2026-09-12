@@ -162,3 +162,17 @@ test("live direction restates the product appearance only when the brand is kept
   assert.ok(!buildLiveDirection({ ...base, preserveBrand: false }).includes("looks like this"));
   assert.ok(!buildLiveDirection({ ...base, productAppearance: undefined }).includes("looks like this"));
 });
+
+const { buildDescribeContent, sanitizeDraft, DESCRIBE_INSTRUCTION } = load("lib/knowledge/describe.ts");
+
+test("image drafts are sanitized like knowledge: capped, guarded, no competitors", () => {
+  const draft = sanitizeDraft(pepsi, {
+    appearance: "  A blue   Pepsi can. ",
+    visualNotes: ["The globe faces the camera", "Next to a Coca-Cola", "", "a", "b", "c", "d", "e"],
+  });
+  assert.equal(draft.appearance, "A blue Pepsi can.");
+  assert.deepEqual(draft.visualNotes, ["The globe faces the camera", "a", "b", "c"]);
+  assert.deepEqual(sanitizeDraft(pepsi, null), { appearance: "", visualNotes: [] });
+  assert.ok(buildDescribeContent(pepsi).includes("Product name: Pepsi"));
+  assert.ok(DESCRIBE_INSTRUCTION.includes("no other\nbrands") || DESCRIBE_INSTRUCTION.includes("no other brands"));
+});

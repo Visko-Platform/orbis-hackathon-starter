@@ -266,3 +266,13 @@ input[type=range] { accent-color:#d9d4c7; width:100%; cursor:pointer; height:15p
 .receipt-compare>span { margin-top:2px; font-size:10px; color:var(--quiet); }
 @media (max-width:900px) { .knowledge-form { padding:0 14px 16px; } }
 @media (max-width:720px) { .knowledge-form { padding:0 18px 18px; } .field-label input { font-size:16px; } }
+
+/* Product-first studio */
+.upload-asset.product-upload { flex-direction:column; gap:4px; margin:18px 0 6px; padding:16px 12px; border-color:#5a5d63; background:#1d1f22; color:var(--ink); }
+.upload-asset.product-upload>span { font-size:12px; font-weight:500; }
+.upload-asset.product-upload small { font-size:10px; color:var(--quiet); }
+.draft-row { display:grid; gap:8px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#1a1c1f; }
+.draft-row .button { justify-self:start; }
+.draft-note { display:flex; align-items:center; gap:7px; font-size:11px; color:#a8c7a9; }
+.library-paused { display:flex; align-items:center; gap:12px; margin:0 0 23px; padding:15px 18px; font-size:13px; color:#c9b98f; border:1px solid #4a4230; border-radius:8px; background:#25221a; }
+.optional-tag { margin-left:8px; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--quiet); font-weight:400; }

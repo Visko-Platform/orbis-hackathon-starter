@@ -10,7 +10,7 @@ import { Icon } from "./icon";
 import { useLiveContinuation } from "@/hooks/use-live-continuation";
 import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 import { audienceProfiles, campaigns, filmTitles, selectEligibleCampaign, type Campaign, type PlacementZone } from "@/lib/studio-data";
-import { composePlacementFrame } from "@/lib/placement-frame";
+import { composePlacementFrame, composeProductFrame } from "@/lib/placement-frame";
 import type { DirectionMode } from "@/lib/live-direction";
 import type { Engineered } from "@/lib/knowledge/engineer";
 
@@ -35,13 +35,14 @@ export function StudioApp() {
 function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const session = useLiveContinuation(clearJwt);
   const [section, setSection] = useState<Section>("studio");
-  const [titleId, setTitleId] = useState(filmTitles[1].id);
+  // Scene presets are paused; the prepare route still needs a title, so the default stands.
+  const titleId = filmTitles[1].id;
   const [profileId, setProfileId] = useState(audienceProfiles[0].id);
   const [automatic, setAutomatic] = useState(false);
   const [campaignId, setCampaignId] = useState(campaigns[0].id);
   const campaign = campaigns.find((item) => item.id === campaignId) ?? campaigns[0];
   const title = filmTitles.find((item) => item.id === titleId) ?? filmTitles[1];
-  const [sceneBrief, setSceneBrief] = useState("Continue the action from this frame. A slow cinematic tracking shot through the location, natural movement, realistic lighting. The product belongs naturally in the scene.");
+  const [sceneBrief, setSceneBrief] = useState("Continue from this frame. A slow tracking shot around the product, natural movement, realistic lighting. The product belongs naturally in the scene.");
   const [clip, setClip] = useState<Upload | null>(null);
   const [frame, setFrame] = useState<Upload | null>(null);
   const [handoffTime, setHandoffTime] = useState(0);
@@ -59,9 +60,11 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
   const [storageReady, setStorageReady] = useState(false);
   const sourceDetails = useRef<HTMLDetailsElement>(null);
+  const productUpload = useRef<HTMLInputElement>(null);
   const urls = useRef(new Set<string>());
   const locked = session.runStarted || session.busy || preparing;
-  const assetId = assetSelections[campaignId] ?? campaign.assets[0]?.id;
+  // The product photo is the default image to place; a logo is a weaker starting frame.
+  const assetId = assetSelections[campaignId] ?? campaign.assets.find((item) => item.kind === "product")?.id ?? campaign.assets[0]?.id;
   const upload = uploads[campaignId];
   const asset = campaign.assets.find((item) => item.id === assetId) ?? campaign.assets[0];
   const artwork = assetId === "upload" && upload ? upload.file : asset.src;
@@ -85,12 +88,12 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   useEffect(() => { if (!overlay) return; const timer = setTimeout(() => setOverlay(null), OVERLAY_MS); return () => clearTimeout(timer); }, [overlay]);
 
   useEffect(() => {
-    if (!frame) { setComposite(null); return; }
     let cancelled = false;
     let resultUrl = "";
     setCompositing(true);
     setComposite(null);
-    composePlacementFrame(frame.file, artwork, zone).then((file) => {
+    // With a reference frame the product is placed into it; without one the product image is the frame.
+    (frame ? composePlacementFrame(frame.file, artwork, zone) : composeProductFrame(artwork)).then((file) => {
       if (cancelled) return;
       resultUrl = objectUrl(file);
       setComposite({ file, url: resultUrl });
@@ -116,18 +119,13 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     setAutomatic(value);
     if (value) { const selected = selectEligibleCampaign(profileId, titleId); if (selected) chooseCampaign(selected.id); }
   }
+  function addProductImage() {
+    setSection("studio");
+    requestAnimationFrame(() => productUpload.current?.click());
+  }
   function importScene() {
     setSection("studio");
     requestAnimationFrame(() => { if (sourceDetails.current) { sourceDetails.current.open = true; sourceDetails.current.scrollIntoView({ behavior: "smooth", block: "center" }); sourceDetails.current.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }); } });
-  }
-  function chooseTitle(id: string) {
-    if (locked) return;
-    const next = filmTitles.find((item) => item.id === id);
-    if (!next) return;
-    setTitleId(id);
-    setSceneBrief(`${next.continuity.setting}. ${next.continuity.camera}. ${next.continuity.lighting}. ${next.continuity.objective}.`);
-    setPreparedRun(null); setSection("studio");
-    addActivity("Scene preset selected", `${next.title} · ${next.moment}. Applies to the scene brief; source media is unchanged.`);
   }
   function selectClip(file: File) {
     if (locked) return;
@@ -149,7 +147,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     release(uploads[campaignId]?.url);
     setUploads((current) => ({ ...current, [campaignId]: { file, url: objectUrl(file) } }));
     setAssetSelections((current) => ({ ...current, [campaignId]: "upload" }));
-    addActivity("Campaign artwork added", `${campaign.brand} · ${file.name}`);
+    addActivity("Product image added", `${campaign.brand} · ${file.name}`);
   }
 
   async function startContinuation() {
@@ -206,28 +204,28 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       <div className="header-status"><span className={`state-dot ${session.connected ? "connected" : ""}`} /><span>{session.runStarted ? "Live session" : session.connected ? "Connected" : "Workspace"}</span><span className="avatar">MA</span></div>
     </header>
     <main className="workspace">
-      <div className="page-heading"><div><div className="eyebrow">ORBIS AD / {section === "studio" ? "CREATIVE WORKSPACE" : section.toUpperCase()}</div><h1>{section === "studio" ? "A place in the story." : section === "campaigns" ? "Brands, ready for their close-up." : section === "library" ? "Set the scene." : "Every direction, in one place."}</h1><p>{section === "studio" ? "Real brands. Your footage. A scene you can direct as it unfolds." : section === "campaigns" ? "Real artwork from each brand, ready to use in your next placement." : section === "library" ? "Start with a creative brief, then bring your own footage." : "Review and export the creative decisions in this browser."}</p></div><div className="heading-actions">{session.connected && <button className="button subtle" type="button" onClick={() => runAction(session.disconnectSession, "Session disconnected")} disabled={session.busy && !session.runStarted}>Disconnect</button>}{section === "activity" ? <button className="button secondary" type="button" disabled={!activity.length} onClick={exportActivity}><Icon name="download" size={16} />Export history</button> : <button className="button secondary" type="button" disabled={locked} onClick={importScene}><Icon name="upload" size={16} />Import scene</button>}</div></div>
+      <div className="page-heading"><div><div className="eyebrow">ORBIS AD / {section === "studio" ? "PRODUCT WORKSPACE" : section === "library" ? "SCENE LIBRARY · PAUSED" : section.toUpperCase()}</div><h1>{section === "studio" ? "Your product, placed live." : section === "campaigns" ? "Brands, ready for their close-up." : section === "library" ? "Scene presets are paused." : "Every direction, in one place."}</h1><p>{section === "studio" ? "Add the product and what is true about it. Then direct the scene as it unfolds." : section === "campaigns" ? "Real artwork from each brand, ready to use in your next placement." : section === "library" ? "Story presets are parked while the studio focuses on the product." : "Review and export the creative decisions in this browser."}</p></div><div className="heading-actions">{session.connected && <button className="button subtle" type="button" onClick={() => runAction(session.disconnectSession, "Session disconnected")} disabled={session.busy && !session.runStarted}>Disconnect</button>}{section === "activity" ? <button className="button secondary" type="button" disabled={!activity.length} onClick={exportActivity}><Icon name="download" size={16} />Export history</button> : <button className="button secondary" type="button" disabled={locked} onClick={addProductImage}><Icon name="upload" size={16} />Add product image</button>}</div></div>
       {(error || session.error) && <div className="global-error" role="alert"><span>{error || session.error}</span><button className="icon-button" aria-label="Dismiss error" type="button" onClick={() => { setError(""); session.clearError?.(); }}><Icon name="close" size={15} /></button></div>}
 
       <div hidden={section !== "studio"} className="studio-screen">
         <div className="studio-grid">
-          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} onStart={startContinuation} onPivot={pivot} onAction={runAction} onImport={importScene} />
-          <aside className="inspector" aria-label="Scene setup">
-            {locked && <div className="locked-notice"><Icon name="check" size={14} />Campaign and source are held for this take. Use the director to pivot live.</div>}
-            <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />
-            <details className="inspector-section source-details" ref={sourceDetails} open><summary><span><span className="panel-eyebrow">02 / SOURCE</span>Source & reference frame</span><span className={frame ? "ready-label" : "subtle-label"}>{frame ? "Ready" : "Import"}</span></summary><SourceClipPanel title={title} clipUrl={clip?.url || ""} clipName={clip?.file.name || ""} framePreview={frame?.url || ""} handoffTime={handoffTime} onClipSelected={selectClip} onFrameCaptured={selectFrame} disabled={locked} onError={setError} /></details>
-            <details className="inspector-section"><summary><span><span className="panel-eyebrow">03 / DIRECTION</span>Scene brief & placement</span><Icon name="chevron" size={15} /></summary><div className="placement-controls"><label className="field-label">What happens next?<textarea value={sceneBrief} maxLength={1200} disabled={locked} onChange={(event) => setSceneBrief(event.target.value)} rows={5} /></label><p>Describe the scene to generate. Your uploaded frame sets the visual starting point.</p><h3>Position the artwork</h3><p>Review the placement tab in the preview before generating.</p>{([{ key: "x", label: "Horizontal", max: 1 - zone.width }, { key: "y", label: "Vertical", max: 1 - zone.height }, { key: "width", label: "Size", max: .5 }] as const).map((control) => <label className="range-field" key={control.key}><span>{control.label}<output>{Math.round(zone[control.key] * 100)}%</output></span><input type="range" min={control.key === "width" ? .06 : 0} max={control.max} step={.01} value={zone[control.key]} disabled={locked} onChange={(event) => { const value = Number(event.target.value); setZone((previous) => control.key === "width" ? { ...previous, width: value, height: Math.min(value * 1.1, .55), x: Math.min(previous.x, 1-value), y: Math.min(previous.y, 1 - Math.min(value * 1.1, .55)) } : { ...previous, [control.key]: value }); }} /></label>)}</div></details>
-            <KnowledgePanel campaignId={campaignId} disabled={locked} onSaved={(knowledge) => { setKnowledgeVersion((version) => version + 1); addActivity("Product knowledge saved", `${knowledge.product.name} · ${knowledge.visualNotes.length} notes · ${knowledge.facts.length} facts`); }} onError={setError} />
+          <ContinuationStage session={session} campaign={session.runStarted && preparedRun ? preparedRun.campaign : campaign} framePreview={composite?.url || ""} originalPreview={frame?.url || ""} preparing={preparing || compositing} runId={preparedRun?.runId || ""} brandRetained={brandRetained} overlay={overlay} knowledgeVersion={knowledgeVersion} onStart={startContinuation} onPivot={pivot} onAction={runAction} onAddProduct={addProductImage} />
+          <aside className="inspector" aria-label="Product setup">
+            {locked && <div className="locked-notice"><Icon name="check" size={14} />Product and frame are held for this take. Use the director to steer live.</div>}
+            <CampaignPanel profiles={audienceProfiles} campaigns={campaigns} selectedProfileId={profileId} campaign={campaign} automatic={automatic} assetId={assetId} assetName={upload?.file.name || ""} uploadedPreview={upload?.url || ""} disabled={locked} uploadInputRef={productUpload} onProfileChange={chooseProfile} onCampaignChange={(id) => { setAutomatic(false); chooseCampaign(id); }} onAutomaticChange={toggleAutomatic} onAssetSelected={selectArtwork} onAssetIdChange={(id) => setAssetSelections((current) => ({ ...current, [campaignId]: id }))} />
+            <KnowledgePanel campaignId={campaignId} disabled={locked} productImage={artwork} onSaved={(knowledge) => { setKnowledgeVersion((version) => version + 1); addActivity("Product info saved", `${knowledge.product.name} · ${knowledge.visualNotes.length} notes · ${knowledge.facts.length} facts`); }} onError={setError} />
+            <details className="inspector-section source-details" ref={sourceDetails}><summary><span><span className="panel-eyebrow">03 / REFERENCE FRAME</span>Reference frame <small className="optional-tag">optional</small></span><span className={frame ? "ready-label" : "subtle-label"}>{frame ? "Ready" : "Product image"}</span></summary><SourceClipPanel title={title} clipUrl={clip?.url || ""} clipName={clip?.file.name || ""} framePreview={frame?.url || ""} handoffTime={handoffTime} onClipSelected={selectClip} onFrameCaptured={selectFrame} disabled={locked} onError={setError} /></details>
+            <details className="inspector-section"><summary><span><span className="panel-eyebrow">04 / SCENE BRIEF</span>Scene brief & placement</span><Icon name="chevron" size={15} /></summary><div className="placement-controls"><label className="field-label">What happens in the scene?<textarea value={sceneBrief} maxLength={1200} disabled={locked} onChange={(event) => setSceneBrief(event.target.value)} rows={5} /></label><p>Rewritten with the product info before it reaches the model.</p>{frame && <><h3>Position the product</h3><p>Only used with a reference frame. Review the placement tab in the preview.</p></>}{frame && ([{ key: "x", label: "Horizontal", max: 1 - zone.width }, { key: "y", label: "Vertical", max: 1 - zone.height }, { key: "width", label: "Size", max: .5 }] as const).map((control) => <label className="range-field" key={control.key}><span>{control.label}<output>{Math.round(zone[control.key] * 100)}%</output></span><input type="range" min={control.key === "width" ? .06 : 0} max={control.max} step={.01} value={zone[control.key]} disabled={locked} onChange={(event) => { const value = Number(event.target.value); setZone((previous) => control.key === "width" ? { ...previous, width: value, height: Math.min(value * 1.1, .55), x: Math.min(previous.x, 1-value), y: Math.min(previous.y, 1 - Math.min(value * 1.1, .55)) } : { ...previous, [control.key]: value }); }} /></label>)}</div></details>
           </aside>
         </div>
-        <footer className="workspace-footer"><span><span className="state-dot" />Powered by Visko Orbis</span><span>Live generative video · placements begin from your reference frame</span></footer>
+        <footer className="workspace-footer"><span><span className="state-dot" />Powered by Visko Orbis</span><span>Live generative video · starts from your product image or a reference frame</span></footer>
       </div>
 
       {section === "campaigns" && <section className="campaign-library" aria-label="Campaign library">{campaigns.map((item) => <article className="campaign-card" key={item.id}><div className={`campaign-hero ${item.category}`}><img src={(item.assets.find((asset) => asset.kind !== "logo") || item.assets[0]).src} alt={`${item.brand} campaign artwork`} /><span className="hero-brand"><img src={item.logo} alt={item.brand} /></span></div><div className="campaign-card-body"><span className="eyebrow">{item.category} / {item.assets.length} ASSETS</span><h2>{item.campaign}</h2><p>{item.placement.label} · {item.brand}</p><div className="library-assets">{item.assets.map((asset) => <a href={asset.src} key={asset.id} target="_blank" rel="noreferrer" aria-label={`View ${asset.label}`}><img src={asset.src} alt={asset.label} /><span>{asset.label}</span></a>)}</div><button className="button secondary full-width" type="button" disabled={locked} onClick={() => { setAutomatic(false); chooseCampaign(item.id); setSection("studio"); }}>Use {item.brand}<Icon name="arrow" size={16} /></button><details className="asset-sources"><summary>Asset sources</summary>{item.assets.map((asset) => <a key={asset.id} href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.label} ↗</a>)}</details></div></article>)}</section>}
 
-      {section === "library" && <><div className="library-note"><Icon name="film" size={19} /><p>These are creative presets. Import a movie clip or still in Studio to work with actual footage.</p></div><div className="scene-library">{filmTitles.map((item, index) => <article className="scene-card" key={item.id}><div className={`scene-card-art scene-${index}`}><span className="scene-index">0{index + 1}</span><Icon name="film" size={42} /><span>CREATIVE PRESET</span></div><div className="scene-card-body"><span className="eyebrow">{item.genre}</span><h2>{item.title}</h2><h3>{item.moment}</h3><p>{item.continuity.setting}.</p><button className="button secondary" type="button" disabled={locked} onClick={() => chooseTitle(item.id)}>Use this brief<Icon name="arrow" size={16} /></button></div></article>)}</div></>}
+      {section === "library" && <><div className="library-paused"><Icon name="film" size={19} /><p>Paused. These story presets are not part of the current flow; the Studio starts from your product image and product info.</p></div><div className="scene-library">{filmTitles.map((item, index) => <article className="scene-card" key={item.id}><div className={`scene-card-art scene-${index}`}><span className="scene-index">0{index + 1}</span><Icon name="film" size={42} /><span>CREATIVE PRESET</span></div><div className="scene-card-body"><span className="eyebrow">{item.genre}</span><h2>{item.title}</h2><h3>{item.moment}</h3><p>{item.continuity.setting}.</p><button className="button secondary" type="button" disabled aria-disabled="true">Paused</button></div></article>)}</div></>}
 
-      {section === "activity" && <section className="activity-panel"><div className="activity-heading"><h2>Creative history</h2><span>{activity.length} events · stored in this browser</span></div>{activity.length ? activity.map((event) => <div className="activity-row" key={event.id}><span className="activity-icon"><Icon name={event.label.includes("direction") || event.label.includes("refinement") ? "spark" : "check"} size={16} /></span><div><strong>{event.label}</strong><p>{event.detail}</p></div><time dateTime={event.time}>{new Date(event.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>) : <div className="activity-empty"><Icon name="clock" size={36} /><h3>Your creative trail starts here.</h3><p>Import a scene or start a take to see your decisions appear.</p><button className="button secondary" type="button" onClick={() => setSection("studio")}>Open Studio<Icon name="arrow" size={16} /></button></div>}<details className="technical-events"><summary>Latest model events</summary>{session.events.length ? session.events.map((event, index) => <code key={`${index}-${event}`}>{event}</code>) : <p>No connected session.</p>}<pre className="model-snapshot">{session.modelSnapshot}</pre></details></section>}
+      {section === "activity" && <section className="activity-panel"><div className="activity-heading"><h2>Creative history</h2><span>{activity.length} events · stored in this browser</span></div>{activity.length ? activity.map((event) => <div className="activity-row" key={event.id}><span className="activity-icon"><Icon name={event.label.includes("direction") || event.label.includes("refinement") ? "spark" : "check"} size={16} /></span><div><strong>{event.label}</strong><p>{event.detail}</p></div><time dateTime={event.time}>{new Date(event.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>) : <div className="activity-empty"><Icon name="clock" size={36} /><h3>Your creative trail starts here.</h3><p>Add a product or start a take to see your decisions appear.</p><button className="button secondary" type="button" onClick={() => setSection("studio")}>Open Studio<Icon name="arrow" size={16} /></button></div>}<details className="technical-events"><summary>Latest model events</summary>{session.events.length ? session.events.map((event, index) => <code key={`${index}-${event}`}>{event}</code>) : <p>No connected session.</p>}<pre className="model-snapshot">{session.modelSnapshot}</pre></details></section>}
     </main>
   </div>;
 }

@@ -117,3 +117,19 @@ test("audience endpoint recommends Nike to culture runners", async () => {
   assert.equal(response.status, 200);
   assert.equal((await response.json()).campaign.brand, "Nike");
 });
+
+test("a product image can be described into draft product info", async () => {
+  const image = await fetch(baseUrl + "/brands/pepsi/pepsi-can.jpg").then((r) => r.blob());
+  const data = new FormData();
+  data.set("image", new File([image], "pepsi-can.jpg", { type: "image/jpeg" }));
+  const response = await fetch(baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge/describe", { method: "POST", body: data, signal: AbortSignal.timeout(40_000) });
+  // 503 when the server has no Gemini key; otherwise a draft with an appearance and notes.
+  assert.ok([200, 503].includes(response.status), `status ${response.status}`);
+  if (response.status === 200) {
+    const draft = await response.json();
+    assert.match(draft.appearance, /Pepsi/);
+    assert.ok(Array.isArray(draft.visualNotes) && draft.visualNotes.length >= 2);
+  }
+  const bad = await fetch(baseUrl + "/api/campaigns/pepsi-thirsty-for-more/knowledge/describe", { method: "POST", body: new FormData() });
+  assert.ok([400, 503].includes(bad.status));
+});
