@@ -75,7 +75,7 @@ export function LiveWorld({ memoryId }: { memoryId?: string }) {
     setCurrentId("initial");
     setPending(null);
     setHistory([
-      { key: "start", at: "0:00", title: SCENE.initial.title, state: "Started", tagClass: "fw-tag-accent" },
+      { key: "start", at: "0:00", title: SCENE.initial.title, state: "Started", tagClass: "fw-tag-accent-2" },
     ]);
     timerRef.current = setInterval(tick, TICK_MS);
   }
@@ -190,7 +190,7 @@ export function LiveWorld({ memoryId }: { memoryId?: string }) {
               fontSize: 13,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--color-accent-700)",
+              color: "var(--color-accent-2-700)",
             }}
           >
             {SCENE.kicker}
@@ -367,7 +367,7 @@ export function LiveWorld({ memoryId }: { memoryId?: string }) {
               fontSize: 13,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--color-accent-700)",
+              color: "var(--color-accent-2-700)",
             }}
           >
             Steer the world
@@ -454,7 +454,7 @@ export function LiveWorld({ memoryId }: { memoryId?: string }) {
                 fontSize: 13,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "var(--color-accent-700)",
+                color: "var(--color-accent-2-700)",
               }}
             >
               The path so far
