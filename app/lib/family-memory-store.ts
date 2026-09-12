@@ -32,9 +32,19 @@ export type FamilyPhotoInput = {
   groundedPrompt?: string;
 };
 
+/** FamilyPhotoInput once groundFamilyMemory() (memory-pipeline.ts) has run —
+ * anchorImage and groundedPrompt are required rather than optional so
+ * AddFamily.tsx's `{ ...input, ...grounded }` merge is compile-checked
+ * against the field names the store actually persists (the regression that
+ * silently produced an undefined `groundedPrompt` before). */
+export type GroundedFamilyMemory = FamilyPhotoInput & {
+  anchorImage: string;
+  groundedPrompt: string;
+};
+
 const STORAGE_PREFIX = "family-world:memory:";
 
-export function saveFamilyMemory(input: FamilyPhotoInput): void {
+export function saveFamilyMemory(input: GroundedFamilyMemory): void {
   if (typeof window === "undefined") return;
   try {
     window.sessionStorage.setItem(

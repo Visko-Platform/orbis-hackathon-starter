@@ -13,7 +13,7 @@ import {
 import {
   dataUrlToFile,
   loadFamilyMemory,
-  type FamilyPhotoInput,
+  type GroundedFamilyMemory,
 } from "../lib/family-memory-store";
 
 type Stage = "starting" | "done" | "error";
@@ -24,7 +24,7 @@ type Stage = "starting" | "done" | "error";
 // fully-grounded memory for this id (different tab, expired, or /add-family's
 // groundFamilyMemory() step never finished) — see loadFamilyMemory in
 // family-memory-store.ts.
-type MemoryLookup = "pending" | "missing" | FamilyPhotoInput;
+type MemoryLookup = "pending" | "missing" | GroundedFamilyMemory;
 
 // /add-family already restores the photo and grounds an Orbis prompt in it
 // (groundFamilyMemory(), run there so the presenter sees the prompt before
@@ -61,7 +61,9 @@ export function MemoryAutostart() {
     if (!memoryId) return;
     const found = loadFamilyMemory(memoryId);
     setLookup(
-      found?.anchorImage && found?.groundedPrompt ? found : "missing",
+      found && found.anchorImage && found.groundedPrompt
+        ? (found as GroundedFamilyMemory)
+        : "missing",
     );
   }, [memoryId]);
 
@@ -69,18 +71,18 @@ export function MemoryAutostart() {
   const alreadyLive = snapshot?.started === true;
   const memory = typeof lookup === "object" ? lookup : null;
 
-  async function run(current: FamilyPhotoInput) {
+  async function run(current: GroundedFamilyMemory) {
     runningRef.current = true;
     setError("");
     setStage("starting");
     try {
       const anchor = await dataUrlToFile(
-        current.anchorImage!,
+        current.anchorImage,
         `${current.id}-anchor.jpg`,
       );
       const ref = await uploadFile(anchor, { name: anchor.name });
       await sendSetImage(s, ref);
-      await sendSetPrompt(s, current.groundedPrompt!);
+      await sendSetPrompt(s, current.groundedPrompt);
       await sendStart(s);
       setStage("done");
     } catch (caught) {

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import {
   saveFamilyMemory,
   type FamilyPhotoInput,
+  type GroundedFamilyMemory,
   type ParsedTime,
 } from "../lib/family-memory-store";
 import { groundFamilyMemory } from "../lib/memory-pipeline";
@@ -155,7 +156,7 @@ export function AddFamily() {
           .filter((v): v is string => !!v?.trim())
           .join(" "),
       });
-      const savedInput: FamilyPhotoInput = { ...input, ...grounded };
+      const savedInput: GroundedFamilyMemory = { ...input, ...grounded };
       saveFamilyMemory(savedInput);
       setPhotos((prev) =>
         prev.map((p) =>
