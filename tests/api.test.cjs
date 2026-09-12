@@ -269,7 +269,11 @@ test("the voiceover route writes grounded narrator lines for a scene", async () 
     const result = await response.json();
     assert.ok(Array.isArray(result.lines) && result.lines.length >= 1 && result.lines.length <= 2);
     assert.ok(result.lines.every((line) => line.split(/\s+/).length <= 24));
-    assert.ok(result.audio === null || typeof result.audio === "string");
+    assert.equal(result.audio, null, "phase one returns lines only");
+    const spoken = await fetch(baseUrl + "/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: "rolex-perpetual-moment", scene: "x", role: "pivot", lines: result.lines }), signal: AbortSignal.timeout(60_000) });
+    assert.equal(spoken.status, 200);
+    const speech = await spoken.json();
+    assert.ok(typeof speech.audio === "string" && speech.audio.length > 1000, "phase two returns audio");
   }
   assert.equal((await post("/api/continuations/voiceover", { campaignId: "nope", scene: "x", role: "pivot" })).status, 400);
 });

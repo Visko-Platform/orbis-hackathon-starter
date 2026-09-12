@@ -80,19 +80,23 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     if (!voiceover) return;
     const ticket = ++voiceoverTake.current;
     try {
-      const response = await fetch("/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId, scene, role, direction, contractLines: contract?.lines.map((line) => line.text) ?? [] }), signal: AbortSignal.timeout(30_000) });
-      const result = await response.json();
-      if (!response.ok || ticket !== voiceoverTake.current) return;
+      const post = (payload: Record<string, unknown>, timeoutMs: number) => fetch("/api/continuations/voiceover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId, ...payload }), signal: AbortSignal.timeout(timeoutMs) });
+      // Phase one: the lines, shown as a caption right away.
+      const written = await post({ scene, role, direction, contractLines: contract?.lines.map((line) => line.text) ?? [] }, 45_000);
+      const result = await written.json();
+      if (!written.ok || ticket !== voiceoverTake.current) return;
       const lines: string[] = Array.isArray(result.lines) ? result.lines : [];
       if (!lines.length) return;
-      narrator.current?.pause();
-      if (result.audio) {
-        const audio = new Audio(`data:${result.mimeType || "audio/wav"};base64,${result.audio}`);
-        narrator.current = audio;
-        audio.play().catch((caught) => console.warn("voiceover playback blocked", caught));
-      }
       setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
       addActivity("Voiceover", lines.join(" "));
+      // Phase two: the speech for those lines.
+      const spoken = await post({ lines }, 60_000);
+      const speech = await spoken.json();
+      if (!spoken.ok || ticket !== voiceoverTake.current || !speech.audio) return;
+      narrator.current?.pause();
+      const audio = new Audio(`data:${speech.mimeType || "audio/wav"};base64,${speech.audio}`);
+      narrator.current = audio;
+      audio.play().catch((caught) => console.warn("voiceover playback blocked", caught));
     } catch (caught) {
       console.warn("voiceover unavailable", caught);
     }
