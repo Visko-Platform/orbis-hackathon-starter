@@ -41,6 +41,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
   const bpmRef = useRef(bpm);
   const steeredAt = useRef(0);
   const steeredBpm = useRef(-99);
+  const steeredWorld = useRef<string | undefined>(undefined);
   const history = useRef<number[]>([]);
   const [lastSteer, setLastSteer] = useState("");
 
@@ -61,6 +62,7 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
       return;
     }
     autoStarted.current = true;
+    steeredWorld.current = zoneForBpm(bpmRef.current).id;
     void session.startWith(buildWorldPrompt(bpmRef.current, "flat"));
   }, [session]);
 
@@ -84,7 +86,15 @@ export function HeartWorld({ session }: { session: OrbisSession }) {
 
       steeredAt.current = now;
       steeredBpm.current = current;
-      const nextPrompt = buildWorldPrompt(current, trend);
+      // Pass the world we are leaving so the prompt asks Orbis to morph out
+      // of it instead of cutting.
+      const nextPrompt = buildWorldPrompt(
+        current,
+        trend,
+        false,
+        steeredWorld.current,
+      );
+      steeredWorld.current = zoneForBpm(current).id;
       setLastSteer(`${current} BPM · ${trend}`);
       void session.steerWith(nextPrompt);
     }, 1000);

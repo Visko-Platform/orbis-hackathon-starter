@@ -31,6 +31,7 @@ type World = {
   minBpm: number;
   color: string;
   build: string;
+  place: string;
   scene: string;
   rising: string;
   falling: string;
@@ -43,6 +44,7 @@ const WORLDS: World[] = [
     minBpm: 0,
     color: "#6ee7b7",
     build: `He is heavy and out of shape, a soft belly straining his t-shirt, round face, slouched posture`,
+    place: "dim living room",
     scene: `He is sunk deep into a couch in a dim living room, a TV glowing
 blue on his face, a warm lamp in the corner, totally still`,
     rising: "He shifts forward, restless, about to get up.",
@@ -54,6 +56,7 @@ blue on his face, a warm lamp in the corner, totally still`,
     minBpm: 95,
     color: "#fcd34d",
     build: `He is still thick and heavy set, but standing taller, the shirt looser on him`,
+    place: "crowded city street",
     scene: `He is walking fast down a crowded city sidewalk at golden hour,
 weaving between people, shop windows and traffic sliding past`,
     rising: "His pace quickens, he starts pushing through the crowd.",
@@ -65,6 +68,7 @@ weaving between people, shop windows and traffic sliding past`,
     minBpm: 125,
     color: "#fb923c",
     build: `He has an average build now, the belly gone, shoulders starting to fill out`,
+    place: "outdoor basketball court",
     scene: `He is in a fast outdoor pickup basketball game, driving hard to the
 hoop, defenders closing, the ball slapping the asphalt`,
     rising: "He accelerates past his defender, the game speeding up.",
@@ -76,6 +80,7 @@ hoop, defenders closing, the ball slapping the asphalt`,
     minBpm: 150,
     color: "#f87171",
     build: `He is lean and athletic, clearly defined arms and a flat stomach`,
+    place: "dark neon alley",
     scene: `He is sprinting down a narrow alley at night, wet asphalt throwing
 back neon, fences and fire escapes flying past, something behind him`,
     rising: "He is gaining speed, running for his life.",
@@ -87,6 +92,7 @@ back neon, fences and fire escapes flying past, something behind him`,
     minBpm: 170,
     color: "#ef4444",
     build: `He is heavily muscled and ripped, abs carved, veins standing out on his arms`,
+    place: "volcanic wasteland",
     scene: `He is running across black volcanic rock, rivers of lava on both
 sides, embers storming through a blood-red sky, heat warping the air`,
     rising: "He drives forward into the fire, past his limit.",
@@ -100,6 +106,7 @@ sides, embers storming through a blood-red sky, heat warping the air`,
     minBpm: 190,
     color: "#a78bfa",
     build: `He has a full bodybuilder physique, enormous shoulders and chest, shredded`,
+    place: "orbiting space station",
     scene: `He is sprinting across the hull of a space station, Earth turning
 enormous and blue below him, stars streaking past, no air, no sound`,
     rising: "He pushes off the hull and launches into open space.",
@@ -111,6 +118,7 @@ enormous and blue below him, stars streaking past, no air, no sound`,
     minBpm: 205,
     color: "#f0abfc",
     build: `He is a colossal bodybuilder at peak condition, every muscle enormous and impossibly defined`,
+    place: "collapsing star",
     scene: `He is running through a collapsing star, his body breaking apart
 into light and particles, space folding around him, reality tearing`,
     rising: "He dissolves completely into the blast.",
@@ -158,7 +166,12 @@ function worldForBpm(bpm: number, demo: boolean) {
 
 // The prompt is rebuilt from the exact BPM and its direction, so the world
 // keeps evolving inside a range instead of only at the five crossings.
-export function buildWorldPrompt(bpm: number, trend: Trend, demo = false) {
+export function buildWorldPrompt(
+  bpm: number,
+  trend: Trend,
+  demo = false,
+  fromWorldId?: string,
+) {
   const world = worldForBpm(bpm, demo);
   // Describe the body by which world we are in, not by raw BPM, so the two
   // threshold scales stay consistent.
@@ -177,5 +190,14 @@ export function buildWorldPrompt(bpm: number, trend: Trend, demo = false) {
   const trendClause =
     trend === "up" ? world.rising : trend === "down" ? world.falling : "";
 
-  return `${hero(world.build)} ${world.scene}, ${body}. ${trendClause} ${STYLE}`;
+  // Orbis is mid-generation: without an explicit instruction it will cut to
+  // the new scene. This tells it to morph the world it is already showing.
+  const from = WORLDS.find((entry) => entry.id === fromWorldId);
+  const transition =
+    from && from.id !== world.id
+      ? `Do not cut. In one unbroken take the ${from.place} around him
+dissolves and reshapes into this new world, and his body transforms with it.`
+      : "";
+
+  return `${hero(world.build)} ${world.scene}, ${body}. ${trendClause} ${transition} ${STYLE}`;
 }
