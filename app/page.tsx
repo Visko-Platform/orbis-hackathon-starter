@@ -39,7 +39,7 @@ export default function Page() {
           Add your family
         </a>
         <a
-          href="#add"
+          href="/add-family"
           className="fw-btn fw-btn-primary"
           style={{ justifyContent: "flex-start", whiteSpace: "nowrap" }}
         >
