@@ -205,7 +205,9 @@ session is released.
 - Generative video cannot guarantee a pixel-perfect logo after many chunks.
 - Artwork placement on the starting image is a rectangular 2D composition,
   not semantic surface tracking or relighting.
-- Scene-library entries are creative presets. Movie footage is not bundled.
+- The Scene library bundles three browser-ready, CC BY 3.0 demo clips from
+  Blender Foundation open movies. Attribution and exact download URLs live in
+  `public/scenes/SOURCES.md`.
 - Audience profiles are synthetic examples and run entirely in the browser.
 - Activity history is useful for a demo but is not a tamper-proof audit log.
 - There is no authentication or rate limiting around the local token endpoint.

@@ -209,18 +209,31 @@ input[type=range] { accent-color:#d9d4c7; width:100%; cursor:pointer; height:15p
 .asset-sources { margin-top:14px; color:var(--quiet); font-size:10px; }
 .asset-sources summary { cursor:pointer; padding:4px 0; }
 .asset-sources a { display:block; color:#a9b8d0; padding:6px 0; text-decoration:underline; }
-.library-note { display:flex; align-items:center; gap:12px; margin:0 0 23px; padding:15px 18px; font-size:13px; color:#b6bcc6; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.library-note { display:flex; align-items:center; gap:14px; margin:0 0 23px; padding:15px 18px; color:#b6bcc6; border:1px solid var(--line); border-radius:10px; background:linear-gradient(100deg,#1c2024,#181a1d); }
+.library-note-icon { width:38px; height:38px; display:grid; place-items:center; flex:0 0 auto; color:#dbe7d4; border:1px solid #424a41; border-radius:50%; background:#252b25; }
+.library-note strong { display:block; margin-bottom:3px; color:#f2f3ef; font-size:12px; font-weight:550; }
+.library-note p { color:#9ba2aa; font-size:11px; line-height:1.5; }
 .scene-library { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; }
-.scene-card { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); }
-.scene-card-art { height:180px; display:flex; position:relative; align-items:center; justify-content:center; background:#292620; color:#bba68a; }
-.scene-card-art.scene-1 { background:#222631; color:#909bb5; }
-.scene-card-art.scene-2 { background:#232c2a; color:#91aaa4; }
-.scene-index { position:absolute; top:18px; left:18px; font-size:12px; opacity:.7; }
-.scene-card-art>span:last-child { position:absolute; bottom:15px; font-size:9px; letter-spacing:2px; opacity:.8; }
+.scene-card { min-width:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); box-shadow:0 12px 30px #00000018; transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+.scene-card:hover { transform:translateY(-3px); border-color:#50555b; box-shadow:0 18px 42px #00000045; }
+.scene-card-art { height:210px; display:flex; position:relative; align-items:center; justify-content:center; overflow:hidden; background:#111; color:#fff; }
+.scene-card-art video { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.01); transition:transform 1.4s ease; }
+.scene-card:hover .scene-card-art video { transform:scale(1.045); }
+.scene-media-scrim { position:absolute; inset:0; background:linear-gradient(180deg,#0506073d 0%,transparent 45%,#08090bd1 100%); pointer-events:none; }
+.scene-topline { position:absolute; inset:14px 14px auto; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.scene-index,.scene-license { display:inline-flex; align-items:center; min-height:24px; padding:0 8px; border:1px solid #ffffff35; border-radius:999px; color:#f5f5f1; background:#080a0bac; backdrop-filter:blur(7px); font-size:9px; line-height:1; letter-spacing:1px; }
+.scene-license { color:#dce8d6; border-color:#bed5b34a; background:#182017c7; }
+.scene-play { position:absolute; left:16px; bottom:14px; display:flex; align-items:center; gap:7px; color:#fff; font-size:9px; font-weight:550; letter-spacing:1.5px; text-shadow:0 1px 9px #000; }
+.scene-play svg { padding:5px; width:25px; height:25px; border:1px solid #ffffff52; border-radius:50%; background:#111820a8; }
 .scene-card-body { padding:24px; }
 .scene-card h2 { font-size:25px; font-weight:450; margin:10px 0 4px; letter-spacing:-.7px; }
 .scene-card h3 { font-size:13px; color:#aeb7c0; font-weight:450; margin-bottom:14px; }
 .scene-card p { color:var(--muted); font-size:12px; line-height:1.7; min-height:62px; margin-bottom:18px; }
+.scene-card-actions { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.scene-card-actions .button { flex:1; }
+.scene-card-actions>a { color:#aeb6c1; flex:0 0 auto; font-size:10px; text-decoration:none; }
+.scene-card-actions>a:hover { color:#fff; text-decoration:underline; }
+.scene-attribution { display:block; margin-top:13px; padding-top:12px; color:#737a83; border-top:1px solid #30343a; font-size:9px; letter-spacing:.4px; }
 .activity-panel { max-width:1040px; border:1px solid var(--line); border-radius:12px; background:var(--panel); }
 .activity-heading { padding:22px 24px; display:flex; justify-content:space-between; gap:20px; border-bottom:1px solid var(--line); align-items:center; }
 .activity-heading h2 { font-size:17px; font-weight:500; }

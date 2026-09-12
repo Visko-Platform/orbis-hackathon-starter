@@ -35,8 +35,7 @@ export function StudioApp() {
 function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const session = useLiveContinuation(clearJwt);
   const [section, setSection] = useState<Section>("studio");
-  // Scene presets are paused; the prepare route still needs a title, so the default stands.
-  const titleId = filmTitles[1].id;
+  const [titleId, setTitleId] = useState(filmTitles[1].id);
   const [profileId, setProfileId] = useState(audienceProfiles[0].id);
   const [automatic, setAutomatic] = useState(false);
   const [campaignId, setCampaignId] = useState(campaigns[0].id);
@@ -59,10 +58,11 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [knowledgeVersion, setKnowledgeVersion] = useState(0);
   const [overlay, setOverlay] = useState<FactOverlay | null>(null);
   const [storageReady, setStorageReady] = useState(false);
+  const [loadingSceneId, setLoadingSceneId] = useState("");
   const sourceDetails = useRef<HTMLDetailsElement>(null);
   const productUpload = useRef<HTMLInputElement>(null);
   const urls = useRef(new Set<string>());
-  const locked = session.runStarted || session.busy || preparing;
+  const locked = session.runStarted || session.busy || preparing || Boolean(loadingSceneId);
   // The product photo is the default image to place; a logo is a weaker starting frame.
   const assetId = assetSelections[campaignId] ?? campaign.assets.find((item) => item.kind === "product")?.id ?? campaign.assets[0]?.id;
   const upload = uploads[campaignId];
@@ -123,9 +123,40 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
     setSection("studio");
     requestAnimationFrame(() => productUpload.current?.click());
   }
-  function importScene() {
-    setSection("studio");
-    requestAnimationFrame(() => { if (sourceDetails.current) { sourceDetails.current.open = true; sourceDetails.current.scrollIntoView({ behavior: "smooth", block: "center" }); sourceDetails.current.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }); } });
+  async function chooseTitle(id: string) {
+    if (locked) return;
+    const next = filmTitles.find((item) => item.id === id);
+    if (!next) return;
+    setLoadingSceneId(id);
+    setError("");
+    try {
+      const [videoResponse, posterResponse] = await Promise.all([
+        fetch(next.media.video),
+        fetch(next.media.poster),
+      ]);
+      if (!videoResponse.ok || !posterResponse.ok) throw new Error("This library scene could not be loaded.");
+      const [videoBlob, posterBlob] = await Promise.all([videoResponse.blob(), posterResponse.blob()]);
+      const videoFile = new File([videoBlob], `${next.id}.mp4`, { type: videoBlob.type || "video/mp4" });
+      const posterFile = new File([posterBlob], `${next.id}-frame.png`, { type: posterBlob.type || "image/png" });
+      release(clip?.url);
+      release(frame?.url);
+      setClip({ file: videoFile, url: objectUrl(videoFile) });
+      setFrame({ file: posterFile, url: objectUrl(posterFile) });
+      setHandoffTime(0);
+      setTitleId(id);
+      setSceneBrief(`${next.continuity.setting}. ${next.continuity.camera}. ${next.continuity.lighting}. ${next.continuity.objective}.`);
+      setPreparedRun(null);
+      setSection("studio");
+      if (automatic) {
+        const selected = selectEligibleCampaign(profileId, id);
+        if (selected) { setCampaignId(selected.id); setZone(selected.placement.zone); }
+      }
+      addActivity("Library scene loaded", `${next.title} · ${next.moment} · ${next.media.license}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "This library scene could not be loaded.");
+    } finally {
+      setLoadingSceneId("");
+    }
   }
   function selectClip(file: File) {
     if (locked) return;
@@ -204,7 +235,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       <div className="header-status"><span className={`state-dot ${session.connected ? "connected" : ""}`} /><span>{session.runStarted ? "Live session" : session.connected ? "Connected" : "Workspace"}</span><span className="avatar">MA</span></div>
     </header>
     <main className="workspace">
-      <div className="page-heading"><div><div className="eyebrow">ORBIS AD / {section === "studio" ? "PRODUCT WORKSPACE" : section === "library" ? "SCENE LIBRARY · PAUSED" : section.toUpperCase()}</div><h1>{section === "studio" ? "Your product, placed live." : section === "campaigns" ? "Brands, ready for their close-up." : section === "library" ? "Scene presets are paused." : "Every direction, in one place."}</h1><p>{section === "studio" ? "Add the product and what is true about it. Then direct the scene as it unfolds." : section === "campaigns" ? "Real artwork from each brand, ready to use in your next placement." : section === "library" ? "Story presets are parked while the studio focuses on the product." : "Review and export the creative decisions in this browser."}</p></div><div className="heading-actions">{session.connected && <button className="button subtle" type="button" onClick={() => runAction(session.disconnectSession, "Session disconnected")} disabled={session.busy && !session.runStarted}>Disconnect</button>}{section === "activity" ? <button className="button secondary" type="button" disabled={!activity.length} onClick={exportActivity}><Icon name="download" size={16} />Export history</button> : <button className="button secondary" type="button" disabled={locked} onClick={addProductImage}><Icon name="upload" size={16} />Add product image</button>}</div></div>
+      <div className="page-heading"><div><div className="eyebrow">ORBIS AD / {section === "studio" ? "PRODUCT WORKSPACE" : section.toUpperCase()}</div><h1>{section === "studio" ? "Your product, placed live." : section === "campaigns" ? "Brands, ready for their close-up." : section === "library" ? "Set the scene." : "Every direction, in one place."}</h1><p>{section === "studio" ? "Add the product and what is true about it. Then direct the scene as it unfolds." : section === "campaigns" ? "Real artwork from each brand, ready to use in your next placement." : section === "library" ? "Choose a real film clip, then direct what happens next." : "Review and export the creative decisions in this browser."}</p></div><div className="heading-actions">{session.connected && <button className="button subtle" type="button" onClick={() => runAction(session.disconnectSession, "Session disconnected")} disabled={session.busy && !session.runStarted}>Disconnect</button>}{section === "activity" ? <button className="button secondary" type="button" disabled={!activity.length} onClick={exportActivity}><Icon name="download" size={16} />Export history</button> : <button className="button secondary" type="button" disabled={locked} onClick={addProductImage}><Icon name="upload" size={16} />Add product image</button>}</div></div>
       {(error || session.error) && <div className="global-error" role="alert"><span>{error || session.error}</span><button className="icon-button" aria-label="Dismiss error" type="button" onClick={() => { setError(""); session.clearError?.(); }}><Icon name="close" size={15} /></button></div>}
 
       <div hidden={section !== "studio"} className="studio-screen">
@@ -223,7 +254,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
 
       {section === "campaigns" && <section className="campaign-library" aria-label="Campaign library">{campaigns.map((item) => <article className="campaign-card" key={item.id}><div className={`campaign-hero ${item.category}`}><img src={(item.assets.find((asset) => asset.kind !== "logo") || item.assets[0]).src} alt={`${item.brand} campaign artwork`} /><span className="hero-brand"><img src={item.logo} alt={item.brand} /></span></div><div className="campaign-card-body"><span className="eyebrow">{item.category} / {item.assets.length} ASSETS</span><h2>{item.campaign}</h2><p>{item.placement.label} · {item.brand}</p><div className="library-assets">{item.assets.map((asset) => <a href={asset.src} key={asset.id} target="_blank" rel="noreferrer" aria-label={`View ${asset.label}`}><img src={asset.src} alt={asset.label} /><span>{asset.label}</span></a>)}</div><button className="button secondary full-width" type="button" disabled={locked} onClick={() => { setAutomatic(false); chooseCampaign(item.id); setSection("studio"); }}>Use {item.brand}<Icon name="arrow" size={16} /></button><details className="asset-sources"><summary>Asset sources</summary>{item.assets.map((asset) => <a key={asset.id} href={asset.sourceUrl} target="_blank" rel="noreferrer">{asset.label} ↗</a>)}</details></div></article>)}</section>}
 
-      {section === "library" && <><div className="library-paused"><Icon name="film" size={19} /><p>Paused. These story presets are not part of the current flow; the Studio starts from your product image and product info.</p></div><div className="scene-library">{filmTitles.map((item, index) => <article className="scene-card" key={item.id}><div className={`scene-card-art scene-${index}`}><span className="scene-index">0{index + 1}</span><Icon name="film" size={42} /><span>CREATIVE PRESET</span></div><div className="scene-card-body"><span className="eyebrow">{item.genre}</span><h2>{item.title}</h2><h3>{item.moment}</h3><p>{item.continuity.setting}.</p><button className="button secondary" type="button" disabled aria-disabled="true">Paused</button></div></article>)}</div></>}
+      {section === "library" && <><div className="library-note"><span className="library-note-icon"><Icon name="film" size={18} /></span><div><strong>Real footage, ready to direct.</strong><p>These open-film clips include a starting frame and load directly into Studio as a reference frame, alongside your product image. Hover a card to preview the shot.</p></div></div><div className="scene-library">{filmTitles.map((item, index) => <article className="scene-card" key={item.id}><div className={`scene-card-art scene-${index}`}><video src={item.media.video} poster={item.media.poster} muted loop playsInline autoPlay preload="metadata" aria-label={`${item.title}: ${item.moment} preview`} /><span className="scene-media-scrim" /><div className="scene-topline"><span className="scene-index">0{index + 1}</span><span className="scene-license">{item.media.license}</span></div><span className="scene-play"><Icon name="play" size={15} /> LIVE PREVIEW</span></div><div className="scene-card-body"><span className="eyebrow">{item.genre}</span><h2>{item.title}</h2><h3>{item.moment}</h3><p>{item.continuity.setting}.</p><div className="scene-card-actions"><button className="button secondary" type="button" disabled={locked} onClick={() => void chooseTitle(item.id)}>{loadingSceneId === item.id ? "Loading scene…" : "Use scene"}<Icon name="arrow" size={16} /></button><a href={item.media.sourceUrl} target="_blank" rel="noreferrer" aria-label={`View source for ${item.title}`}>Source ↗</a></div><span className="scene-attribution">{item.media.sourceLabel}</span></div></article>)}</div></>}
 
       {section === "activity" && <section className="activity-panel"><div className="activity-heading"><h2>Creative history</h2><span>{activity.length} events · stored in this browser</span></div>{activity.length ? activity.map((event) => <div className="activity-row" key={event.id}><span className="activity-icon"><Icon name={event.label.includes("direction") || event.label.includes("refinement") ? "spark" : "check"} size={16} /></span><div><strong>{event.label}</strong><p>{event.detail}</p></div><time dateTime={event.time}>{new Date(event.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>) : <div className="activity-empty"><Icon name="clock" size={36} /><h3>Your creative trail starts here.</h3><p>Add a product or start a take to see your decisions appear.</p><button className="button secondary" type="button" onClick={() => setSection("studio")}>Open Studio<Icon name="arrow" size={16} /></button></div>}<details className="technical-events"><summary>Latest model events</summary>{session.events.length ? session.events.map((event, index) => <code key={`${index}-${event}`}>{event}</code>) : <p>No connected session.</p>}<pre className="model-snapshot">{session.modelSnapshot}</pre></details></section>}
     </main>
