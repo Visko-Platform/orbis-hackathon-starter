@@ -1,0 +1,200 @@
+id: tiny-life
+title: Tiny Life — A day in a new town
+version: 1
+runtime:
+  chunks_per_action: 15
+  judge_after_each_action: true
+
+state:
+  location:
+    type: enum
+    values: [home, cafe, park, shelter]
+  time:
+    type: enum
+    values: [morning, afternoon, evening]
+  energy:
+    type: integer
+    min: 0
+    max: 2
+  money:
+    type: integer
+    min: 0
+    max: 2
+  dog_trust:
+    type: integer
+    min: 0
+    max: 2
+
+initial_state:
+  location: home
+  time: morning
+  energy: 2
+  money: 1
+  dog_trust: 0
+
+actions:
+  - id: rest
+    label: Rest at home
+    available_when: { location: home, time: morning }
+    transition:
+      set: { time: afternoon }
+      add: { energy: 0 }
+    render:
+      scene: "a small, warm apartment"
+      event: "The protagonist takes a restorative break at home."
+      visual_facts: ["indoor home", "one person", "calm domestic moment"]
+      camera: "stable medium-wide shot"
+
+  - id: go_to_cafe
+    label: Visit the café
+    available_when: { location: home }
+    transition:
+      set: { location: cafe, time: afternoon, energy: 1 }
+    render:
+      scene: "a lively neighborhood café"
+      event: "The protagonist walks from home into a welcoming neighborhood café."
+      visual_facts: ["café interior", "person", "chairs", "dining tables"]
+      camera: "continuous arrival, then medium-wide shot"
+
+  - id: go_to_park
+    label: Go to the park
+    available_when: { location: home }
+    transition:
+      set: { location: park, time: afternoon, energy: 1 }
+    render:
+      scene: "a green public park in afternoon light"
+      event: "The protagonist leaves home and enters a lively public park."
+      visual_facts: ["park", "person", "outdoor setting"]
+      camera: "gentle continuous walking shot"
+
+  - id: work_shift
+    label: Work a café shift
+    available_when: { location: cafe, time: afternoon }
+    transition:
+      set: { time: evening, energy: 0, money: 2 }
+    render:
+      scene: "a busy but friendly neighborhood café"
+      event: "The protagonist helps during a short café shift as customers arrive."
+      visual_facts: ["person", "chairs", "dining tables", "bottles"]
+      camera: "observational medium-wide shot"
+
+  - id: talk_to_neighbor
+    label: Talk to a neighbor
+    available_when: { location: cafe, time: afternoon }
+    transition:
+      set: { time: evening, energy: 0 }
+    render:
+      scene: "a quiet corner of a neighborhood café"
+      event: "The protagonist has a warm conversation with a new neighbor over a drink."
+      visual_facts: ["two people", "chairs", "dining table", "bottle"]
+      camera: "stable two-person medium shot"
+
+  - id: leave_cafe_for_park
+    label: Walk to the park
+    available_when: { location: cafe, time: afternoon, energy: 1 }
+    transition:
+      set: { location: park, energy: 0 }
+    render:
+      scene: "a public park near the café"
+      event: "The protagonist leaves the café and follows the street toward the park."
+      visual_facts: ["person", "street", "park"]
+      camera: "continuous walking shot"
+
+  - id: go_home_from_cafe
+    label: Go home from the café
+    available_when: { location: cafe, time: evening }
+    transition:
+      set: { location: home, time: evening }
+    render:
+      scene: "the protagonist's warm apartment at evening"
+      event: "The protagonist leaves the café and returns home to rest."
+      visual_facts: ["indoor home", "person", "evening"]
+      camera: "quiet stable wide shot"
+
+  - id: take_evening_walk
+    label: Take an evening walk
+    available_when: { location: cafe, time: evening, energy: 1 }
+    transition:
+      set: { location: park, energy: 0 }
+    render:
+      scene: "a peaceful public park at evening"
+      event: "The protagonist leaves the café for a short evening walk in the park."
+      visual_facts: ["person", "park", "evening"]
+      camera: "gentle continuous walking shot"
+
+  - id: help_stray_dog
+    label: Help the stray dog
+    available_when: { location: park, time: afternoon, dog_trust: 0, energy: 1 }
+    transition:
+      set: { time: evening, dog_trust: 1, energy: 0 }
+    render:
+      scene: "a quiet corner of a green public park"
+      event: "The protagonist gently offers food and water to a cautious stray dog."
+      visual_facts: ["person", "dog", "park", "gentle interaction"]
+      camera: "respectful stable medium-wide shot"
+
+  - id: go_to_shelter
+    label: Visit the shelter
+    available_when: { location: park }
+    transition:
+      set: { location: shelter, time: evening }
+    render:
+      scene: "a welcoming animal shelter"
+      event: "The protagonist walks from the park into a calm local animal shelter."
+      visual_facts: ["person", "dog", "indoor shelter"]
+      camera: "continuous arrival, then medium-wide shot"
+
+  - id: go_home_from_park
+    label: Go home
+    available_when: { location: park }
+    transition:
+      set: { location: home, time: evening }
+    render:
+      scene: "the protagonist's warm apartment at evening"
+      event: "The protagonist returns home after time in the park."
+      visual_facts: ["indoor home", "person", "evening"]
+      camera: "quiet stable wide shot"
+
+  - id: feed_dog
+    label: Feed the dog
+    available_when: { location: shelter, time: evening, dog_trust: 1 }
+    transition:
+      set: { dog_trust: 2 }
+    render:
+      scene: "a welcoming animal shelter at evening"
+      event: "The protagonist feeds the now-familiar dog, and the dog responds with trust."
+      visual_facts: ["person", "dog", "indoor shelter", "gentle interaction"]
+      camera: "stable medium shot"
+
+  - id: ask_about_foster
+    label: Ask about fostering
+    available_when: { location: shelter, time: evening, dog_trust: 1 }
+    transition:
+      set: { location: home }
+    render:
+      scene: "the entrance of a welcoming animal shelter"
+      event: "The protagonist talks to a shelter worker about becoming a foster home for the dog."
+      visual_facts: ["two people", "dog", "indoor shelter"]
+      camera: "stable conversational medium shot"
+
+  - id: go_home_from_shelter
+    label: Go home for the evening
+    available_when: { location: shelter, time: evening }
+    transition:
+      set: { location: home }
+    render:
+      scene: "the protagonist's warm apartment at evening"
+      event: "The protagonist leaves the shelter and returns home to reflect on the day."
+      visual_facts: ["indoor home", "person", "evening"]
+      camera: "quiet stable wide shot"
+
+  - id: sleep
+    label: Sleep and begin a new day
+    available_when: { location: home, time: evening }
+    transition:
+      set: { time: morning, energy: 2 }
+    render:
+      scene: "the protagonist's warm apartment in early morning"
+      event: "A new day begins after a restorative night at home."
+      visual_facts: ["indoor home", "person", "morning"]
+      camera: "quiet stable wide shot"

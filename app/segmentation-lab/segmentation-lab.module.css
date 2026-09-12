@@ -1,0 +1,26 @@
+.page { min-height: 100vh; padding: 32px clamp(18px, 5vw, 70px) 58px; color: #ecfff3; background: radial-gradient(circle at 15% 0%, #183d31, #08100c 45%, #030504); font-family: Arial, Helvetica, sans-serif; }
+.header { max-width: 980px; margin-bottom: 30px; }
+.back { color: #87e6b8; font-size: .88rem; text-decoration: none; }
+.header p { margin: 26px 0 7px; color: #85d3a9; font-size: .72rem; font-weight: 800; letter-spacing: .15em; }
+.header h1 { margin: 0; font: 800 clamp(2.6rem, 6vw, 5.5rem)/.93 Georgia, serif; letter-spacing: -.06em; }
+.header span { display: block; margin-top: 14px; color: #b3c8b9; font-size: 1rem; }
+.views { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, .8fr); gap: 20px; max-width: 1400px; }
+.view, .segmentPanel { overflow: hidden; border: 1px solid #285842; border-radius: 14px; background: #0a1610; box-shadow: 0 20px 70px #0008; }
+.viewLabel { padding: 11px 14px; border-bottom: 1px solid #234937; color: #a4d8b8; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.view :global(.player) { border: 0; border-radius: 0; aspect-ratio: 16 / 9; }
+.maskStage { position: relative; display: grid; min-height: 260px; aspect-ratio: 16 / 9; place-items: center; background: #020403; }
+.maskCanvas { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
+.placeholder { position: absolute; color: #718b7b; font-size: .85rem; }
+.hidden { display: none; }
+.profileHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 15px 0; color: #a9e3bf; font-size: .78rem; }
+.profileHeader select { padding: 6px 9px; border: 1px solid #3d694f; border-radius: 6px; color: #eafff0; background: #132519; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 14px 15px 0; border: 1px solid #2c543e; background: #2c543e; }
+.metrics div { padding: 10px; background: #0d1912; }
+.metrics dt { color: #7f9989; font-size: .67rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.metrics dd { margin: 5px 0 0; font-size: 1.18rem; font-weight: 800; }
+.note, .error { margin: 15px; font-size: .76rem; line-height: 1.45; }
+.note { color: #809587; }
+.error { color: #ffb3a8; }
+.controls { max-width: 900px; margin-top: 28px; }
+.controls :global(.controls) { border-color: #285842; background: #0a1610; }
+@media (max-width: 860px) { .views { grid-template-columns: 1fr; } .maskStage { min-height: 210px; } }
