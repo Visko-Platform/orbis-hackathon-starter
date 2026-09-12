@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — landing + closing screen mockup (spikes 006/007)</title>
+<style>
+  :root {
+    --bg: #0b0a09;
+    --panel: #17140f;
+    --panel-border: #2c2620;
+    --ink: #f2ece1;
+    --ink-dim: #a89d8c;
+    --brand: #d98e3f;
+    --brand-fg: #1a1208;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .screen { display: none; min-height: 100vh; padding: 32px 20px 60px; }
+  .screen.active { display: block; }
+
+  /* ---- Nav (spike demo convenience only — not part of the real UX) ---- */
+  .demo-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; gap: 8px; padding: 8px 12px;
+    background: #000; border-bottom: 1px solid var(--panel-border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    overflow-x: auto;
+  }
+  .demo-nav button {
+    background: none; border: 1px solid var(--panel-border); color: var(--ink-dim);
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+  }
+  .demo-nav button.current { border-color: var(--brand); color: var(--brand); }
+  main { padding-top: 44px; max-width: 980px; margin: 0 auto; }
+
+  /* ---- Landing ---- */
+  .landing-head { text-align: center; margin: 40px 0 48px; }
+  .landing-head h1 {
+    font-size: clamp(28px, 6vw, 44px); letter-spacing: 0.08em; margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .landing-head p { color: var(--ink-dim); font-size: 15px; margin: 0; }
+
+  .world-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+  }
+  .world-card {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column; text-align: left;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .world-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .world-card .photo { aspect-ratio: 16/9; overflow: hidden; background: #000; }
+  .world-card .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .world-card .body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .world-card .flag { font-size: 22px; }
+  .world-card h3 { margin: 0; font-size: 18px; }
+  .world-card .meta { color: var(--ink-dim); font-size: 13px; margin: 0; }
+  .world-card .composite-tag {
+    align-self: flex-start; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-dim); border: 1px solid var(--panel-border); border-radius: 999px;
+    padding: 2px 8px; margin-top: 2px;
+  }
+  .world-card .flagship-tag {
+    align-self: flex-start; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--brand-fg); background: var(--brand); border-radius: 999px;
+    padding: 2px 8px; margin-top: 2px; font-weight: 600;
+  }
+  .enter-btn {
+    margin-top: auto; background: var(--brand); color: var(--brand-fg); border: none;
+    padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;
+    cursor: pointer; letter-spacing: 0.03em;
+  }
+  .enter-btn:hover { opacity: 0.9; }
+
+  .add-family-card {
+    background: transparent; border: 1px dashed var(--panel-border); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 8px; color: var(--ink-dim); padding: 24px; min-height: 220px; text-align: center;
+  }
+  .add-family-card .plus { font-size: 30px; color: var(--brand); }
+  .add-family-card small { max-width: 220px; line-height: 1.4; }
+
+  /* ---- Intro (Meet X at age N) ---- */
+  .intro-wrap { max-width: 640px; margin: 0 auto; padding-top: 20px; }
+  .intro-photo { aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; margin-bottom: 24px; border: 1px solid var(--panel-border); }
+  .intro-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .intro-wrap .eyebrow { color: var(--brand); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; }
+  .intro-wrap h2 { font-size: 30px; margin: 0 0 4px; }
+  .intro-wrap .place-year { color: var(--ink-dim); font-size: 14px; margin: 0 0 4px; }
+  .intro-wrap .composite-note {
+    font-size: 12.5px; color: var(--ink-dim); background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 10px 12px; margin: 14px 0 20px; line-height: 1.5;
+  }
+  .qa { display: flex; flex-direction: column; gap: 16px; margin: 24px 0 32px; }
+  .qa .q { color: var(--brand); font-size: 13px; font-weight: 600; margin: 0 0 4px; }
+  .qa .a { margin: 0; line-height: 1.55; color: var(--ink); }
+  .enter-memory-btn {
+    background: var(--brand); color: var(--brand-fg); border: none; padding: 12px 20px;
+    border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .back-link { display: inline-block; margin-bottom: 18px; color: var(--ink-dim); font-size: 13px; cursor: pointer; text-decoration: underline; }
+
+  /* ---- Mock live view ---- */
+  .live-wrap { max-width: 760px; margin: 0 auto; }
+  .live-photo { aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 1px solid var(--panel-border); margin-bottom: 16px; position: relative; }
+  .live-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .live-photo .now-narrating {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+    font-size: 14px; font-style: italic; color: #fff;
+  }
+  .beat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .beat-btn {
+    text-align: left; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 10px 12px; color: var(--ink); cursor: pointer;
+  }
+  .beat-btn.active { border-color: var(--brand); }
+  .beat-btn .t { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .beat-btn .n { font-size: 11.5px; color: var(--ink-dim); line-height: 1.4; }
+
+  /* ---- Closing recap ---- */
+  .recap-wrap { max-width: 720px; margin: 60px auto; text-align: center; }
+  .recap-row { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin: 32px 0 40px; }
+  .recap-item { font-size: 15px; color: var(--ink-dim); }
+  .recap-item b { color: var(--ink); display: block; font-size: 20px; margin-bottom: 4px; }
+  .recap-line { font-size: 22px; line-height: 1.5; margin: 0 0 10px; }
+  .recap-tag { font-size: 26px; font-weight: 700; letter-spacing: 0.04em; color: var(--brand); }
+</style>
+</head>
+<body>
+
+<nav class="demo-nav" id="demoNav"></nav>
+
+<main>
+  <!-- SCREEN 1: Landing (spike 006) -->
+  <section class="screen active" id="screen-landing">
+    <div class="landing-head">
+      <h1>FAMILY WORLD</h1>
+      <p>Discover where they came from</p>
+    </div>
+    <div class="world-grid" id="worldGrid"></div>
+  </section>
+
+  <!-- SCREEN 2: Intro "Meet X at age N" (spike 006) -->
+  <section class="screen" id="screen-intro">
+    <div class="intro-wrap">
+      <span class="back-link" onclick="showScreen('screen-landing')">&larr; Back to Family World</span>
+      <div class="intro-photo"><img id="introPhoto" src="" alt="" /></div>
+      <p class="eyebrow" id="introEyebrow"></p>
+      <h2 id="introHeadline"></h2>
+      <p class="place-year" id="introPlaceYear"></p>
+      <div class="composite-note" id="introCompositeNote"></div>
+      <div class="qa" id="introQA"></div>
+      <button class="enter-memory-btn" onclick="enterMemory()">Enter her memory &rarr;</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: Mock live steering view (spike 006) -->
+  <section class="screen" id="screen-live">
+    <div class="live-wrap">
+      <span class="back-link" onclick="showScreen('screen-intro')">&larr; Back to intro</span>
+      <div class="live-photo">
+        <img id="liveImg" src="" alt="" />
+        <div class="now-narrating" id="liveNarration"></div>
+      </div>
+      <label style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-dim);">Steer the scene live (mocked — no real Orbis-Stable connection in this spike)</label>
+      <div class="beat-grid" id="beatGrid" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Closing recap (spike 007) -->
+  <section class="screen" id="screen-recap">
+    <div class="recap-wrap">
+      <div class="recap-row">
+        <div class="recap-item"><b>1953</b>Cavite &#127477;&#127469;</div>
+        <div class="recap-item"><b>1964</b>Phnom Penh &#127472;&#127469;</div>
+        <div class="recap-item"><b>1980s</b>Leningrad &#127479;&#127482;</div>
+      </div>
+      <p class="recap-line">Every family has a world that disappeared.</p>
+      <p class="recap-tag">Family World lets the next generation enter it.</p>
+      <p style="margin-top:40px;"><span class="back-link" onclick="showScreen('screen-landing')">&larr; Start over</span></p>
+    </div>
+  </section>
+</main>
+
+<script>
+// ---------------------------------------------------------------------
+// Spike 006/007 mockup data. Cavite's beats are copied from the REAL,
+// already-shipped app/lib/prompts.ts (spike 003a, wired to the live app).
+// Phnom Penh's and Leningrad's beats are copied from spikes 004/005's
+// beats.ts (standalone, not yet wired). This file does not touch the
+// running my-orbis-app — it's a self-contained demo of the proposed
+// landing → intro → live → recap flow and the Scene-model extension
+// (worldMeta / threeQuestions / compositeDisclosure) those spikes added.
+// ---------------------------------------------------------------------
+const WORLDS = [
+  {
+    id: "cavite-1953",
+    grandmotherLabel: "Lola",
+    age: 6,
+    place: "Cavite City, Philippines",
+    year: "1953",
+    flag: "\u{1F1F5}\u{1F1ED}",
+    photo: "cavite-1953.jpg",
+    flagship: true,
+    threeQuestions: {
+      whereDidSheLive: "A barrio street in Cavite City, Philippines — a sari-sari store, a concrete step, a corrugated yero roof.",
+      whatWasEverydayLifeLike: "Fractional tingi purchases at the sari-sari counter, a Coca-Cola sign tying the block into a postwar global brand, cement as a small luxury.",
+      whatDidSheExperience: "An ordinary morning on the family's own real street — this is the flagship world, built from the presenter's actual family material."
+    },
+    beats: [
+      { title: "Coca-Cola Sign", narration: "That red sign is a Coca-Cola 'button' sign — free store signage the company pushed into barrios across the Philippines after World War Two, tying this tiny shop into a global brand system that arrived with American troops." },
+      { title: "Sari-Sari Counter", narration: "This is a sari-sari store — Tagalog for 'variety.' Almost everything here was sold in tingi, fractional quantities: a twist of sugar, a single cigarette, priced for a day's wage rather than a household budget." },
+      { title: "The Concrete Step", narration: "That concrete step was a small luxury in 1953. Cement was still expensive enough that a household's first pour was usually just a step or a counter base." },
+      { title: "Yero Roofing", narration: "That corrugated metal roofing is called yero. It flooded into barrios like this one from WWII military surplus, slowly replacing nipa thatch, roof by roof." },
+      { title: "Wide Barrio Shot", narration: "Put together, these details are a household's balance sheet in physical form — what's still traditional, what's been upgraded, and exactly how far the postwar economy had reached by 1953." }
+    ]
+  },
+  {
+    id: "phnom-penh-1964",
+    grandmotherLabel: "Yay",
+    age: 10,
+    place: "Phnom Penh, Cambodia",
+    year: "1964",
+    flag: "\u{1F1F0}\u{1F1ED}",
+    photo: "phnom-penh-1964.jpg",
+    flagship: false,
+    composite: "A composite portrait — not a real family history. The photograph is a real, dated (Nov. 1964) Phnom Penh street scene from a public archive (CC BY-SA 4.0, Don Christie / Wikimedia Commons); “Yay” is an invented grandmother placed in this real, ordinary Sangkum-era setting.",
+    threeQuestions: {
+      whereDidSheLive: "A tree-lined boulevard in Phnom Penh, in the years Cambodians now remember as the Sangkum — the ‘golden age’ of Sihanouk-era Cambodia, the ‘Pearl of Asia.’",
+      whatWasEverydayLifeLike: "Whitewashed tree trunks along the curb, cyclos threading past monks on their morning almsround, the occasional imported sedan parked at the curb.",
+      whatDidSheExperience: "A ten-year-old's ordinary morning — crossing a wide boulevard barefoot, cyclos and bicycles for traffic, a city that felt calm and unhurried."
+    },
+    beats: [
+      { title: "The Boulevard's White Trunks", narration: "Whitewashing tree trunks was standard practice on Phnom Penh's French-planned boulevards — it made the curb visible at night and was thought to deter insects." },
+      { title: "The Monk's Almsround", narration: "A monk's almsround happened on this street every single morning, rain or shine, for centuries before this photo and decades after it." },
+      { title: "The Cyclo at the Curb", narration: "The cyclo — a pedaled bicycle-rickshaw — was the era's taxi, cheap enough for a daily errand and slow enough that its driver usually knew every family on the block." },
+      { title: "A Vintage Sedan at the Curb", narration: "A private car like this one was a genuine luxury in 1964 Phnom Penh — most of the street ran on foot, bicycle, or cyclo." },
+      { title: "Crossing the Boulevard", narration: "Children crossed streets like this one on their own, barefoot, every day — this was an ordinary Tuesday in what Cambodians would later call the golden age." },
+      { title: "Wide Boulevard Shot", narration: "This is the world Yay grew up in — not a recreation, but the real texture of an ordinary Phnom Penh morning, the year she turned ten." }
+    ]
+  },
+  {
+    id: "leningrad-1980s",
+    grandmotherLabel: "БАБУШКА",
+    age: 9,
+    place: "Leningrad, USSR",
+    year: "1980s",
+    flag: "\u{1F1F7}\u{1F1FA}",
+    photo: "leningrad-1980s.jpg",
+    flagship: false,
+    composite: "A composite portrait — not a real family history. The photograph is a real, dated-1980s Leningrad street scene from a public archive (CC BY 2.0, Vladimir Fedotov / Wikimedia Commons); “Babushka” is an invented grandmother placed in this real, ordinary setting.",
+    threeQuestions: {
+      whereDidSheLive: "A residential street in Leningrad, tram tracks running past rows of pre-revolutionary apartment buildings repurposed for Soviet life.",
+      whatWasEverydayLifeLike: "A tram rattling past every few minutes, an old church bell tower still standing on the skyline, a street loudspeaker carrying the morning broadcast over the courtyards.",
+      whatDidSheExperience: "A child's ordinary walk to school past the tram stop, bundled in a coat, the overhead wires humming above the street."
+    },
+    beats: [
+      { title: "The Tram on Its Tracks", narration: "By the late 1980s Leningrad had the largest tram network in the world — for most families here, the tram wasn't a novelty, it was simply how you got anywhere." },
+      { title: "Overhead Wires", narration: "Those wires ran straight into the buildings' own facades — the whole street's electrical infrastructure was as visible as the architecture." },
+      { title: "The Bell Tower", narration: "Many of Leningrad's pre-revolutionary church buildings survived the Soviet period standing, even as they were repurposed as warehouses, pools, or museums." },
+      { title: "Coats on the Sidewalk", narration: "A coat like this one was worn for most of the year here — Leningrad's climate shaped the wardrobe as much as any factory did." },
+      { title: "The Street Loudspeaker", narration: "Streets and courtyards across the Soviet Union were wired with public loudspeakers like this one, carrying the morning broadcast — news, the anthem, sometimes gymnastics instructions." },
+      { title: "Wide Street Shot", narration: "This is the world Babushka grew up in — not a recreation, but the real texture of an ordinary Leningrad morning, the decade before it became a different city with a different name." }
+    ]
+  }
+];
+
+let activeWorld = null;
+
+function renderLanding() {
+  const grid = document.getElementById("worldGrid");
+  grid.innerHTML = "";
+  WORLDS.forEach(w => {
+    const card = document.createElement("div");
+    card.className = "world-card";
+    card.innerHTML = `
+      <div class="photo"><img src="${w.photo}" alt="${w.place}" /></div>
+      <div class="body">
+        <span class="flag">${w.flag}</span>
+        <h3>${w.grandmotherLabel}</h3>
+        <p class="meta">${w.place} &middot; ${w.year}</p>
+        <span class="${w.flagship ? 'flagship-tag' : 'composite-tag'}">${w.flagship ? 'Flagship — real family' : 'Composite / fictional'}</span>
+        <button class="enter-btn">Enter World</button>
+      </div>`;
+    card.querySelector(".enter-btn").onclick = () => openIntro(w);
+    grid.appendChild(card);
+  });
+  const addCard = document.createElement("div");
+  addCard.className = "add-family-card";
+  addCard.innerHTML = `<div class="plus">+</div><div>Add Your Family</div><small>Bring your own sanitized photo and become the fourth world. (Not wired in this spike.)</small>`;
+  grid.appendChild(addCard);
+}
+
+function openIntro(world) {
+  activeWorld = world;
+  document.getElementById("introPhoto").src = world.photo;
+  document.getElementById("introEyebrow").textContent = `${world.place} · ${world.year}`;
+  document.getElementById("introHeadline").textContent = `Meet ${world.grandmotherLabel} at age ${world.age}`;
+  document.getElementById("introPlaceYear").textContent = world.flagship
+    ? "The flagship world — the presenter's real family."
+    : "A composite world.";
+  const noteEl = document.getElementById("introCompositeNote");
+  if (world.composite) {
+    noteEl.style.display = "block";
+    noteEl.textContent = world.composite;
+  } else {
+    noteEl.style.display = "none";
+  }
+  const qa = document.getElementById("introQA");
+  qa.innerHTML = "";
+  const rows = [
+    ["Where did she live?", world.threeQuestions.whereDidSheLive],
+    ["What was everyday life like?", world.threeQuestions.whatWasEverydayLifeLike],
+    ["What did she experience as a child?", world.threeQuestions.whatDidSheExperience],
+  ];
+  rows.forEach(([q, a]) => {
+    const div = document.createElement("div");
+    div.innerHTML = `<p class="q">${q}</p><p class="a">${a}</p>`;
+    qa.appendChild(div);
+  });
+  showScreen("screen-intro");
+}
+
+function enterMemory() {
+  if (!activeWorld) return;
+  document.getElementById("liveImg").src = activeWorld.photo;
+  renderBeats(activeWorld);
+  document.getElementById("liveNarration").textContent = `“${activeWorld.beats[0].narration}”`;
+  showScreen("screen-live");
+}
+
+function renderBeats(world) {
+  const grid = document.getElementById("beatGrid");
+  grid.innerHTML = "";
+  world.beats.forEach((b, i) => {
+    const btn = document.createElement("button");
+    btn.className = "beat-btn" + (i === 0 ? " active" : "");
+    btn.innerHTML = `<div class="t">${b.title}</div><div class="n">${b.narration}</div>`;
+    btn.onclick = () => {
+      document.getElementById("liveNarration").textContent = `“${b.narration}”`;
+      grid.querySelectorAll(".beat-btn").forEach(x => x.classList.remove("active"));
+      btn.classList.add("active");
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll("#demoNav button").forEach(b => b.classList.toggle("current", b.dataset.target === id));
+  window.scrollTo(0, 0);
+}
+
+// Demo-only nav strip so a reviewer can jump straight to any screen
+// without replaying the whole flow.
+(function buildDemoNav() {
+  const nav = document.getElementById("demoNav");
+  [
+    ["screen-landing", "1. Landing (006)"],
+    ["screen-intro", "2. Intro card (006)"],
+    ["screen-live", "3. Mock live view (006)"],
+    ["screen-recap", "4. Closing recap (007)"],
+  ].forEach(([id, label]) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.dataset.target = id;
+    b.onclick = () => {
+      if (id !== "screen-landing" && !activeWorld) openIntro(WORLDS[0]);
+      showScreen(id);
+    };
+    nav.appendChild(b);
+  });
+  nav.querySelector("button").classList.add("current");
+})();
+
+renderLanding();
+</script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — creation screen (spike 008)</title>
+<style>
+  :root {
+    --bg: #0b0a09;
+    --panel: #17140f;
+    --panel-border: #2c2620;
+    --ink: #f2ece1;
+    --ink-dim: #a89d8c;
+    --brand: #d98e3f;
+    --brand-fg: #1a1208;
+    --danger: #d9603f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh; padding: 32px 20px 60px;
+  }
+  main { max-width: 560px; margin: 0 auto; }
+  .eyebrow { color: var(--brand); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px; text-align: center; }
+  h1 { font-size: clamp(26px, 6vw, 38px); letter-spacing: 0.06em; margin: 0 0 8px; text-align: center; }
+  .sub { color: var(--ink-dim); font-size: 14px; text-align: center; margin: 0 0 32px; }
+
+  .dropzone {
+    border: 2px dashed var(--panel-border); border-radius: 16px; aspect-ratio: 16/10;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 10px; cursor: pointer; position: relative; overflow: hidden; background: var(--panel);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dropzone.drag-over { border-color: var(--brand); background: #1f1a12; }
+  .dropzone .icon { font-size: 34px; }
+  .dropzone .label { color: var(--ink-dim); font-size: 14px; }
+  .dropzone .hint { color: var(--ink-dim); font-size: 11.5px; opacity: 0.7; }
+  .dropzone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .dropzone .change-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 8px; text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); font-size: 12px; color: #fff;
+  }
+  .sample-link { display: block; text-align: center; margin: 10px 0 0; font-size: 12px; color: var(--ink-dim); }
+  .sample-link a { color: var(--brand); cursor: pointer; text-decoration: underline; }
+
+  .field { margin: 22px 0; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--brand); margin-bottom: 6px; }
+  .field input, .field textarea {
+    width: 100%; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; color: var(--ink); font-size: 15px; font-family: inherit;
+  }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--brand); }
+  .field textarea { min-height: 84px; resize: vertical; }
+
+  .enter-btn {
+    width: 100%; margin-top: 12px; background: var(--brand); color: var(--brand-fg); border: none;
+    padding: 16px; border-radius: 12px; font-weight: 700; font-size: 15px; letter-spacing: 0.04em;
+    cursor: pointer; text-transform: uppercase;
+  }
+  .enter-btn:disabled { background: var(--panel-border); color: var(--ink-dim); cursor: not-allowed; }
+
+  .contract-panel {
+    margin-top: 28px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .contract-panel summary { cursor: pointer; font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .contract-panel pre {
+    margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: #b8e6b0; white-space: pre-wrap;
+    word-break: break-all; max-height: 220px; overflow: auto;
+  }
+
+  .confirm {
+    margin-top: 24px; background: var(--panel); border: 1px solid var(--brand); border-radius: 12px;
+    padding: 18px; display: none;
+  }
+  .confirm.show { display: block; }
+  .confirm h3 { margin: 0 0 8px; color: var(--brand); font-size: 15px; }
+  .confirm p { margin: 0 0 12px; color: var(--ink-dim); font-size: 13px; line-height: 1.5; }
+  .confirm a.next-link {
+    display: inline-block; background: var(--brand); color: var(--brand-fg); padding: 10px 16px;
+    border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none;
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Family World</p>
+  <h1>Add a family memory</h1>
+  <p class="sub">Four fields become the Memory object every world is built from.</p>
+
+  <div class="dropzone" id="dropzone">
+    <div id="dzEmpty">
+      <div class="icon">📷</div>
+      <div class="label">Drop a family photograph</div>
+      <div class="hint">or click to browse</div>
+    </div>
+    <img id="dzPreview" style="display:none" alt="" />
+    <div class="change-overlay" id="dzChange" style="display:none">Click to change photo</div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" />
+  </div>
+  <p class="sample-link">No photo handy? <a id="useSample">Use a sample photo</a></p>
+
+  <div class="field">
+    <label for="relationship">Who is this?</label>
+    <input id="relationship" type="text" placeholder="My grandmother" />
+  </div>
+  <div class="field">
+    <label for="place">Where did they live?</label>
+    <input id="place" type="text" placeholder="Cavite City, Philippines" />
+  </div>
+  <div class="field">
+    <label for="year">Around when?</label>
+    <input id="year" type="text" placeholder="1956" />
+  </div>
+  <div class="field">
+    <label for="memory">Anything you remember?</label>
+    <textarea id="memory" placeholder="She went to the market with her mother."></textarea>
+  </div>
+
+  <button class="enter-btn" id="enterBtn" disabled>Enter Their World</button>
+
+  <details class="contract-panel">
+    <summary>Live Memory object (the UI → WorldProvider contract)</summary>
+    <pre id="memoryPreview">{}</pre>
+  </details>
+
+  <div class="confirm" id="confirmPanel">
+    <h3>✓ Memory created and saved</h3>
+    <p id="confirmText"></p>
+    <a class="next-link" id="nextLink" href="../009-mock-world-provider/index.html">Continue to spike 009 (mock world) →</a>
+  </div>
+</main>
+
+<script type="module">
+  import { buildMemory, derivePersonLabel, saveMemory } from "./memory.js";
+
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const dzEmpty = document.getElementById("dzEmpty");
+  const dzPreview = document.getElementById("dzPreview");
+  const dzChange = document.getElementById("dzChange");
+  const useSample = document.getElementById("useSample");
+
+  const relationshipEl = document.getElementById("relationship");
+  const placeEl = document.getElementById("place");
+  const yearEl = document.getElementById("year");
+  const memoryEl = document.getElementById("memory");
+  const enterBtn = document.getElementById("enterBtn");
+  const memoryPreview = document.getElementById("memoryPreview");
+  const confirmPanel = document.getElementById("confirmPanel");
+  const confirmText = document.getElementById("confirmText");
+  const nextLink = document.getElementById("nextLink");
+
+  let photoDataUrl = null;
+
+  function setPhoto(dataUrl) {
+    photoDataUrl = dataUrl;
+    dzPreview.src = dataUrl;
+    dzPreview.style.display = "block";
+    dzChange.style.display = "block";
+    dzEmpty.style.display = "none";
+    updatePreview();
+  }
+
+  function readFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => setPhoto(e.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", (e) => readFile(e.target.files[0]));
+
+  ["dragenter", "dragover"].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add("drag-over"); })
+  );
+  ["dragleave", "drop"].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove("drag-over"); })
+  );
+  dropzone.addEventListener("drop", (e) => {
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    readFile(file);
+  });
+
+  useSample.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const res = await fetch("../006-world-select-landing/cavite-1953.jpg");
+    const blob = await res.blob();
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhoto(ev.target.result);
+    reader.readAsDataURL(blob);
+  });
+
+  function currentFields() {
+    return {
+      relationship: relationshipEl.value,
+      place: placeEl.value,
+      year: yearEl.value,
+      memory: memoryEl.value,
+      photo: photoDataUrl,
+    };
+  }
+
+  function updatePreview() {
+    const fields = currentFields();
+    const person = derivePersonLabel(fields.relationship) || "—";
+    const preview = {
+      person,
+      relationship: fields.relationship || "—",
+      place: fields.place || "—",
+      year: fields.year || "—",
+      memory: fields.memory || "—",
+      photo: fields.photo ? `data:image/...(${Math.round(fields.photo.length / 1024)}KB)` : "—",
+    };
+    memoryPreview.textContent = JSON.stringify(preview, null, 2);
+
+    const complete = fields.relationship.trim() && fields.place.trim() && fields.year.trim() && fields.memory.trim() && fields.photo;
+    enterBtn.disabled = !complete;
+  }
+
+  [relationshipEl, placeEl, yearEl, memoryEl].forEach((el) =>
+    el.addEventListener("input", updatePreview)
+  );
+  updatePreview();
+
+  enterBtn.addEventListener("click", () => {
+    const mem = buildMemory(currentFields());
+    saveMemory(mem);
+    confirmText.textContent = `${mem.person} (${mem.relationship}) · ${mem.place} · ${mem.year} — saved to this browser's family gallery. id: ${mem.id}`;
+    nextLink.href = `../009-mock-world-provider/index.html?memoryId=${encodeURIComponent(mem.id)}`;
+    confirmPanel.classList.add("show");
+    confirmPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+</script>
+</body>
+</html>

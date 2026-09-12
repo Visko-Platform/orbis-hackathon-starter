@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — mock world provider (spike 009)</title>
+<style>
+  :root {
+    --bg: #0b0a09; --panel: #17140f; --panel-border: #2c2620;
+    --ink: #f2ece1; --ink-dim: #a89d8c; --brand: #d98e3f; --brand-fg: #1a1208; --danger: #d9603f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding: 24px 20px 60px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .back-link { color: var(--ink-dim); font-size: 13px; cursor: pointer; text-decoration: underline; }
+  .provider-badge { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--panel-border); border-radius: 999px; padding: 3px 10px; color: var(--ink-dim); }
+  .provider-badge.mock { color: var(--brand); border-color: var(--brand); }
+  .eyebrow { color: var(--brand); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 4px; }
+  h1 { font-size: clamp(24px, 5vw, 32px); margin: 0 0 18px; }
+
+  .stage { aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; border: 1px solid var(--panel-border); position: relative; background: #000; }
+  .stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .stage .narration {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 18px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 14px; font-style: italic; color: #fff;
+  }
+  .stage .loc-tag {
+    position: absolute; top: 12px; left: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 999px; color: var(--brand);
+  }
+
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-dim); margin: 20px 0 8px; }
+  .loc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .loc-btn {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 14px 10px;
+    color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; text-align: center;
+  }
+  .loc-btn.active { border-color: var(--brand); color: var(--brand); }
+
+  .steer-row { display: flex; gap: 8px; margin-top: 22px; }
+  .steer-row input { flex: 1; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 12px 14px; color: var(--ink); font-size: 14px; }
+  .steer-row input:focus { outline: none; border-color: var(--brand); }
+  .steer-row button { background: var(--brand); color: var(--brand-fg); border: none; padding: 0 18px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+  .exit-row { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+  .exit-btn { background: transparent; border: 1px solid var(--panel-border); color: var(--ink-dim); padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+  .exit-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .provider-panel { margin-top: 30px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 14px 16px; }
+  .provider-panel summary { cursor: pointer; font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .provider-panel .try-orbis { margin-top: 10px; background: transparent; border: 1px solid var(--panel-border); color: var(--ink-dim); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
+  .provider-panel .orbis-result { margin-top: 10px; font-size: 12px; line-height: 1.5; color: var(--danger); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top-row">
+    <span class="back-link" id="backLink">&larr; Back</span>
+    <span class="provider-badge mock" id="providerBadge">WorldProvider: mock</span>
+  </div>
+  <p class="eyebrow" id="placeYear"></p>
+  <h1 id="headline"></h1>
+
+  <div class="stage">
+    <span class="loc-tag" id="locTag">Home</span>
+    <img id="stageImg" src="" alt="" />
+    <div class="narration" id="narration"></div>
+  </div>
+
+  <p class="nav-label">Go somewhere</p>
+  <div class="loc-grid" id="locGrid"></div>
+
+  <div class="steer-row">
+    <input id="steerInput" type="text" placeholder="Where should we go?" />
+    <button id="steerBtn">Go</button>
+  </div>
+
+  <div class="exit-row">
+    <button class="exit-btn" id="exitBtn">Exit this world</button>
+    <span class="back-link" id="anotherRelative">Enter another relative's world →</span>
+  </div>
+
+  <details class="provider-panel">
+    <summary>WorldProvider debug — prove the Mock/Orbis swap point</summary>
+    <button class="try-orbis" id="tryOrbis">Try OrbisWorldProvider.enter() (not implemented yet)</button>
+    <div class="orbis-result" id="orbisResult"></div>
+  </details>
+</main>
+
+<script type="module">
+  import { loadFamily } from "../008-creation-screen-memory-contract/memory.js";
+  import { createMockWorldProvider, createOrbisWorldProvider } from "./worldProvider.js";
+
+  const params = new URLSearchParams(location.search);
+  const memoryId = params.get("memoryId");
+
+  const EXAMPLE_MEMORY = {
+    id: "mem-example",
+    person: "Grandmother",
+    relationship: "My grandmother",
+    place: "Cavite City, Philippines",
+    year: "1956",
+    memory: "She went to the market with her mother.",
+    photo: "../006-world-select-landing/cavite-1953.jpg",
+  };
+
+  function resolveMemory() {
+    const all = loadFamily();
+    if (memoryId) {
+      const found = all.find((m) => m.id === memoryId);
+      if (found) return found;
+    }
+    return all[all.length - 1] || EXAMPLE_MEMORY;
+  }
+
+  const memory = resolveMemory();
+  const provider = createMockWorldProvider();
+  const session = provider.enter(memory);
+
+  document.getElementById("placeYear").textContent = `${memory.place} · ${memory.year}`;
+  document.getElementById("headline").textContent = `${memory.person}'s World`;
+  document.getElementById("backLink").onclick = () =>
+    (location.href = "../008-creation-screen-memory-contract/index.html");
+  document.getElementById("anotherRelative").onclick = () =>
+    (location.href = "../010-family-gallery-full-loop/index.html");
+
+  const locGrid = document.getElementById("locGrid");
+  session.locations.forEach((loc) => {
+    const btn = document.createElement("button");
+    btn.className = "loc-btn";
+    btn.textContent = loc.label;
+    btn.onclick = () => {
+      session.goTo(loc.key);
+      render();
+    };
+    locGrid.appendChild(btn);
+  });
+
+  function render() {
+    const cur = session.current();
+    document.getElementById("stageImg").src = cur.backdrop;
+    document.getElementById("narration").textContent = cur.narration;
+    document.getElementById("locTag").textContent = cur.label;
+    locGrid.querySelectorAll(".loc-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.textContent === cur.label);
+    });
+  }
+  render();
+
+  document.getElementById("steerBtn").onclick = () => {
+    const val = document.getElementById("steerInput").value.trim();
+    if (!val) return;
+    session.steer(val);
+    render();
+    document.getElementById("steerInput").value = "";
+  };
+  document.getElementById("steerInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("steerBtn").click();
+  });
+
+  document.getElementById("exitBtn").onclick = () => {
+    session.exit();
+    render();
+  };
+
+  document.getElementById("tryOrbis").onclick = () => {
+    const orbis = createOrbisWorldProvider();
+    const out = document.getElementById("orbisResult");
+    try {
+      orbis.enter(memory);
+      out.textContent = "(unexpectedly succeeded — should not happen in this spike)";
+    } catch (err) {
+      out.textContent = `Threw as expected, same call site as mock.enter(memory):\n${err.message}`;
+    }
+  };
+</script>
+</body>
+</html>

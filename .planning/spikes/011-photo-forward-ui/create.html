@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — photo-forward creation (spike 011)</title>
+<style>
+  :root {
+    --panel-border: #2c2620; --ink: #f2ece1; --ink-dim: #cabfaf; --brand: #d98e3f; --brand-fg: #1a1208;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--ink); font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0b0a09; overflow: hidden;
+  }
+  .stage {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background-size: cover; background-position: center; background-color: #0b0a09;
+    transition: background-image 0.2s;
+  }
+  .stage.has-photo::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.55) 100%);
+  }
+  .stage.drag-over::after {
+    content: ""; position: absolute; inset: 12px; border: 2px dashed var(--brand); border-radius: 20px; pointer-events: none;
+  }
+
+  .empty-prompt {
+    position: relative; z-index: 1; text-align: center; cursor: pointer; padding: 40px;
+  }
+  .empty-prompt .icon { font-size: 56px; margin-bottom: 14px; }
+  .empty-prompt .label { font-size: 20px; font-weight: 600; }
+  .empty-prompt .hint { color: var(--ink-dim); font-size: 13px; margin-top: 6px; }
+  .stage.has-photo .empty-prompt { display: none; }
+
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2; display: flex; justify-content: space-between;
+    align-items: center; padding: 18px 20px; opacity: 0; transition: opacity 0.2s;
+  }
+  .stage.has-photo ~ .top-bar, .top-bar.show { opacity: 1; }
+  .eyebrow-pill {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: rgba(0,0,0,0.5);
+    padding: 6px 12px; border-radius: 999px; color: var(--brand);
+  }
+  .change-photo-btn {
+    background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); color: var(--ink);
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer;
+  }
+
+  .overlay-form {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px; max-width: 640px; margin: 0 auto;
+  }
+  .overlay-form input, .overlay-form textarea {
+    width: 100%; background: rgba(10,8,6,0.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 12px 14px; color: var(--ink); font-size: 15px; font-family: inherit;
+  }
+  .overlay-form input::placeholder, .overlay-form textarea::placeholder { color: var(--ink-dim); }
+  .overlay-form input:focus, .overlay-form textarea:focus { outline: none; border-color: var(--brand); }
+  .overlay-form textarea { min-height: 54px; resize: none; }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > * { flex: 1; }
+
+  .enter-btn {
+    background: var(--brand); color: var(--brand-fg); border: none; padding: 15px; border-radius: 12px;
+    font-weight: 700; font-size: 15px; letter-spacing: 0.03em; text-transform: uppercase; cursor: pointer;
+  }
+  .enter-btn:disabled { background: #4a4034; color: #8a8070; cursor: not-allowed; }
+
+  .confirm-toast {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-20px); z-index: 5;
+    background: var(--brand); color: var(--brand-fg); padding: 12px 20px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.2s, transform 0.2s; text-align: center;
+    max-width: 90vw;
+  }
+  .confirm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .confirm-toast a { color: var(--brand-fg); text-decoration: underline; }
+
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="empty-prompt" id="emptyPrompt">
+      <div class="icon">📷</div>
+      <div class="label">Drop a family photograph</div>
+      <div class="hint">or tap to browse</div>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <span class="eyebrow-pill">Family World</span>
+    <button class="change-photo-btn" id="changePhotoBtn" style="display:none">Change photo</button>
+  </div>
+
+  <form class="overlay-form" id="overlayForm" style="display:none">
+    <input id="relationship" type="text" placeholder="Who is this? (e.g. My grandmother)" />
+    <div class="row2">
+      <input id="place" type="text" placeholder="Where did they live?" />
+      <input id="year" type="text" placeholder="Around when?" />
+    </div>
+    <textarea id="memory" placeholder="Anything you remember?"></textarea>
+    <button type="button" class="enter-btn" id="enterBtn" disabled>Enter Their World</button>
+  </form>
+
+  <input type="file" id="fileInput" accept="image/*" />
+  <div class="confirm-toast" id="toast"></div>
+
+<script type="module">
+  import { buildMemory, saveMemory } from "../008-creation-screen-memory-contract/memory.js";
+
+  const stage = document.getElementById("stage");
+  const emptyPrompt = document.getElementById("emptyPrompt");
+  const fileInput = document.getElementById("fileInput");
+  const overlayForm = document.getElementById("overlayForm");
+  const changePhotoBtn = document.getElementById("changePhotoBtn");
+  const topBar = document.querySelector(".top-bar");
+  const toast = document.getElementById("toast");
+
+  const relationshipEl = document.getElementById("relationship");
+  const placeEl = document.getElementById("place");
+  const yearEl = document.getElementById("year");
+  const memoryEl = document.getElementById("memory");
+  const enterBtn = document.getElementById("enterBtn");
+
+  let photoDataUrl = null;
+
+  function setPhoto(dataUrl) {
+    photoDataUrl = dataUrl;
+    stage.style.backgroundImage = `url(${dataUrl})`;
+    stage.classList.add("has-photo");
+    overlayForm.style.display = "flex";
+    changePhotoBtn.style.display = "inline-block";
+    topBar.classList.add("show");
+    updateGate();
+  }
+
+  function readFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => setPhoto(e.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  stage.addEventListener("click", (e) => {
+    if (!stage.classList.contains("has-photo")) fileInput.click();
+  });
+  changePhotoBtn.addEventListener("click", (e) => { e.stopPropagation(); fileInput.click(); });
+  fileInput.addEventListener("change", (e) => readFile(e.target.files[0]));
+
+  ["dragenter", "dragover"].forEach((evt) =>
+    stage.addEventListener(evt, (e) => { e.preventDefault(); stage.classList.add("drag-over"); })
+  );
+  ["dragleave", "drop"].forEach((evt) =>
+    stage.addEventListener(evt, (e) => { e.preventDefault(); stage.classList.remove("drag-over"); })
+  );
+  stage.addEventListener("drop", (e) => readFile(e.dataTransfer.files && e.dataTransfer.files[0]));
+
+  function updateGate() {
+    const complete = relationshipEl.value.trim() && placeEl.value.trim() && yearEl.value.trim() && memoryEl.value.trim() && photoDataUrl;
+    enterBtn.disabled = !complete;
+  }
+  [relationshipEl, placeEl, yearEl, memoryEl].forEach((el) => el.addEventListener("input", updateGate));
+
+  enterBtn.addEventListener("click", () => {
+    const mem = buildMemory({
+      relationship: relationshipEl.value, place: placeEl.value, year: yearEl.value,
+      memory: memoryEl.value, photo: photoDataUrl,
+    });
+    saveMemory(mem);
+    toast.innerHTML = `Saved ${mem.person} · ${mem.place} — <a href="../009-mock-world-provider/index.html?memoryId=${encodeURIComponent(mem.id)}">Enter their world →</a>`;
+    toast.classList.add("show");
+  });
+</script>
+</body>
+</html>

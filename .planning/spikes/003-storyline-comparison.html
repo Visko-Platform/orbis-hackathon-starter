@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Storyline Comparison — Spike 003a/b/c</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #12100e;
+    --panel: #1c1916;
+    --ink: #f2ece2;
+    --muted: #b8ada0;
+    --accent: #d9772e;
+    --accent-dim: #8a5527;
+    --line: #3a332c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 24px 16px 48px;
+  }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .photo-card {
+    position: sticky;
+    top: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    align-self: start;
+  }
+  .photo-card img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+  }
+  .photo-caption {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--ink);
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(217,119,46,0.18), rgba(217,119,46,0.05));
+  }
+  .story-panel { display: none; }
+  .story-panel.active { display: block; }
+  .base-scene {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .base-scene b { color: var(--ink); }
+  .beat-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .beat-nav button {
+    background: var(--accent-dim);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .beat-nav button:disabled { opacity: 0.35; cursor: default; }
+  .beat-index { font-size: 0.8rem; color: var(--muted); }
+  .beat-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .beat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 6px; }
+  .beat-prompt { font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px; }
+  .narration-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+  .narration { font-size: 0.92rem; line-height: 1.6; color: var(--ink); font-style: italic; }
+  .narration.empty { color: var(--muted); }
+  .beat-dots { display: flex; gap: 6px; margin-top: 16px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); cursor: pointer; }
+  .dot.on { background: var(--accent); }
+  .verdict {
+    margin-top: 28px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .verdict b { color: var(--ink); }
+</style>
+</head>
+<body>
+  <h1>Spike 003a/b/c — Storyline Comparison</h1>
+  <p class="sub">Three candidate narrative arcs for the same seed photo. Page through each storyline's beats to feel the pacing before picking one for Phase 3.</p>
+
+  <div class="layout">
+    <div class="photo-card">
+      <img src="003-seed-photo.png" alt="Sari-sari store, Cavite City barrio, 1953 — four children on a step, sari-sari store, Coca-Cola sign, sawali walls, corrugated roofing" />
+      <div class="photo-caption">
+        The actual seed photo (Family-album source, sanitized). Note: the on-screen live demo should crop this to 16:9 per SETUP-02 / STACK.md's 832×480 constraint — this preview shows the full frame for storyline reference.
+      </div>
+    </div>
+
+    <div>
+      <div class="tabs" role="tablist">
+        <button class="tab" data-story="a" aria-selected="true">003a · Object Journey</button>
+        <button class="tab" data-story="b" aria-selected="false">003b · This Photo, Alive</button>
+        <button class="tab" data-story="c" aria-selected="false">003c · Neighborhood in Motion</button>
+      </div>
+
+      <div id="panels"></div>
+
+      <div class="verdict">
+        <b>Head-to-head (see 003c/README.md Results for full write-up):</b>
+        Object Journey is the most legible for an audience that's never seen the photo before —
+        each beat has an obvious visual referent. This Photo, Alive best matches the Core Value
+        statement ("photo → living, steerable memory") but risks feeling thin on history if rushed.
+        Neighborhood in Motion carries the richest social context but needs the most careful
+        narration pacing since two beats (customers/children) are more abstract to render than a
+        literal sign or a literal roof.
+      </div>
+    </div>
+  </div>
+
+<script>
+const STORIES = {
+  a: {
+    baseScene: "A barrio street in Cavite City, Philippines, 1953: a sari-sari store with a woven sawali wall, an open front lined with pinned sachets and wooden shelves of canned goods, a red enameled Coca-Cola sign mounted above the counter, a red Coca-Cola ice cooler beside it, a concrete step in the foreground, tightly packed plank-and-yero-roofed houses along a narrow alley",
+    beats: [
+      { prompt: "the camera holds on the red enameled Coca-Cola sign above the store, sunlight glinting faintly off its metal surface", narration: "That red sign is a Coca-Cola 'button' sign — free store signage the company pushed into barrios across the Philippines after World War Two, tying this tiny shop into a global brand system that arrived with American troops." },
+      { prompt: "attention shifts down to the sari-sari store counter, where pinned sachets sway slightly and the tindera arranges bottles on the shelf", narration: "This is a sari-sari store — Tagalog for 'variety.' Almost everything here was sold in tingi, fractional quantities: a twist of sugar, a single cigarette, priced for a day's wage rather than a household budget." },
+      { prompt: "the view settles on the concrete step in the foreground, its surface worn smooth, morning light pooling across the cement", narration: "That concrete step was a small luxury in 1953. Cement was still expensive enough that a household's first pour was usually just a step or a counter base — the house above it often stayed built from bamboo and sawali for another decade." },
+      { prompt: "the camera tilts up past the sawali wall to the corrugated yero roofing above, its ridges catching the sun", narration: "That corrugated metal roofing is called yero. It flooded into barrios like this one from WWII military surplus, slowly replacing nipa thatch, roof by roof, through the whole postwar decade." },
+      { prompt: "a wide view returns, taking in the whole barrio storefront as a neighbor crosses the alley behind it", narration: "Put together, these details are a household's balance sheet in physical form — what's still traditional, what's been upgraded, and exactly how far the postwar economy had reached by 1953." }
+    ]
+  },
+  b: {
+    baseScene: "A barrio street in Cavite City, Philippines, 1953: a sari-sari store with a woven sawali wall, an open front lined with pinned sachets and wooden shelves of canned goods, a red enameled Coca-Cola sign mounted above the counter, a red Coca-Cola ice cooler beside it, a concrete step in the foreground, tightly packed plank-and-yero-roofed houses with laundry strung between them along a narrow alley",
+    intro: "This is a real photograph — a barrio street in Cavite City, Philippines, 1953. Watch it come alive.",
+    beats: [
+      { prompt: "a light breeze moves through the alley, gently stirring the laundry strung between the houses", narration: "" },
+      { prompt: "faint smoke drifts from a cooking fire somewhere just out of frame", narration: "Cavite City sat at the tip of a peninsula opposite Manila — a Spanish-era port that had spent the previous decade rebuilding after WWII bombing runs on the nearby Cavite Navy Yard." },
+      { prompt: "the tindera leans across the counter to hand a bottle from the cooler to a customer stepping into frame", narration: "The sari-sari store was the barrio's town square before there was a town square — credit, gossip, and a cold Coke all passed across that one counter." },
+      { prompt: "a barefoot man pedals a pedicab slowly past the far end of the alley", narration: "Postwar Cavite lived a double life: half battered Spanish port, half civilian fringe of the US Naval Station at Sangley Point just up the road. You can see that layered history in every frame of daily commerce here." },
+      { prompt: "afternoon light shifts and lengthens the shadows across the concrete step and storefront", narration: "By 1953 the barrio was rebuilding itself house by house, upgrade by upgrade — cement here, corrugated roofing there — never all at once." },
+      { prompt: "the scene settles into quiet stillness, the sari-sari store humming with the last of the day's activity", narration: "The same photo you saw a minute ago — now it's a memory, moving." }
+    ]
+  },
+  c: {
+    baseScene: "A barrio street in Cavite City, Philippines, 1953: a sari-sari store with a woven sawali wall, an open front lined with pinned sachets and wooden shelves of canned goods, a red enameled Coca-Cola sign mounted above the counter, a red Coca-Cola ice cooler beside it, a concrete step in the foreground, tightly packed plank-and-yero-roofed houses along a narrow eskinita alley",
+    beats: [
+      { prompt: "neighbors pass along the narrow alley behind the store, moving between the tightly packed houses", narration: "Barrios like this one grew dense fast after the war — Cavite's buildable land was a thin peninsula, so lots got subdivided again and again, and houses ended up wall-to-wall along footpath-width alleys called eskinita." },
+      { prompt: "the tindera serves a line of customers at the counter, exchanging small coins for goods wrapped in newspaper", narration: "Most transactions here were tingi — fractional. A laborer with a few centavos could buy a single cigarette or a twist of sugar in newspaper, not a whole pack or a kilo." },
+      { prompt: "children's laughter drifts faintly from a side alley, just out of frame", narration: "This density had a real cost — almost no privacy — but it also built a support network: a child could be watched from half a dozen kitchens at once, and no one needed a form for that." },
+      { prompt: "laundry sways overhead between two facades as a woman gathers it in", narration: "Housing upgraded unevenly here — a family might pour a concrete step or add a corrugated-metal roof panel long before the rest of the house changed at all." },
+      { prompt: "a pedicab driver calls out for a fare passing at the alley's far end", narration: "Pedicabs were the barrio's taxi and delivery service — human-powered, low-cost, everywhere in postwar Filipino towns before jeepneys took over the longer routes." },
+      { prompt: "the street settles into its evening rhythm, a lantern beginning to glow in one window", narration: "None of this is about who specifically lived here — it's what an ordinary postwar Filipino barrio looked and felt like, alive again for a moment." }
+    ]
+  }
+};
+
+const panelsEl = document.getElementById("panels");
+const state = { a: 0, b: 0, c: 0 };
+let current = "a";
+
+function render() {
+  panelsEl.innerHTML = "";
+  const s = STORIES[current];
+  const i = state[current];
+  const beat = s.beats[i];
+
+  const panel = document.createElement("div");
+  panel.className = "story-panel active";
+
+  const baseHtml = `<div class="base-scene"><b>Base scene (image-seed anchor, set once):</b> ${s.baseScene}</div>`;
+  const introHtml = s.intro ? `<div class="base-scene" style="border-left-color:#7a8ac2"><b>Presenter opens with:</b> "${s.intro}"</div>` : "";
+
+  panel.innerHTML = `
+    ${baseHtml}
+    ${introHtml}
+    <div class="beat-nav">
+      <button id="prevBtn" ${i === 0 ? "disabled" : ""}>&larr; Prev</button>
+      <span class="beat-index">Beat ${i + 1} of ${s.beats.length}</span>
+      <button id="nextBtn" ${i === s.beats.length - 1 ? "disabled" : ""}>Next &rarr;</button>
+    </div>
+    <div class="beat-card">
+      <div class="beat-label">setPrompt() directional clause</div>
+      <div class="beat-prompt">${beat.prompt}</div>
+      <div class="narration-label">Presenter narration</div>
+      <div class="narration ${beat.narration ? "" : "empty"}">${beat.narration || "(silent — let the motion land first)"}</div>
+    </div>
+    <div class="beat-dots">
+      ${s.beats.map((_, idx) => `<span class="dot ${idx === i ? "on" : ""}" data-idx="${idx}"></span>`).join("")}
+    </div>
+  `;
+  panelsEl.appendChild(panel);
+
+  panel.querySelector("#prevBtn").onclick = () => { state[current] = Math.max(0, i - 1); render(); };
+  panel.querySelector("#nextBtn").onclick = () => { state[current] = Math.min(s.beats.length - 1, i + 1); render(); };
+  panel.querySelectorAll(".dot").forEach(dot => {
+    dot.onclick = () => { state[current] = parseInt(dot.dataset.idx, 10); render(); };
+  });
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.onclick = () => {
+    current = tab.dataset.story;
+    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t === tab ? "true" : "false"));
+    render();
+  };
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — family gallery (spike 010)</title>
+<style>
+  :root {
+    --bg: #0b0a09; --panel: #17140f; --panel-border: #2c2620;
+    --ink: #f2ece1; --ink-dim: #a89d8c; --brand: #d98e3f; --brand-fg: #1a1208; --danger: #d9603f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; padding: 32px 20px 60px;
+  }
+  main { max-width: 980px; margin: 0 auto; }
+  .head { text-align: center; margin: 8px 0 40px; }
+  .head h1 { font-size: clamp(28px, 6vw, 44px); letter-spacing: 0.08em; margin: 0 0 10px; }
+  .head p { color: var(--ink-dim); font-size: 15px; margin: 0; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
+    overflow: hidden; display: flex; flex-direction: column; position: relative;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover { border-color: var(--brand); transform: translateY(-2px); }
+  .card .photo { aspect-ratio: 16/9; overflow: hidden; background: #000; }
+  .card .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .card h3 { margin: 0; font-size: 18px; }
+  .card .meta { color: var(--ink-dim); font-size: 13px; margin: 0; }
+  .card .seed-tag {
+    align-self: flex-start; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-dim); border: 1px solid var(--panel-border); border-radius: 999px; padding: 2px 8px;
+  }
+  .card .enter-btn {
+    margin-top: auto; background: var(--brand); color: var(--brand-fg); border: none;
+    padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  .card .remove-btn {
+    position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); border: none;
+    color: var(--ink-dim); width: 24px; height: 24px; border-radius: 999px; cursor: pointer; font-size: 13px;
+  }
+  .card .remove-btn:hover { color: var(--danger); }
+
+  .add-card {
+    background: transparent; border: 1px dashed var(--panel-border); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 8px; color: var(--ink-dim); padding: 24px; min-height: 220px; text-align: center;
+    cursor: pointer;
+  }
+  .add-card:hover { border-color: var(--brand); color: var(--brand); }
+  .add-card .plus { font-size: 30px; color: var(--brand); }
+
+  .loop-note {
+    max-width: 640px; margin: 40px auto 0; text-align: center; font-size: 12.5px;
+    color: var(--ink-dim); line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <h1>FAMILY WORLD</h1>
+    <p>Your family's worlds — pick someone to enter their memory</p>
+  </div>
+  <div class="grid" id="grid"></div>
+  <p class="loop-note">This is the full vertical slice: pick a relative, enter their (mocked) world,
+  exit, pick another. "Add Someone" opens spike 008's creation screen, which produces a Memory
+  object; every card here (seed or user-added) resolves through the same spike 009 WorldProvider.</p>
+</main>
+
+<script type="module">
+  import { deleteMemory } from "../008-creation-screen-memory-contract/memory.js";
+  import { ensureSeedsInStorage } from "./gallery.js";
+
+  function render() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    const family = ensureSeedsInStorage();
+
+    family.forEach((m) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="photo"><img src="${m.photo}" alt="${m.person}" /></div>
+        <div class="body">
+          <h3>${m.person}</h3>
+          <p class="meta">${m.relationship} &middot; ${m.place} &middot; ${m.year}</p>
+          ${m.seed ? '<span class="seed-tag">Example</span>' : ""}
+          <button class="enter-btn">Enter Their World</button>
+        </div>
+        ${m.seed ? "" : '<button class="remove-btn" title="Remove">&times;</button>'}
+      `;
+      card.querySelector(".enter-btn").onclick = () => {
+        location.href = `../009-mock-world-provider/index.html?memoryId=${encodeURIComponent(m.id)}`;
+      };
+      const removeBtn = card.querySelector(".remove-btn");
+      if (removeBtn) {
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteMemory(m.id);
+          render();
+        };
+      }
+      grid.appendChild(card);
+    });
+
+    const addCard = document.createElement("div");
+    addCard.className = "add-card";
+    addCard.innerHTML = `<div class="plus">+</div><div>Add Someone</div>`;
+    addCard.onclick = () => (location.href = "../008-creation-screen-memory-contract/index.html");
+    grid.appendChild(addCard);
+  }
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Family World — photo-forward world (spike 011)</title>
+<style>
+  :root { --ink: #f2ece1; --ink-dim: #cabfaf; --brand: #d98e3f; --brand-fg: #1a1208; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; color: var(--ink); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #000; overflow: hidden; }
+
+  .stage { position: fixed; inset: 0; background-size: cover; background-position: center; transition: background-image 0.25s ease; }
+  .stage::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.55) 100%);
+  }
+
+  .top-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; }
+  .icon-btn { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: var(--ink); width: 36px; height: 36px; border-radius: 999px; cursor: pointer; font-size: 16px; }
+  .headline-pill { text-align: right; }
+  .headline-pill .name { font-size: 15px; font-weight: 700; }
+  .headline-pill .meta { font-size: 11px; color: var(--ink-dim); }
+
+  .narration-block { position: absolute; left: 0; right: 0; bottom: 210px; z-index: 1; padding: 0 24px; max-width: 640px; margin: 0 auto; }
+  .narration-block .loc-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand); margin-bottom: 6px; }
+  .narration-block p { font-size: 17px; line-height: 1.5; font-style: italic; margin: 0; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+
+  .bottom-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
+  .pill-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; }
+  .pill-row::-webkit-scrollbar { display: none; }
+  .pill {
+    flex: none; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: var(--ink);
+    padding: 9px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .pill.active { background: var(--brand); border-color: var(--brand); color: var(--brand-fg); }
+
+  .steer-row { display: flex; gap: 8px; }
+  .steer-row input {
+    flex: 1; background: rgba(10,8,6,0.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px; padding: 12px 18px; color: var(--ink); font-size: 14px;
+  }
+  .steer-row input::placeholder { color: var(--ink-dim); }
+  .steer-row input:focus { outline: none; border-color: var(--brand); }
+  .steer-row button {
+    background: var(--brand); color: var(--brand-fg); border: none; width: 44px; height: 44px;
+    border-radius: 999px; font-weight: 700; cursor: pointer; font-size: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage"></div>
+
+  <div class="top-bar">
+    <button class="icon-btn" id="exitBtn" title="Exit">&larr;</button>
+    <div class="headline-pill">
+      <div class="name" id="headlineName"></div>
+      <div class="meta" id="headlineMeta"></div>
+    </div>
+  </div>
+
+  <div class="narration-block">
+    <div class="loc-label" id="locLabel"></div>
+    <p id="narration"></p>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="pill-row" id="pillRow"></div>
+    <div class="steer-row">
+      <input id="steerInput" type="text" placeholder="Where should we go?" />
+      <button id="steerBtn">→</button>
+    </div>
+  </div>
+
+<script type="module">
+  import { loadFamily } from "../008-creation-screen-memory-contract/memory.js";
+  import { createMockWorldProvider } from "../009-mock-world-provider/worldProvider.js";
+
+  const params = new URLSearchParams(location.search);
+  const memoryId = params.get("memoryId");
+
+  const EXAMPLE_MEMORY = {
+    id: "mem-example", person: "Grandmother", relationship: "My grandmother",
+    place: "Cavite City, Philippines", year: "1956",
+    memory: "She went to the market with her mother.",
+    photo: "../006-world-select-landing/cavite-1953.jpg",
+  };
+
+  function resolveMemory() {
+    const all = loadFamily();
+    if (memoryId) {
+      const found = all.find((m) => m.id === memoryId);
+      if (found) return found;
+    }
+    return all[all.length - 1] || EXAMPLE_MEMORY;
+  }
+
+  const memory = resolveMemory();
+  const session = createMockWorldProvider().enter(memory);
+
+  document.getElementById("headlineName").textContent = `${memory.person}'s World`;
+  document.getElementById("headlineMeta").textContent = `${memory.place} · ${memory.year}`;
+  document.getElementById("exitBtn").onclick = () => (location.href = "gallery.html");
+
+  const pillRow = document.getElementById("pillRow");
+  session.locations.forEach((loc) => {
+    const pill = document.createElement("button");
+    pill.className = "pill";
+    pill.textContent = loc.label;
+    pill.onclick = () => { session.goTo(loc.key); render(); };
+    pillRow.appendChild(pill);
+  });
+
+  function render() {
+    const cur = session.current();
+    document.getElementById("stage").style.backgroundImage = `url(${cur.backdrop})`;
+    document.getElementById("locLabel").textContent = cur.label;
+    document.getElementById("narration").textContent = cur.narration;
+    pillRow.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.textContent === cur.label));
+  }
+  render();
+
+  document.getElementById("steerBtn").onclick = () => {
+    const val = document.getElementById("steerInput").value.trim();
+    if (!val) return;
+    session.steer(val);
+    render();
+    document.getElementById("steerInput").value = "";
+  };
+  document.getElementById("steerInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("steerBtn").click();
+  });
+</script>
+</body>
+</html>
