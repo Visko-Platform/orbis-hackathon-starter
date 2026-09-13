@@ -1182,6 +1182,16 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
   };
   closeBookRef.current = closeBook;
 
+  // Back to the home screen (theme picker + shelf). The current story's pages
+  // stay in state, so picking a theme again drops you right back into it.
+  const goHome = () => {
+    stopNarration();
+    setBookOpen(false);
+    setViewing(null);
+    setReadingPage(null);
+    setTheme(null);
+  };
+
   const newStory = () => {
     stopNarration();
     setWorld(EMPTY_WORLD);
@@ -1374,20 +1384,20 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
           ))}
         </div>
         <div className="sb-top-right">
-          {live && (
-            <button className="sb-mini sb-mini-text sb-mini-end" onClick={() => void endPage()}>
-              the end
-            </button>
-          )}
           {pages.length > 0 && (
             <button className="sb-mini sb-mini-text" onClick={openBook}>
               📖 {pages.length}
             </button>
           )}
+          {theme && !live && (
+            <button className="sb-mini sb-mini-text" onClick={goHome} aria-label="home">
+              🏠 home
+            </button>
+          )}
         </div>
       </div>
 
-      {bubble.trim() && (
+      {bubble.trim() && (theme || live) && (
         <div className={`sb-echo ${listening ? "sb-echo-live" : ""}`}>
           {listening && (
             <span className="sb-bars" aria-hidden>
@@ -1412,13 +1422,23 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
         <div className="sb-talk-wrap">
           {live && (
             <button
-              className="sb-wonder"
+              className="sb-toybtn sb-endbtn"
+              onClick={() => void endPage()}
+              aria-label="finish this page"
+            >
+              <span className="sb-toybtn-emoji" aria-hidden>📕</span>
+              <span className="sb-toybtn-label">the end</span>
+            </button>
+          )}
+          {live && (
+            <button
+              className="sb-toybtn sb-wonder"
               disabled={thinking}
               onClick={surprise}
-              aria-label="what if…"
+              aria-label="give me an idea"
             >
-              <span className="sb-wonder-bulb" aria-hidden>💡</span>
-              <span className="sb-wonder-label">what if…</span>
+              <span className="sb-toybtn-emoji" aria-hidden>💡</span>
+              <span className="sb-toybtn-label">what if…</span>
             </button>
           )}
           <svg className="sb-ring" viewBox="0 0 170 170" aria-hidden>
@@ -1470,7 +1490,7 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
               </div>
               <div className="sb-book-actions">
                 <button
-                  className="sb-mini sb-mini-text"
+                  className="sb-mini sb-mini-text sb-mini-primary"
                   onClick={() => void readBook(shownPages, shownTitle)}
                 >
                   🔊 read to me
@@ -1483,7 +1503,7 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
                 </button>
                 {viewing ? (
                   <button
-                    className="sb-mini sb-mini-text"
+                    className="sb-mini sb-mini-text sb-mini-quiet"
                     onClick={() => {
                       const id = viewing.id;
                       closeBook();
@@ -1495,9 +1515,10 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
                 ) : (
                   <button className="sb-mini sb-mini-text" onClick={newStory}>✨ new story</button>
                 )}
-                <button className="sb-mini sb-mini-text" onClick={closeBook}>close</button>
+                <button className="sb-mini sb-mini-text sb-mini-quiet" onClick={goHome}>🏠 home</button>
               </div>
             </div>
+            <button className="sb-book-x" onClick={closeBook} aria-label="close">×</button>
             {shownPages[spread] && (
               <div className="sb-spread-wrap">
                 <button className="sb-flip-btn" onClick={() => goTo(spread - 1)} disabled={spread === 0} aria-label="previous page">‹</button>

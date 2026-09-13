@@ -239,6 +239,7 @@
 
 /* ── echo bubble ───────────────────────────────────────── */
 .sb-echo {
+  pointer-events: none;
   position: absolute; left: 50%; bottom: 230px; transform: translate(-50%, 0);
   display: inline-flex; align-items: center; gap: 14px;
   max-width: 70vw; padding: 14px 24px; border-radius: 28px;
@@ -286,6 +287,9 @@
 .sb-bottom > * { pointer-events: auto; }
 .sb-bottom { transition: opacity 0.4s var(--ease), transform 0.5s var(--spring); }
 .sb-bottom-away { opacity: 0; transform: translateY(40px) scale(0.9); pointer-events: none; }
+/* the `> *` rule above re-enables clicks on children, which left an invisible
+   talk button swallowing taps on the theme grid and the shelf. */
+.sb-bottom-away > *, .sb-bottom-away > * * { pointer-events: none !important; }
 .sb-talk-wrap { position: relative; width: 170px; height: 170px; display: grid; place-items: center; }
 .sb-ring { position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }
 .sb-ring-track { fill: none; stroke: rgba(43,35,80,0.12); stroke-width: 5; }
@@ -330,21 +334,48 @@
 .sb-idle .sb-oops { opacity: 0.3; }
 
 /* ── what if: a little bulb beside the mic ─────────────── */
-.sb-wonder {
-  position: absolute; right: -106px; top: 50%; margin-top: -45px;
-  width: 90px; height: 90px; border: 0; border-radius: 50%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--ink); cursor: pointer;
-  background: var(--sun);
-  box-shadow: 0 6px 0 var(--amber-deep), 0 14px 26px rgba(224, 166, 47, 0.32);
+/* the two toy buttons flanking the talk button */
+.sb-toybtn {
+  position: absolute; top: 50%; margin-top: -48px;
+  width: 96px; height: 96px; border: 0; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  cursor: pointer;
   transition: transform 0.12s var(--ease), box-shadow 0.12s var(--ease), opacity 0.6s var(--ease);
+}
+.sb-toybtn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.sb-toybtn-emoji { font-size: 30px; line-height: 1; }
+.sb-toybtn-label {
+  font: 700 10px var(--font); text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* right: another idea */
+.sb-wonder {
+  right: -114px;
+  color: var(--ink); background: var(--sun);
+  box-shadow: 0 6px 0 var(--amber-deep), 0 14px 26px rgba(224, 166, 47, 0.32);
 }
 .sb-wonder:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--amber-deep), 0 18px 30px rgba(224, 166, 47, 0.36); }
 .sb-wonder:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--amber-deep), 0 6px 14px rgba(224, 166, 47, 0.3); }
-.sb-wonder:disabled { opacity: 0.4; cursor: default; transform: none; }
-.sb-wonder-bulb { font-size: 28px; line-height: 1; }
-.sb-wonder-label { font: 700 9.5px var(--font); text-transform: uppercase; letter-spacing: 0.06em; }
 .sb-idle .sb-wonder { opacity: 0.3; }
+
+/* left: bank this scene as a page */
+.sb-endbtn {
+  left: -114px;
+  color: #fff; background: var(--coral);
+  box-shadow: 0 6px 0 var(--coral-deep), 0 14px 26px rgba(255, 93, 115, 0.32);
+}
+.sb-endbtn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--coral-deep), 0 18px 30px rgba(255, 93, 115, 0.36); }
+.sb-endbtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--coral-deep), 0 6px 14px rgba(255, 93, 115, 0.3); }
+.sb-idle .sb-endbtn { opacity: 0.3; }
+
+@media (max-width: 860px) {
+  .sb-toybtn { width: 80px; height: 80px; margin-top: -40px; }
+  .sb-toybtn-emoji { font-size: 25px; }
+  .sb-toybtn-label { font-size: 9px; letter-spacing: 0.04em; }
+  .sb-wonder { right: -88px; }
+  .sb-endbtn { left: -88px; }
+}
 
 @media (max-width: 720px) {
   .sb-wonder { right: -84px; margin-top: -36px; width: 72px; height: 72px; }
@@ -447,22 +478,27 @@
 .sb-book {
   position: absolute; inset: 0; z-index: 10;
   display: grid; place-items: center; padding: 24px;
-  background: rgba(43, 35, 80, 0.45); backdrop-filter: blur(14px);
+  background: rgba(38, 30, 62, 0.55); backdrop-filter: blur(18px) saturate(0.9);
   animation: sb-fade 0.3s var(--ease);
 }
 @keyframes sb-fade { from { opacity: 0; } }
 .sb-book-inner {
-  width: min(1200px, 100%); max-height: 100%; overflow: auto;
-  padding: 30px; border-radius: 30px;
-  background: #fbf5ea; color: #2b2350;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+  position: relative;
+  width: min(1240px, 100%); max-height: 100%; overflow: auto;
+  padding: 34px 38px 30px; border-radius: 34px;
+  color: #2b2350;
+  background:
+    radial-gradient(120% 90% at 50% -20%, #fffdf7 0%, #fbf5ea 55%, #f4ebd9 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    0 50px 120px rgba(20, 14, 40, 0.5);
   animation: sb-pop-plain 0.45s var(--spring);
 }
 @keyframes sb-pop-plain { from { transform: scale(0.92); opacity: 0; } }
 /* the title is written by the story, so it can run long: give it its own
    column and keep the controls together on the right */
 .sb-book-head {
-  display: grid; align-items: center; gap: 6px 16px; margin-bottom: 20px;
+  display: grid; align-items: center; gap: 4px 28px; margin-bottom: 26px; padding-right: 44px;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "title actions" "sub actions";
 }
@@ -472,13 +508,40 @@
   line-height: 1.05; color: #2b2350;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.sb-book-sub { grid-area: sub; font: 600 13.5px var(--font); color: rgba(43,35,80,0.6); }
+.sb-book-sub {
+  grid-area: sub; font: 600 13.5px var(--font); color: rgba(43,35,80,0.5);
+  letter-spacing: 0.01em;
+}
 .sb-book-actions { grid-area: actions; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 @media (max-width: 720px) {
   .sb-book-head { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "sub" "actions"; }
   .sb-book-actions { justify-content: flex-start; }
 }
-.sb-book .sb-mini { --card: #fff; --card-ink: #2b2350; --card-shadow: 0 6px 18px rgba(43,35,80,0.12); }
+.sb-book .sb-mini {
+  --card: #fff; --card-ink: #2b2350;
+  --card-shadow: 0 2px 0 rgba(43,35,80,0.10), 0 6px 16px rgba(43,35,80,0.10);
+  height: 40px;
+}
+.sb-book .sb-mini-primary {
+  --card: var(--coral); --card-ink: #fff;
+  --card-shadow: 0 3px 0 var(--coral-deep), 0 10px 24px rgba(255,93,115,0.35);
+}
+.sb-book .sb-mini-quiet {
+  --card: transparent; --card-ink: rgba(43,35,80,0.5);
+  --card-shadow: inset 0 0 0 1.5px rgba(43,35,80,0.12);
+}
+.sb-book .sb-mini-quiet:hover { --card-ink: #2b2350; --card-shadow: inset 0 0 0 1.5px rgba(43,35,80,0.28); }
+
+/* close lives in the corner of the card, not in the button row */
+.sb-book-x {
+  position: absolute; top: 20px; right: 20px; z-index: 3;
+  width: 40px; height: 40px; border: 0; border-radius: 50%; padding: 0;
+  font: 400 26px/1 var(--font); color: rgba(43,35,80,0.45);
+  background: rgba(43,35,80,0.06); cursor: pointer;
+  transition: transform 0.25s var(--spring), background 0.2s, color 0.2s;
+}
+.sb-book-x:hover { background: rgba(43,35,80,0.12); color: #2b2350; transform: rotate(90deg); }
+.sb-book-x:active { transform: rotate(90deg) scale(0.9); }
 .sb-book-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .sb-book-page {
   border-radius: 20px; overflow: hidden; background: #fff;
@@ -527,54 +590,131 @@
 
 /* ── flip book ─────────────────────────────────────────── */
 .sb-book-inner { display: flex; flex-direction: column; }
-.sb-spread-wrap { display: flex; align-items: center; gap: 14px; perspective: 2000px; }
+.sb-spread-wrap {
+  position: relative; display: flex; align-items: center;
+  padding: 0 34px; perspective: 2400px;
+}
 .sb-spread {
-  flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0;
-  aspect-ratio: 2 / 0.72; border-radius: 22px; overflow: hidden; background: #fff;
-  box-shadow: 0 30px 70px rgba(43,35,80,0.28), 0 4px 10px rgba(43,35,80,0.1);
-  transform-origin: left center;
+  position: relative; flex: 1; min-height: 0;
+  display: grid; grid-template-columns: 1fr 1fr;
+  aspect-ratio: 2 / 0.74; border-radius: 24px;
+  transform-style: preserve-3d;
+  /* stacked sheets under the open spread */
+  box-shadow:
+    0 7px 0 -2px #f3ecdc,
+    0 14px 0 -4px #e9e0cb,
+    0 20px 0 -6px #ded4bd,
+    0 40px 80px rgba(20,14,40,0.34);
 }
-.sb-spread-next { animation: sb-flip-next 0.65s var(--ease); }
-.sb-spread-prev { animation: sb-flip-prev 0.65s var(--ease); transform-origin: right center; }
-@keyframes sb-flip-next { from { transform: rotateY(-70deg); opacity: 0; } 40% { opacity: 1; } to { transform: none; } }
-@keyframes sb-flip-prev { from { transform: rotateY(70deg); opacity: 0; } 40% { opacity: 1; } to { transform: none; } }
-.sb-spread::after {
-  /* the gutter */
-  content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 26px; transform: translateX(-50%);
-  background: linear-gradient(to right, rgba(43,35,80,0), rgba(43,35,80,0.10) 50%, rgba(43,35,80,0));
-  pointer-events: none;
+
+/* ── the two leaves ────────────────────────────────────── */
+.sb-leaf {
+  position: relative; min-height: 0; overflow: hidden;
+  background: #fffdf8; backface-visibility: hidden;
 }
-.sb-spread { position: relative; }
-.sb-leaf { position: relative; min-height: 0; }
+.sb-leaf-left { border-radius: 24px 3px 3px 24px; }
+.sb-leaf-right { border-radius: 3px 24px 24px 3px; }
 .sb-leaf-left img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sb-leaf-right {
   display: flex; flex-direction: column; justify-content: center;
-  padding: 6% 8%; background: #fffdf8;
+  padding: 7% 8.5%;
 }
+/* paper curving into the spine */
+.sb-leaf::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 46px; z-index: 2;
+  pointer-events: none;
+}
+.sb-leaf-left::after {
+  right: 0;
+  background: linear-gradient(to right, rgba(43,35,80,0) 0%, rgba(43,35,80,0.06) 60%, rgba(43,35,80,0.16) 100%);
+}
+.sb-leaf-right::after {
+  left: 0;
+  background: linear-gradient(to left, rgba(43,35,80,0) 0%, rgba(43,35,80,0.05) 60%, rgba(43,35,80,0.13) 100%);
+}
+/* shading that sweeps across a leaf while it turns */
+.sb-leaf::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: #2b2350; opacity: 0;
+}
+
 .sb-leaf-text p {
-  margin: 0 0 0.7em; font: 700 clamp(18px, 2.1vw, 30px)/1.3 var(--font); color: #2b2350; letter-spacing: -0.01em;
+  margin: 0 0 0.7em; font: 700 clamp(18px, 2.1vw, 30px)/1.32 var(--font);
+  color: #2b2350; letter-spacing: -0.012em;
 }
-.sb-leaf-text p:first-child::first-letter { font-size: 1.6em; color: var(--coral); }
+.sb-leaf-text p:last-child { margin-bottom: 0; }
+.sb-leaf-text p:first-child::first-letter {
+  font-size: 1.7em; line-height: 1; color: var(--coral);
+}
 .sb-leaf-num {
-  position: absolute; right: 22px; bottom: 16px;
-  font: 700 13px var(--font); color: rgba(43,35,80,0.55);
+  position: absolute; right: 26px; bottom: 18px; z-index: 4;
+  font: 700 13px var(--font); color: rgba(43,35,80,0.4);
 }
-.sb-spread-reading { box-shadow: 0 0 0 4px var(--sun), 0 30px 70px rgba(43,35,80,0.28); }
+.sb-spread-reading { box-shadow: 0 0 0 4px var(--sun), 0 40px 80px rgba(20,14,40,0.34); }
+
+/* ── page turn ─────────────────────────────────────────── */
+/* Only the arriving leaf swings on the spine; the other settles.
+   That reads as a page turning instead of the whole book swinging. */
+.sb-spread-next .sb-leaf-right {
+  transform-origin: left center;
+  animation: sb-turn-right 0.66s cubic-bezier(0.25, 0.86, 0.24, 1) both;
+}
+.sb-spread-next .sb-leaf-right::before { animation: sb-turn-shade 0.66s cubic-bezier(0.25, 0.86, 0.24, 1) both; }
+.sb-spread-next .sb-leaf-left { animation: sb-turn-settle 0.66s var(--ease) both; }
+
+.sb-spread-prev .sb-leaf-left {
+  transform-origin: right center;
+  animation: sb-turn-left 0.66s cubic-bezier(0.25, 0.86, 0.24, 1) both;
+}
+.sb-spread-prev .sb-leaf-left::before { animation: sb-turn-shade 0.66s cubic-bezier(0.25, 0.86, 0.24, 1) both; }
+.sb-spread-prev .sb-leaf-right { animation: sb-turn-settle 0.66s var(--ease) both; }
+
+@keyframes sb-turn-right {
+  from { transform: rotateY(92deg); }
+  to   { transform: rotateY(0deg); }
+}
+@keyframes sb-turn-left {
+  from { transform: rotateY(-92deg); }
+  to   { transform: rotateY(0deg); }
+}
+@keyframes sb-turn-shade {
+  from { opacity: 0.5; }
+  55%  { opacity: 0.14; }
+  to   { opacity: 0; }
+}
+@keyframes sb-turn-settle {
+  from { opacity: 0.45; filter: brightness(0.9); }
+  to   { opacity: 1; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-spread-next .sb-leaf-right, .sb-spread-prev .sb-leaf-left,
+  .sb-spread-next .sb-leaf-left, .sb-spread-prev .sb-leaf-right,
+  .sb-spread-next .sb-leaf-right::before, .sb-spread-prev .sb-leaf-left::before {
+    animation: sb-fade 0.25s var(--ease) both;
+  }
+}
+
+/* ── flip arrows: float over the page edges ────────────── */
 .sb-flip-btn {
-  width: 52px; height: 52px; border: 0; border-radius: 50%; flex: none;
+  position: absolute; top: 50%; z-index: 5; transform: translateY(-50%);
+  width: 56px; height: 56px; border: 0; border-radius: 50%; flex: none; padding: 0;
   font: 700 30px/1 var(--font); color: #2b2350; background: #fff; cursor: pointer;
-  box-shadow: 0 8px 20px rgba(43,35,80,0.14);
-  transition: transform 0.3s var(--spring), opacity 0.2s;
+  box-shadow: 0 3px 0 rgba(43,35,80,0.12), 0 12px 28px rgba(20,14,40,0.22);
+  transition: transform 0.3s var(--spring), opacity 0.25s, box-shadow 0.25s;
 }
-.sb-flip-btn:hover { transform: scale(1.08); }
-.sb-flip-btn:active { transform: scale(0.92); }
-.sb-flip-btn:disabled { opacity: 0.25; cursor: default; transform: none; }
-.sb-dots-nav { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
+.sb-flip-btn:first-of-type { left: 0; }
+.sb-flip-btn:last-of-type { right: 0; }
+.sb-flip-btn:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 3px 0 rgba(43,35,80,0.12), 0 16px 34px rgba(20,14,40,0.28); }
+.sb-flip-btn:active { transform: translateY(-50%) scale(0.92); }
+.sb-flip-btn:disabled { opacity: 0; pointer-events: none; }
+
+.sb-dots-nav { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 24px; }
 .sb-dot-nav {
-  width: 10px; height: 10px; border: 0; border-radius: 50%; padding: 0; cursor: pointer;
-  background: rgba(43,35,80,0.18); transition: transform 0.3s var(--spring), background 0.2s;
+  width: 9px; height: 9px; border: 0; border-radius: 999px; padding: 0; cursor: pointer;
+  background: rgba(43,35,80,0.16); transition: transform 0.3s var(--spring), background 0.25s, width 0.3s var(--spring);
 }
-.sb-dot-nav.on { background: var(--coral); transform: scale(1.3); }
+.sb-dot-nav:hover { background: rgba(43,35,80,0.3); }
+.sb-dot-nav.on { background: var(--coral); width: 26px; }
 
 /* ───────────────────────────────────────────────────────────
    Onboarding, profiles, the shelf, and the grown-ups corner.
