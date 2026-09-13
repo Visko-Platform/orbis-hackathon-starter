@@ -104,11 +104,17 @@ type Modal =
   | "example"
   | null;
 export default function Studio() {
-  const [keys, setKeys] = useState<Keys>({
+  // Local demo: on localhost the server unlocks the shared .env.local keys
+  // without a presenter code, so the studio starts already connected.
+  const [keys, setKeys] = useState<Keys>(() => ({
     reactor: "",
     nebius: "",
-    accessCode: "",
-  });
+    accessCode:
+      typeof window !== "undefined" &&
+      ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
+        ? "local-demo"
+        : "",
+  }));
   const [draftKeys, setDraftKeys] = useState(keys);
   const [modal, setModal] = useState<Modal>(null);
   const [tab, setTab] = useState("studio");

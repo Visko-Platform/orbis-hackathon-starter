@@ -192,6 +192,14 @@ export async function rateLimit(owner: string, kind: string, limit: number) {
       "This session has reached its hourly limit. Please try again later.",
     );
 }
+export function isLocalHost(request: Request) {
+  try {
+    const host = new URL(request.url).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+  } catch {
+    return false;
+  }
+}
 export function providerKey(request: Request, provider: "reactor" | "nebius") {
   const own = request.headers.get("x-" + provider + "-key")?.trim();
   if (own) {
@@ -200,6 +208,9 @@ export function providerKey(request: Request, provider: "reactor" | "nebius") {
   }
   const key = setting(provider.toUpperCase() + "_API_KEY");
   if (!key) return "";
+  // Local demos (localhost only) use the shared keys from .env.local without a
+  // presenter code. Any public host still requires LIVE_ACCESS_CODE.
+  if (isLocalHost(request)) return key;
   const required = setting("LIVE_ACCESS_CODE");
   if (required.length < 16)
     throw new HttpError(
