@@ -33,6 +33,8 @@ import {
   Settings2,
   ShieldCheck,
   SkipForward,
+  Mic,
+  MicOff,
   Sparkles,
   Square,
   Sun,
@@ -60,6 +62,30 @@ import { CHAPTER_REFERENCES } from "@/lib/cutline/references";
 import { useStory } from "./use-story";
 import { useLiveVideo } from "./use-live-video";
 
+interface SpeechRecognizerEvent {
+  resultIndex: number;
+  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+}
+interface SpeechRecognizer {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognizerEvent) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type SpeechRecognizerCtor = new () => SpeechRecognizer;
+const speechRecognizer = () => {
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognizerCtor;
+    webkitSpeechRecognition?: SpeechRecognizerCtor;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+};
 const CosmicFlight = lazy(() =>
   import("./cosmic-flight").then((module) => ({
     default: module.CosmicFlight,
@@ -345,6 +371,73 @@ export default function Studio() {
         );
       setPrompt("");
     });
+  };
+  // Voice direction: speak the next moment; the final transcript is sent as a direction.
+  const [listening, setListening] = useState(false);
+  const recognizer = useRef<SpeechRecognizer | null>(null);
+  useEffect(() => () => recognizer.current?.abort(), []);
+  const toggleVoice = () => {
+    if (listening) {
+      recognizer.current?.stop();
+      return;
+    }
+    const Recognizer = speechRecognizer();
+    if (!Recognizer) {
+      toast.info(
+        "Voice direction needs speech recognition. Use Chrome, Edge, or Safari.",
+      );
+      return;
+    }
+    if (isOpening) {
+      toast.info("Enter the film to direct by voice.");
+      return;
+    }
+    if (poll?.open) {
+      toast.info("Close audience voting before directing by voice.");
+      return;
+    }
+    const recognition = new Recognizer();
+    recognition.lang = navigator.language || "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    let finalText = "";
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) finalText += result[0].transcript;
+        else interim += result[0].transcript;
+      }
+      setPrompt((finalText + interim).trim().slice(0, 1200));
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "no-speech")
+        toast.info("No speech heard. Try again closer to the microphone.");
+      else if (event.error === "not-allowed")
+        toast.error("Microphone access was blocked. Allow it to direct by voice.");
+      else if (event.error !== "aborted")
+        toast.error("Voice direction failed: " + event.error);
+    };
+    recognition.onend = () => {
+      recognizer.current = null;
+      setListening(false);
+      const text = finalText.trim().slice(0, 1200);
+      if (text.length >= 3) {
+        setPrompt(text);
+        setStageNotice("Voice: " + (text.length > 48 ? text.slice(0, 45) + "…" : text));
+        void direct(text);
+      }
+    };
+    recognizer.current = recognition;
+    setListening(true);
+    try {
+      recognition.start();
+    } catch {
+      recognizer.current = null;
+      setListening(false);
+      toast.error("Could not start listening. Try again.");
+    }
   };
   const cue = useCallback(
     async (cueId: string) => {
@@ -1407,6 +1500,19 @@ export default function Studio() {
                     <span className="mono muted">⌘ ↵</span>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  className={listening ? "button lime full" : "button outline full"}
+                  onClick={toggleVoice}
+                  aria-pressed={listening}
+                  disabled={busy || live.sending || data.loading || !!data.error}
+                  title="Say what happens next. When you stop talking, the direction is sent."
+                >
+                  {listening ? <MicOff size={16} /> : <Mic size={16} />}
+                  {listening
+                    ? "Listening… tap when you finish"
+                    : "Talk to direct the film"}
+                </button>
                 <button
                   className="button lime full"
                   disabled={
