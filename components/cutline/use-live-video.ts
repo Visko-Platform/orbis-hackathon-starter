@@ -222,9 +222,13 @@ export function useLiveVideo(keys: Keys) {
       setStatus("connecting");
       setError(null);
       setHasFrames(false);
-      try {
+      const otherModel = (model: string) =>
+        model === "reactor/visko-orbis-stable"
+          ? "reactor/visko-orbis-dynamic"
+          : "reactor/visko-orbis-stable";
+      const attempt = async (model: string) => {
         const res = await fetch(
-          `/api/stories/${story.id}/token?model=${encodeURIComponent(keys.model || "")}`,
+          `/api/stories/${story.id}/token?model=${encodeURIComponent(model)}`,
           { method: "POST", headers: keyHeaders(keys) },
         );
         const data = (await res.json()) as {
@@ -377,6 +381,22 @@ export function useLiveVideo(keys: Keys) {
         }
         if (generation !== generationRef.current)
           throw new DOMException("Connection cancelled.", "AbortError");
+      };
+      try {
+        const requested = keys.model || "reactor/visko-orbis-dynamic";
+        try {
+          await attempt(requested);
+        } catch (e) {
+          const raw = e instanceof Error ? e.message : "";
+          if (!raw.includes("no available capacity")) throw e;
+          // The requested Orbis model is full: fall back to the other one automatically.
+          const previous = clientRef.current;
+          clientRef.current = null;
+          void previous?.disconnect().catch(() => {});
+          if (generation !== generationRef.current)
+            throw new DOMException("Connection cancelled.", "AbortError");
+          await attempt(otherModel(requested));
+        }
         setConnected(true);
         await startTake(prompt, imagePath);
         expiryRef.current = setTimeout(
@@ -393,7 +413,7 @@ export function useLiveVideo(keys: Keys) {
           throw new DOMException("Connection cancelled.", "AbortError");
         const raw = e instanceof Error ? e.message : "Could not start Orbis.";
         const message = raw.includes("no available capacity")
-          ? "This Orbis model has no available capacity. Choose the other Orbis model in Connections or try again shortly."
+          ? "Both Orbis models are at capacity right now. Try again in a moment."
           : raw;
         await disconnect();
         setStatus("error");

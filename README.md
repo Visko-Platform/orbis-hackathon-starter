@@ -15,7 +15,8 @@
 </p>
 
 <p align="center">
-  <a href="https://vnmoorthy.github.io/cutline/"><img alt="Website" src="https://img.shields.io/badge/website-vnmoorthy.github.io%2Fcutline-f2b134?style=for-the-badge"></a>
+  <a href="https://cutline.vnarasingamoorthy.workers.dev"><img alt="Live app" src="https://img.shields.io/badge/LIVE%20APP-cutline.vnarasingamoorthy.workers.dev-f2b134?style=for-the-badge"></a>
+  <a href="https://vnmoorthy.github.io/cutline/"><img alt="Website" src="https://img.shields.io/badge/website-vnmoorthy.github.io%2Fcutline-3fd0c9?style=for-the-badge"></a>
   <a href="public/demo/cutline-live.mp4"><img alt="Demo video" src="https://img.shields.io/badge/demo-recorded%20Orbis%20take-3fd0c9?style=for-the-badge"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-see%20LICENSE-lightgrey?style=for-the-badge"></a>
 </p>
@@ -28,6 +29,7 @@
   <img alt="D1" src="https://img.shields.io/badge/Cloudflare%20D1-F38020?logo=cloudflare&logoColor=white">
 </p>
 
+> **🎬 Live app:** [cutline.vnarasingamoorthy.workers.dev](https://cutline.vnarasingamoorthy.workers.dev) — the full interactive product on Cloudflare Workers: open it on the theater screen, share the room QR, and let the audience talk to the film.
 > **🌐 Website:** [vnmoorthy.github.io/cutline](https://vnmoorthy.github.io/cutline/) — pitch, recorded live take, and how the loop works.
 > **Hackathon branch:** [`Cutline-vnmoorthy`](https://github.com/vnmoorthy/cutline/tree/Cutline-vnmoorthy) · [PowerPoint](presentation/CUTLINE-3-minute-pitch.pptx) · [Three-minute script](presentation/STORYBOARD.md) · [Complete Claude handoff](CLAUDE-HANDOFF.md) · [Review checklist](CLAUDE-REVIEW.md)
 > The complete interactive app is a Cloudflare Worker with a D1 database. Run it locally in three commands, or publish your own public copy with `npm run deploy` (see [Quick start](#quick-start)).
