@@ -41,6 +41,8 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 npm run dev -- --port 3000   # open http://localhost:3000
 ```
 
+**Presenting?** Use `npm run demo` instead of `npm run dev`. It serves the production build on port 3000 with no hot reload, so the dev-only "server rendering errored" overlay cannot appear mid-show.
+
 Rehearsal mode needs no API keys: create stories, vote from a second browser, apply winners, branch, and export. Copy `.env.example` to `.env.local` and add `REACTOR_API_KEY` and `NEBIUS_API_KEY` for live Orbis video and AI scene planning.
 
 **Publish a public HTTPS copy** (audience phones need one; `localhost` on a phone points at the phone):

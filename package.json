@@ -20,7 +20,8 @@
     "test:cosmic": "node tests/cosmic-preservation.mjs",
     "test:choices": "node tests/choice-regressions.mjs",
     "deploy": "bash scripts/deploy-cloudflare.sh",
-    "test:voice": "node tests/voice-lifecycle.mjs"
+    "test:voice": "node tests/voice-lifecycle.mjs",
+    "demo": "npm run build && node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --port 3000 --inspector-port 0"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
