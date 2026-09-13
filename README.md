@@ -92,7 +92,7 @@ flowchart LR
 | Make a collective decision | Close voting, freeze tallies and the winner atomically, then apply the winning action once. Ties follow displayed choice order. Empty polls have no winner.                                                |
 | Preserve continuity        | Carry character, clothing, setting, and style in editable story memory. The Nebius director receives only the active branch's recent ancestry.                                                             |
 | Explore another ending     | Return to a saved scene and continue along a new branch. Alternate scenes remain in the exported story graph.                                                                                              |
-| Build a cosmic opening     | Fly through a continuous 3D scene and click destinations on the canvas. A NASA equirectangular texture anchors Earth; a sourced San Francisco aerial anchors the city. Orbis begins at the fictional film. |
+| Build a cosmic opening     | Fly through a continuous 3D scene and click destinations on the canvas. Real NASA imagery is mapped into the scene: Webb's deep field fills the universe, NASA's cosmic-web simulation forms the large-scale structure, the NASA/JPL Milky Way is the galaxy disc, the SDO observation is the Sun, a NASA equirectangular map wraps Earth, and an ISS photograph is San Francisco. Orbis begins at the fictional film. |
 | Rehearse without keys      | Create stories, test voting, save directions, branch, and export. Rehearsal is explicitly labeled; it does not generate video or claim an AI director call.                                                |
 | Keep the result            | Export Markdown and JSON story data. During live playback, record the next ten seconds of actual media in a browser-supported video format.                                                                |
 
@@ -109,7 +109,7 @@ The creator's private library belongs to the current browser cookie. Room links 
   <tr><td>Webb · infrared composite</td><td>Earth · Apollo 17 photograph</td><td>San Francisco · ISS photograph</td></tr>
 </table>
 
-These are source references, not screenshots of the interactive flight. The flight renders cosmic structure in 3D, wraps Earth with a separate NASA equirectangular map, and uses original San Francisco aerial imagery. [Full credits and source records →](docs/provenance/NASA.md)
+These are source frames, and the interactive flight maps them into the 3D scene: Webb's deep field sits inside the universe, NASA's cosmic-web simulation still forms the large-scale structure, the NASA/JPL Milky Way concept is the tilted galaxy disc with a scattered stellar layer for depth, the SDO 171 Å observation is the Sun, a NASA equirectangular map wraps the globe, and the ISS photograph is the San Francisco ground. Procedural stars and geometry add parallax around them; scales are cinematic, not measured. [Full credits and source records →](docs/provenance/NASA.md)
 
 ## Built for live models
 

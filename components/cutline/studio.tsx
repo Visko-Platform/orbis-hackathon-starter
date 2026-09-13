@@ -996,7 +996,7 @@ export default function Studio() {
                     {live.hasFrames && !isOpening
                       ? `Orbis live video${live.imageConfirmed ? " · reference confirmed" : ""}`
                       : isOpening
-                        ? "Cinematic 3D journey · NASA Earth texture"
+                        ? "Cinematic 3D journey · NASA source imagery"
                         : !isOpening && template.id === "custom"
                           ? "Your original world · prompt-only generation"
                           : `${reference.kind} · ${reference.credit}`}
@@ -1231,7 +1231,7 @@ export default function Studio() {
                     <p className="cosmic-note">
                       {live.isConnected
                         ? "Select the glowing destination on screen. The camera carries you into the next world."
-                        : "A continuous 3D camera journey, with NASA Earth texture and original San Francisco imagery. Distances are compressed for the story."}
+                        : "A continuous 3D camera journey built from credited NASA imagery: Webb deep field, cosmic-web simulation, Milky Way concept, SDO Sun, equirectangular Earth, and ISS San Francisco. Distances are compressed for the story."}
                     </p>
                   </>
                 )}

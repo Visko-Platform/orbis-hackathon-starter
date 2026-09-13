@@ -10,9 +10,13 @@ export interface CosmicFlightProps {
   disabled?: boolean;
 }
 
-// Original NASA equirectangular texture; copy earth-day.jpg from the asset handoff here.
-const EARTH_TEXTURE = "/images/nasa/earth-day.jpg";
-const SAN_FRANCISCO_TEXTURE = "/images/nasa/san-francisco.jpg";
+// Original NASA imagery mapped into the 3D scene. Credits: docs/provenance/NASA.md
+const DEEP_FIELD_TEXTURE = "/images/nasa/deep-field.png"; // Webb NIRCam, SMACS 0723
+const COSMIC_WEB_TEXTURE = "/images/nasa/cosmic-web.jpg"; // NASA SVS simulation still
+const MILKY_WAY_TEXTURE = "/images/nasa/milky-way.jpg"; // NASA/JPL-Caltech concept
+const SUN_TEXTURE = "/images/nasa/sun.jpg"; // SDO/AIA 171 Å observation
+const EARTH_TEXTURE = "/images/nasa/earth-day.jpg"; // NASA equirectangular map
+const SAN_FRANCISCO_TEXTURE = "/images/nasa/san-francisco.jpg"; // ISS photograph
 const LABELS = [
   "Enter this universe",
   "Follow the cosmic web",
@@ -330,6 +334,85 @@ export function CosmicFlight({
         }
         return points(parent, positions, tint, sizes, 0.85);
       }
+      const loader = new THREE.TextureLoader();
+      /** A NASA image on a soft-edged disc. Black sky adds nothing, so only the
+       *  photographed structure appears, with no rectangular frame. */
+      function photoDisc(
+        parent: THREE.Object3D,
+        url: string,
+        radius: number,
+        position: [number, number, number],
+        options: {
+          repeat?: [number, number];
+          offset?: [number, number];
+          fadeStart?: number;
+          opacity?: number;
+        } = {},
+      ) {
+        const material = new THREE.ShaderMaterial({
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          uniforms: {
+            map: { value: null },
+            loaded: { value: 0 },
+            opacity: { value: options.opacity ?? 1 },
+            fadeStart: { value: options.fadeStart ?? 0.55 },
+            repeat: { value: new THREE.Vector2(...(options.repeat ?? [1, 1])) },
+            offset: { value: new THREE.Vector2(...(options.offset ?? [0, 0])) },
+          },
+          vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+          fragmentShader: `uniform sampler2D map;uniform float loaded,opacity,fadeStart;uniform vec2 repeat,offset;varying vec2 vUv;
+            void main(){vec2 c=vUv-.5;float r=length(c)*2.;if(r>1.)discard;vec4 t=texture2D(map,offset+vUv*repeat);float a=(1.-smoothstep(fadeStart,1.,r))*opacity*loaded;gl_FragColor=vec4(t.rgb*a,a);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+            }`,
+        });
+        const mesh = new THREE.Mesh(new THREE.CircleGeometry(radius, 72), material);
+        mesh.position.set(...position);
+        parent.add(mesh);
+        loader.load(
+          url,
+          (texture) => {
+            if (disposed) {
+              texture.dispose();
+              return;
+            }
+            textures.add(texture);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.anisotropy = Math.min(
+              8,
+              renderer?.capabilities.getMaxAnisotropy() || 1,
+            );
+            material.uniforms.map.value = texture;
+            material.uniforms.loaded.value = 1;
+          },
+          undefined,
+          () => {
+            /* The procedural scene remains navigable without the image. */
+          },
+        );
+        return material;
+      }
+      /** A thin, uniformly scattered stellar disc that adds depth to a photographed galaxy. */
+      function discStars(parent: THREE.Object3D, count: number, radius: number) {
+        const positions: number[] = [],
+          tint: number[] = [],
+          sizes: number[] = [];
+        for (let i = 0; i < count; i++) {
+          const theta = random() * Math.PI * 2,
+            r = radius * Math.sqrt(random());
+          positions.push(
+            Math.cos(theta) * r,
+            Math.sin(theta) * r,
+            ranged(0.9) * (1 - (r / radius) * 0.6),
+          );
+          const color = colors[Math.floor(random() * colors.length)];
+          tint.push(color.r, color.g, color.b);
+          sizes.push(0.5 + random() * 1.1);
+        }
+        return points(parent, positions, tint, sizes, 0.55);
+      }
       function cosmicWeb(
         parent: THREE.Object3D,
         nodeCount: number,
@@ -407,8 +490,20 @@ export function CosmicFlight({
         randomStars(bubble, 210, radius * 0.94, 1.2);
       }
       // 1–2. Enter the central universe and move through its large-scale structure.
+      // The universe is filled with Webb's real deep-field galaxies; the large-scale
+      // structure is NASA's cosmic-web simulation still, both behind procedural depth.
+      const deepField = photoDisc(groups[1], DEEP_FIELD_TEXTURE, 58, [0, 0, -38], {
+        fadeStart: 0.45,
+        opacity: 1.1,
+      });
       cosmicWeb(groups[1], 42, 18);
       randomStars(groups[1], 1200, 26, 1.2);
+      const webPhoto = photoDisc(groups[2], COSMIC_WEB_TEXTURE, 54, [0, 0, -33], {
+        repeat: [0.5625, 1],
+        offset: [0.21875, 0],
+        fadeStart: 0.4,
+        opacity: 0.95,
+      });
       cosmicWeb(groups[2], 60, 17);
       for (let i = 0; i < 11; i++) {
         const cluster = new THREE.Group();
@@ -418,22 +513,37 @@ export function CosmicFlight({
         groups[2].add(cluster);
         galaxy(cluster, 350, 12);
       }
-      // 3. A volumetric four-arm Milky Way, viewed obliquely.
+      // 3. The Milky Way as NASA/JPL depicts it, tilted obliquely, with a thin
+      // scattered stellar disc above the image for parallax and depth.
       const spiral = new THREE.Group();
       spiral.rotation.set(0.5, -0.15, -0.25);
       groups[3].add(spiral);
-      galaxy(spiral, 12500, 17);
+      const milkyWay = photoDisc(spiral, MILKY_WAY_TEXTURE, 19.5, [0, 0, -0.35], {
+        fadeStart: 0.82,
+        opacity: 1.15,
+      });
+      discStars(spiral, 3200, 15.5);
       randomStars(groups[3], 900, 26, 0.9);
       // 4. The solar neighborhood. Orbital distances are compressed for this cinematic journey.
-      const sun = sphere(groups[4], 2.9, 0xf3bd71, [-12, 0, 0], true);
-      shell(sun, 3.15, "#e2a35b", 0.65);
-      shell(sun, 3.8, "#a77547", 0.16);
+      // The Sun is the SDO/AIA 171 Å observation (legend strip cropped away).
+      const sunPhoto = photoDisc(groups[4], SUN_TEXTURE, 4.6, [-12, 0, 0], {
+        repeat: [0.9, 0.9],
+        offset: [0.05, 0.05],
+        fadeStart: 0.86,
+        opacity: 1.35,
+      });
+      const sunGlow = sphere(groups[4], 2.55, 0xffc46b, [-12, 0, 0], true);
+      shell(sunGlow, 3.3, "#f0a850", 0.35);
+      const sunLight = new THREE.PointLight(0xffe0b8, 60, 90, 1.4);
+      sunLight.position.set(-12, 0, 0);
+      groups[4].add(sunLight);
+      // Mercury, Venus, Mars, Jupiter, Saturn in observed colours; Earth is the next chapter.
       const planetData: [number, number, number, number][] = [
-        [4, 0.35, 0x897563, 1.1],
-        [7, 0.65, 0xc9b496, 2.2],
-        [13, 0.48, 0xa66d4f, 4.0],
-        [19, 1.55, 0xb99878, 2.9],
-        [25, 1.2, 0xbbae8b, 4.6],
+        [4, 0.35, 0x9a9590, 1.1],
+        [7, 0.65, 0xe6d3a3, 2.2],
+        [13, 0.48, 0xc1653a, 4.0],
+        [19, 1.55, 0xd9b895, 2.9],
+        [25, 1.2, 0xe4d3a6, 4.6],
       ];
       for (const [radius, size, color, angle] of planetData) {
         const orbit = Array.from({ length: 129 }, (_, i) => {
@@ -468,8 +578,8 @@ export function CosmicFlight({
       // 5. A sphere mapped with the NASA equirectangular map, never with the Apollo disk photo.
       const earthMaterial = new THREE.MeshStandardMaterial({
         color: 0x829cb6,
-        roughness: 0.95,
-        metalness: 0,
+        roughness: 0.78,
+        metalness: 0.02,
       });
       const earth = new THREE.Mesh(
         new THREE.SphereGeometry(8, 96, 64),
@@ -483,7 +593,7 @@ export function CosmicFlight({
       );
       groups[5].add(earth);
       shell(groups[5], 8.16, "#769cc1", 0.65);
-      const loader = new THREE.TextureLoader();
+      shell(groups[5], 8.5, "#4f86c9", 0.22);
       loader.load(
         EARTH_TEXTURE,
         (texture) => {
@@ -699,6 +809,15 @@ export function CosmicFlight({
             (i !== 6 || current < 6.75);
         }
         groundMaterial.opacity = THREE.MathUtils.smoothstep(current, 5.68, 6);
+        // Photographed layers fade before the next scale makes them a blurry backdrop.
+        deepField.uniforms.opacity.value =
+          1.1 * (1 - THREE.MathUtils.smoothstep(current, 1.35, 2.05));
+        webPhoto.uniforms.opacity.value =
+          0.95 * (1 - THREE.MathUtils.smoothstep(current, 2.35, 3.05));
+        milkyWay.uniforms.opacity.value =
+          1.15 * (1 - THREE.MathUtils.smoothstep(current, 3.3, 3.92));
+        sunPhoto.uniforms.opacity.value =
+          1.35 * (1 - THREE.MathUtils.smoothstep(current, 4.45, 5.0));
         // Logarithmic world rebasing is equivalent to moving a camera through nested scales,
         // and keeps floating-point precision stable all the way from universes to a room.
         const drift = reduce ? 0 : Math.sin(now * 0.00008) * 0.28;

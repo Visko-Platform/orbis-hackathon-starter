@@ -67,6 +67,21 @@ Six original agency images, downloaded and visually checked on 12 September 2026
 - Reuse: NASA astronaut photograph made publicly available by ISS/JSC; reusable under NASA media guidelines with source credit and no implied endorsement. No additional restriction marked.
 - Accuracy: Real orbital photograph. NASA's published version was cropped, contrast enhanced, and had lens artifacts removed. Includes Golden Gate Bridge, Bay Bridge, and the northeastern waterfront.
 
+## Where each image appears in the interactive flight
+
+The flight (`components/cutline/cosmic-flight.tsx`) maps the source images into the 3D scene rather than showing them as slides. Each photographed layer sits on a soft-edged disc with additive blending, so black sky contributes nothing and no rectangular frame is visible. Layers fade out before the next scale would enlarge them into a blurry backdrop.
+
+| Chapter | Layer | Treatment |
+| --- | --- | --- |
+| Universe | Webb deep field | Disc behind the procedural cosmic web; at the multiverse scale it reads as a round universe filled with real galaxies. |
+| Cosmic web | NASA SVS simulation still | Centered square crop of the 16:9 frame on a disc behind the procedural filaments and galaxy clusters. |
+| Milky Way | NASA/JPL artist concept | Tilted disc (the same oblique angle as before) with a thin scattered stellar layer above it for parallax. |
+| Solar system | SDO/AIA 171 Å observation | Disc with the lower legend strip cropped away, a warm core and point light behind it, and planets in observed colours. |
+| Earth | NASA equirectangular map | Wrapped on a lit sphere with a two-layer atmosphere rim; see [EARTH-TEXTURE.md](EARTH-TEXTURE.md). |
+| San Francisco | ISS photograph | Ground plane under the approach; no invented buildings are overlaid. |
+
+Procedural stars, filaments, orbits, and the theater are original geometry. The sequence remains an artistic scale journey; see the accuracy notes above for each source.
+
 ## Integration notes
 
 - NASA imagery is generally reusable under NASA media guidelines, subject to identified third-party rights and no implied endorsement. No third-party copyright restriction was found on these selected image pages.
