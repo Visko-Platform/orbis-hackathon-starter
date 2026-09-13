@@ -1,16 +1,22 @@
-import { OrbisDemo } from "@/components/orbis-demo";
+import Link from "next/link";
+
+import { ManipulationLab } from "@/components/manipulation-lab";
 
 export default function Home() {
   return (
-    <main>
+    <main className="lab-main">
       <header>
-        <h1>Orbis starter</h1>
+        <p className="eyebrow">Synthetic manipulation data · Visko Orbis Stable</p>
+        <h1>Manipulation Lab</h1>
         <p>
-          Connect, generate a continuous live video, then steer it by changing
-          the prompt while it runs.
+          Pick a robot and a task, generate the start frame it acts on, and let
+          the director steer Orbis through the manipulation one chunk at a time
+          — checking each phase against what is actually on screen before it
+          moves on. Out the back: a minute-long episode and a manifest.{" "}
+          <Link href="/starter">Starter reference →</Link>
         </p>
       </header>
-      <OrbisDemo />
+      <ManipulationLab />
     </main>
   );
 }

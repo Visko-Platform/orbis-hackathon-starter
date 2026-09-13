@@ -28,11 +28,27 @@ export function unwrapOrbisMessage(raw: unknown): OrbisMessage {
   return raw as OrbisMessage;
 }
 
+/**
+ * Cached so the provider and the clip downloader use the same token: the clip
+ * manifest GET is authorized with `Authorization: Bearer <jwt>`, and the chunks
+ * it points at are presigned S3 URLs fetched unauthenticated.
+ */
+let cachedJwt: string | null = null;
+
+export function currentReactorJwt() {
+  return cachedJwt;
+}
+
+export function clearReactorJwt() {
+  cachedJwt = null;
+}
+
 export async function requestReactorJwt() {
   const response = await fetch("/api/token", { method: "POST" });
   const result = (await response.json()) as { jwt?: string; error?: string };
   if (!response.ok || !result.jwt) {
     throw new Error(result.error || "Could not create a Reactor token");
   }
+  cachedJwt = result.jwt;
   return result.jwt;
 }
