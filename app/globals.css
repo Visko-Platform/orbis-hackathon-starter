@@ -2697,3 +2697,13 @@ body {
 .has-video .live-caption { top:65px; bottom:auto; background:#080c1599; max-width:70%; font-size:12px; }
 @media(max-width:640px) { .film-decisions { left:12px; right:12px; bottom:44px; } .film-decision-options { gap:5px; } .film-decision-options button { min-height:49px; padding:7px; gap:5px; } .film-decision-options button>span,.film-decision-options svg { display:none; } .film-decision-options strong { font-size:9px; } .film-decision-label > span:last-child { display:none; } .has-video .live-caption { display:none; } }
 @media(prefers-reduced-motion:reduce) { .film-decision-options button { transition:none; } }
+
+/* Audience voice direction */
+.crowd-feed { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 6px; }
+.crowd-feed li { display: flex; gap: 8px; align-items: center; font-size: 13px; color: #cfd6e4; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 7px 10px; }
+.crowd-feed li svg { color: #eac18c; flex: none; }
+.audience-talk { margin-top: 18px; padding: 16px; border: 1px solid rgba(234,193,140,.25); border-radius: 14px; background: rgba(234,193,140,.05); display: grid; gap: 10px; }
+.audience-talk h3 { margin: 0; font-size: 17px; }
+.audience-talk p { margin: 0; color: #b9c2d2; font-size: 14px; }
+.audience-heard { font-style: italic; color: #f4f3ee !important; }
+.audience-sent { display: flex; gap: 6px; align-items: center; color: #9fd6b0 !important; font-size: 13px !important; }

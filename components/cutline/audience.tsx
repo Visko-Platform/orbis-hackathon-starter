@@ -1,23 +1,107 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Check,
   Clapperboard,
   Film,
   Loader2,
+  Mic,
+  MicOff,
   Radio,
   Users,
 } from "lucide-react";
 import type { Snapshot } from "@/lib/cutline/types";
 import { COSMIC_CHAPTERS, TEMPLATES } from "@/lib/cutline/content";
 import { requestJson } from "./use-story";
+import { speechRecognizer, type SpeechRecognizer } from "./speech";
 export default function Audience({ id }: { id: string }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState(false);
+  // Talk to the film: every finished sentence is sent to the room.
+  const [listening, setListening] = useState(false);
+  const [heard, setHeard] = useState("");
+  const [lastSent, setLastSent] = useState("");
+  const recognizer = useRef<SpeechRecognizer | null>(null);
+  const keepListening = useRef(false);
+  useEffect(
+    () => () => {
+      keepListening.current = false;
+      recognizer.current?.abort();
+    },
+    [],
+  );
+  const say = async (text: string) => {
+    const clean = text.trim();
+    if (clean.length < 2) return;
+    try {
+      setLastSent(clean);
+      setSnapshot(
+        await requestJson<Snapshot>(`/api/stories/${id}/say`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: clean.slice(0, 240) }),
+        }),
+      );
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  const startListening = () => {
+    const Recognizer = speechRecognizer();
+    if (!Recognizer) {
+      setError(
+        "Talking to the film needs Chrome, Edge, or Safari on this phone.",
+      );
+      return;
+    }
+    const recognition = new Recognizer();
+    recognition.lang = navigator.language || "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = true;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) void say(result[0].transcript);
+        else interim += result[0].transcript;
+      }
+      setHeard(interim.trim());
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed") {
+        keepListening.current = false;
+        setError("Allow the microphone to talk to the film.");
+      }
+    };
+    recognition.onend = () => {
+      recognizer.current = null;
+      setHeard("");
+      if (keepListening.current) {
+        try {
+          startListening();
+          return;
+        } catch {}
+      }
+      setListening(false);
+    };
+    recognizer.current = recognition;
+    keepListening.current = true;
+    setListening(true);
+    recognition.start();
+  };
+  const toggleListening = () => {
+    if (listening) {
+      keepListening.current = false;
+      recognizer.current?.stop();
+      setListening(false);
+    } else startListening();
+  };
   useEffect(() => {
     let source: EventSource | null = null;
     let disposed = false;
@@ -230,6 +314,46 @@ export default function Audience({ id }: { id: string }) {
                   The director will open the next vote soon. Keep watching the
                   shared screen.
                 </p>
+              </div>
+            )}
+            {!opening && story.state.openMic !== false && (
+              <div className="audience-talk">
+                <h3>Talk to the film</h3>
+                <p>
+                  Say what should happen. The movie changes by itself. No
+                  buttons, no waiting.
+                </p>
+                <button
+                  className={
+                    listening ? "button lime full" : "button outline full"
+                  }
+                  onClick={toggleListening}
+                  aria-pressed={listening}
+                >
+                  {listening ? <MicOff size={16} /> : <Mic size={16} />}
+                  {listening
+                    ? "Listening… tap to stop"
+                    : "Tap, then talk to the screen"}
+                </button>
+                {listening && (
+                  <p className="audience-heard" aria-live="polite">
+                    {heard ? `“${heard}”` : "Listening to you…"}
+                  </p>
+                )}
+                {lastSent && (
+                  <p className="audience-sent">
+                    <Check size={12} /> Sent to the film: “{lastSent}”
+                  </p>
+                )}
+                {!!story.state.crowd?.length && (
+                  <ul className="crowd-feed">
+                    {story.state.crowd.slice(-5).map((s) => (
+                      <li key={s.id}>
+                        <Mic size={12} /> “{s.text}”
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
             {error && (

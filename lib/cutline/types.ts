@@ -14,6 +14,8 @@ export type Beat = {
   choices: Choice[];
   createdAt: number;
   source: "opening" | "rehearsal" | "nebius" | "cue";
+  /** True when the scene was directed by the audience talking to the screen. */
+  byAudience?: boolean;
   visualStatus?: "draft" | "sent" | "acknowledged" | "observed" | "failed";
 };
 export type Poll = {
@@ -26,8 +28,14 @@ export type Poll = {
   results?: Record<string, number>;
   applied?: boolean;
 };
+/** One thing an audience member said to the screen. */
+export type Shout = { id: string; text: string; at: number; voter: string };
 export type StoryState = {
   scenes: Beat[];
+  /** Pending audience voices, cleared when merged into a scene. */
+  crowd?: Shout[];
+  /** Audience voice direction; undefined means open. */
+  openMic?: boolean;
   currentSceneId: string;
   memory: string;
   poll: Poll | null;

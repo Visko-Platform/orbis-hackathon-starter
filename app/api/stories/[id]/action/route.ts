@@ -18,7 +18,10 @@ const actionSchema = z.discriminatedUnion("type", [
     type: z.literal("direct"),
     planning: z.enum(["rehearsal", "nebius"]).default("rehearsal"),
     prompt: z.string().trim().min(3).max(1200),
+    /** Audience voices merged into this direction; shouts up to this time are cleared. */
+    crowdUntil: z.number().int().positive().optional(),
   }),
+  z.object({ type: z.literal("openmic"), on: z.boolean() }),
   z.object({ type: z.literal("poll.open") }),
   z.object({ type: z.literal("poll.close") }),
   z.object({
@@ -109,6 +112,10 @@ export async function POST(
       }
       await rateLimit(owner, "director", 100);
       const beat = await direct(request, story, prompt, action.planning);
+      if (action.type === "direct" && action.crowdUntil) {
+        beat.byAudience = true;
+        state.crowd = (state.crowd || []).filter((s) => s.at > action.crowdUntil!);
+      }
       state.scenes.push(beat);
       state.currentSceneId = beat.id;
       state.phase = "story";
@@ -118,6 +125,8 @@ export async function POST(
         state.poll.closedAt = Date.now();
         if (action.type === "poll.apply") state.poll.applied = true;
       }
+    } else if (action.type === "openmic") {
+      state.openMic = action.on;
     } else if (action.type === "poll.open") {
       if (state.phase !== "story")
         throw new HttpError(

@@ -64,30 +64,7 @@ import { CHAPTER_REFERENCES } from "@/lib/cutline/references";
 import { useStory } from "./use-story";
 import { useLiveVideo } from "./use-live-video";
 
-interface SpeechRecognizerEvent {
-  resultIndex: number;
-  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
-}
-interface SpeechRecognizer {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  maxAlternatives: number;
-  onresult: ((event: SpeechRecognizerEvent) => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-type SpeechRecognizerCtor = new () => SpeechRecognizer;
-const speechRecognizer = () => {
-  const w = window as unknown as {
-    SpeechRecognition?: SpeechRecognizerCtor;
-    webkitSpeechRecognition?: SpeechRecognizerCtor;
-  };
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
-};
+import { speechRecognizer, type SpeechRecognizer } from "./speech";
 import { useScore } from "./score";
 const CosmicFlight = lazy(() =>
   import("./cosmic-flight").then((module) => ({
@@ -446,7 +423,9 @@ export default function Studio() {
       if (event.error === "no-speech")
         toast.info("No speech heard. Try again closer to the microphone.");
       else if (event.error === "not-allowed")
-        toast.error("Microphone access was blocked. Allow it to direct by voice.");
+        toast.error(
+          "Microphone access was blocked. Allow it to direct by voice.",
+        );
       else if (event.error !== "aborted")
         toast.error("Voice direction failed: " + event.error);
     };
@@ -456,7 +435,9 @@ export default function Studio() {
       const text = finalText.trim().slice(0, 1200);
       if (text.length >= 3) {
         setPrompt(text);
-        setStageNotice("Voice: " + (text.length > 48 ? text.slice(0, 45) + "…" : text));
+        setStageNotice(
+          "Voice: " + (text.length > 48 ? text.slice(0, 45) + "…" : text),
+        );
         void direct(text);
       }
     };
@@ -577,6 +558,89 @@ export default function Studio() {
           throw error;
         }
       }
+    });
+  };
+  // Crowd voice autopilot: the audience talks to the screen; pending shouts are
+  // merged into ONE scene direction and sent to the film without the director.
+  const crowd = story?.state.crowd;
+  const openMic = story?.state.openMic !== false;
+  const crowdApplied = useRef(0);
+  const [crowdAppliedAt, setCrowdAppliedAt] = useState(0);
+  const [directingCrowd, setDirectingCrowd] = useState(false);
+  const pendingCrowd = (crowd || []).filter((s) => s.at > crowdAppliedAt);
+  const crowdStatus = directingCrowd
+    ? "directing"
+    : pendingCrowd.length
+      ? "waiting"
+      : "idle";
+  useEffect(() => {
+    const pending = (crowd || []).filter((s) => s.at > crowdApplied.current);
+    if (!openMic || isOpening || !story || poll?.open || !pending.length)
+      return;
+    if (
+      busy ||
+      live.sending ||
+      data.loading ||
+      ["connecting", "priming", "paused"].includes(live.status)
+    )
+      return;
+    const last = pending[pending.length - 1];
+    const quiet = Math.max(400, 2600 - (Date.now() - last.at));
+    const timer = window.setTimeout(() => {
+      crowdApplied.current = last.at;
+      setCrowdAppliedAt(last.at);
+      setDirectingCrowd(true);
+      const lines = pending.map((s) => s.text.trim()).filter(Boolean);
+      const action = hasNebius
+        ? `The audience is talking to the screen. Their voices: ${lines.map((l) => `"${l}"`).join(" · ")}. Turn what the crowd wants into one immediately visible change that keeps the same story, character and setting.`
+        : lines.join(". ");
+      void run(async () => {
+        const current = await ensureStory();
+        const result = await data.act(
+          {
+            type: "direct",
+            prompt: action.slice(0, 1200),
+            crowdUntil: last.at,
+          },
+          current,
+        );
+        const next = result.story.state.scenes.find(
+          (x) => x.id === result.story.state.currentSceneId,
+        )!;
+        setStageNotice("Audience · " + next.title);
+        if (canSend) {
+          try {
+            await live.sendPrompt(next.prompt, "Audience · " + next.title);
+            await data.act(
+              { type: "visual", sceneId: next.id, status: "acknowledged" },
+              result.story,
+            );
+          } catch (e) {
+            await data.act(
+              { type: "visual", sceneId: next.id, status: "failed" },
+              result.story,
+            );
+            throw e;
+          }
+        }
+      }).finally(() => setDirectingCrowd(false));
+    }, quiet);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    crowd,
+    openMic,
+    isOpening,
+    busy,
+    live.sending,
+    live.status,
+    data.loading,
+    poll?.open,
+  ]);
+  const toggleOpenMic = async () => {
+    await run(async () => {
+      const current = await ensureStory();
+      await data.act({ type: "openmic", on: !openMic }, current);
     });
   };
   const invite = async () => {
@@ -1136,7 +1200,11 @@ export default function Studio() {
                     </button>
                     <button
                       aria-label={music ? "Turn score off" : "Turn score on"}
-                      title={music ? "Score on · click to silence" : "Score off · click to play"}
+                      title={
+                        music
+                          ? "Score on · click to silence"
+                          : "Score off · click to play"
+                      }
                       aria-pressed={music}
                       onClick={toggleMusic}
                     >
@@ -1542,10 +1610,14 @@ export default function Studio() {
                 </div>
                 <button
                   type="button"
-                  className={listening ? "button lime full" : "button outline full"}
+                  className={
+                    listening ? "button lime full" : "button outline full"
+                  }
                   onClick={toggleVoice}
                   aria-pressed={listening}
-                  disabled={busy || live.sending || data.loading || !!data.error}
+                  disabled={
+                    busy || live.sending || data.loading || !!data.error
+                  }
                   title="Say what happens next. When you stop talking, the direction is sent."
                 >
                   {listening ? <MicOff size={16} /> : <Mic size={16} />}
@@ -1582,6 +1654,45 @@ export default function Studio() {
                       ? "Nebius keeps your character and story consistent."
                       : "Rehearsal director · connect Nebius for AI story planning."}
                 </p>
+                <div className="divider" />
+                <div className="section-heading">
+                  <h3>The audience talks to the screen</h3>
+                  <span className={`tag ${openMic ? "configured" : ""}`}>
+                    {openMic ? "OPEN MIC" : "MIC CLOSED"}
+                  </span>
+                </div>
+                <p className="helper">
+                  {isOpening
+                    ? "Once the film starts, anyone in the room can talk to it from their phone. What they say becomes the next moment, automatically."
+                    : crowdStatus === "directing"
+                      ? "Directing the film from the crowd's voices…"
+                      : crowdStatus === "waiting"
+                        ? "Listening… the crowd is speaking."
+                        : openMic
+                          ? "Live. Audience voices are merged into one visible change and sent to the film by themselves."
+                          : "Closed. The audience can vote, but their voices are not applied."}
+                </p>
+                {!!crowd?.length && (
+                  <ul className="crowd-feed" aria-live="polite">
+                    {crowd.slice(-4).map((s) => (
+                      <li key={s.id}>
+                        <Mic size={12} /> “{s.text}”
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button
+                  className={
+                    openMic ? "button outline full" : "button lime full"
+                  }
+                  onClick={() => void toggleOpenMic()}
+                  disabled={busy || data.loading || !!data.error}
+                >
+                  {openMic ? <MicOff size={16} /> : <Mic size={16} />}
+                  {openMic
+                    ? "Close the room microphone"
+                    : "Open the room microphone"}
+                </button>
                 <div className="divider" />
                 <div className="section-heading">
                   <h3>
