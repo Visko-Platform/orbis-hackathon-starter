@@ -1,4 +1,4 @@
-import Audience from "@/components/cutline/audience-client";
+import Audience from "@/components/cutline/audience";
 export default async function Watch({
   params,
 }: {
