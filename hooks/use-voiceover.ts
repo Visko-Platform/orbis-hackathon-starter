@@ -23,7 +23,7 @@ const SPEAK_MS = 60_000;
 /**
  * Narrator lines for the scene on screen: written from the campaign's approved
  * knowledge, then spoken by Gemini TTS and played over the take. Two phases, so
- * the caption appears while the speech is still being synthesized.
+ * the lines are known while the speech is still being synthesized.
  *
  * Shared by the studio and the viewer's ad break. Never throws into the caller
  * and never blocks a take — a scene must not fail because its narration did.

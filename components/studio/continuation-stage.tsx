@@ -12,7 +12,7 @@ import { Icon } from "./icon";
 // What the studio reports back for one submitted direction: a steer carries the
 // engineered prompt, a product question carries the on-screen answer instead.
 export type PivotResult = { ok: boolean; engineered?: Engineered; answer?: string; actionPrompt?: string | null };
-export type FactOverlay = { text: string; at: number; label?: string };
+export type FactOverlay = { text: string; at: number };
 type Receipt = { source: string; engineered: Engineered | null; answered: boolean; actionPrompt?: string | null };
 
 type Props = {
@@ -132,7 +132,7 @@ export function ContinuationStage({ session, campaign, framePreview, originalPre
           </div>}
         {busy && !live && <div className="render-overlay" role="status"><span className="spinner" /><strong>{preparing && !session.busy ? "Preparing your scene…" : session.phase || "Connecting to the live model…"}</strong><p>{session.phase === "Disconnecting" ? "Releasing your live session." : session.phase.startsWith("Orbis is busy") ? "The model had no free session. Waiting for one; nothing to do." : "The first frames may take a moment."}</p></div>}
         {live && <div className="live-corner"><span className="state-dot live" />{session.paused ? "PAUSED" : "LIVE"}</div>}
-        {overlay && <div className="fact-overlay" key={overlay.at} role="status" aria-live="polite"><span className="fact-overlay-label">{overlay.label ?? campaign.brand}</span><p>{overlay.text}</p></div>}
+        {overlay && <div className="fact-overlay" key={overlay.at} role="status" aria-live="polite"><span className="fact-overlay-label">{campaign.brand}</span><p>{overlay.text}</p></div>}
       </div>
       <div className="player-footer">
         <div className="partner-info"><img src={campaign.logo} alt={campaign.brand} /><div><span>{live && !brandRetained ? "Original campaign" : "In-scene partner"}</span><strong>{campaign.brand}</strong></div></div>

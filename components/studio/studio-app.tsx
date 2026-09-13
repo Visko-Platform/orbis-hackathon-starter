@@ -74,7 +74,7 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
   const [voiceover, setVoiceover] = useState(true);
   const { speak } = useVoiceover(voiceover);
 
-  // Narrator lines for the scene now on screen, shown as a caption and logged.
+  // Narrator lines for the scene now on screen, spoken and logged.
   // The two-phase write-then-speak lives in the hook, shared with the ad break.
   function speakScene(campaignId: string, scene: string, role: VoiceoverRole, direction?: string) {
     void speak({
@@ -84,7 +84,6 @@ function StudioWorkspace({ clearJwt }: { clearJwt: () => void }) {
       direction,
       contractLines: contract?.lines.map((line) => line.text) ?? [],
       onLines: (lines) => {
-        setOverlay({ text: lines.join(" "), at: Date.now(), label: "Voiceover" });
         addActivity("Voiceover", lines.join(" "));
       },
     });

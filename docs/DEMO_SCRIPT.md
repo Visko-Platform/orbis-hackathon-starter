@@ -114,7 +114,7 @@ make it rain
 > cage.
 
 **Let the narration land.** A line is written for each beat from the approved knowledge and
-spoken over the take, with the words captioned underneath.
+spoken over the take.
 
 > That voice is not Orbis. Its audio is picture-driven and carries no reliable speech, so we
 > write the line from the same approved facts the rest of the ad is built on, and speak it.

@@ -50,6 +50,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Could not write the voiceover." }, { status: 502 });
   }
   if (lines.length) await recordPromptVersion({ campaignId: campaign.id, role: "overlay", engineered: null, prompt: lines.join(" "), outcome: "overlay" });
-  // First phase: lines only, so the caption can show while speech is synthesized.
+  // First phase: lines only; the speech is a second call for exactly these lines.
   return NextResponse.json({ lines, audio: null, model: "gemini" }, { headers: NO_STORE });
 }

@@ -172,5 +172,3 @@
 @media (max-width:1000px) { .yt-main { grid-template-columns:1fr; } .yt-header { grid-template-columns:auto 1fr auto; } }
 @media (max-width:640px) { .yt-search { display:none; } .yt-main { padding:0 0 24px; } .yt-player { border-radius:0; } .yt-title,.yt-owner-row,.yt-description,.yt-comments,.yt-side { margin-left:12px; margin-right:12px; } }
 
-/* Narrator caption for the interactive ad; in flow above the controls so it never covers them. */
-.yt-ad-caption { max-width:min(760px,92%); margin:0 auto 10px; padding:8px 16px; border-radius:8px; background:rgba(0,0,0,.62); backdrop-filter:blur(4px); text-align:center; font-size:15px; line-height:1.45; }
