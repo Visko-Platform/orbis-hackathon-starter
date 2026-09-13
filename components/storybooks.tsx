@@ -1118,23 +1118,37 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
     const author = profileRef.current?.name;
     for (let i = 0; i < total; i++) {
       const p = list[i];
+      const text = pageText(p, i, total, title, author);
       // last page's text changes ("The end.") once more pages exist; regenerate if stale
       let job = voices.current.get(p.id);
       if (!job || i === total - 1) {
-        job = fetchVoice(pageText(p, i, total, title, author));
+        job = fetchVoice(text);
         voices.current.set(p.id, job);
       }
       const blob = await job;
       if (me !== readId.current) return;
-      if (!blob) continue; // narrator unavailable → just turn the page
       setReadingPage(i);
-      const audio = new Audio(URL.createObjectURL(blob));
-      narrator.current = audio;
-      await new Promise<void>((resolve) => {
-        audio.onended = () => resolve();
-        audio.onerror = () => resolve();
-        audio.play().catch(() => resolve());
-      });
+      if (blob) {
+        const audio = new Audio(URL.createObjectURL(blob));
+        narrator.current = audio;
+        await new Promise<void>((resolve) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => resolve();
+          audio.play().catch(() => resolve());
+        });
+      } else {
+        // the dream narrator is down — read it in the browser's own voice
+        await new Promise<void>((resolve) => {
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
+            resolve();
+          };
+          speak(text, undefined, finish);
+          setTimeout(finish, Math.max(4000, text.length * 90));
+        });
+      }
       if (me !== readId.current) return;
       await new Promise((r) => setTimeout(r, 350));
     }
@@ -1182,14 +1196,33 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
   };
   closeBookRef.current = closeBook;
 
-  // Back to the home screen (theme picker + shelf). The current story's pages
-  // stay in state, so picking a theme again drops you right back into it.
+  // Back to the home screen (theme picker + shelf). Every finished page is
+  // already on the shelf, so we clear the current story — otherwise the
+  // page-turn screen keeps covering home.
   const goHome = () => {
     stopNarration();
     setBookOpen(false);
     setViewing(null);
     setReadingPage(null);
     setTheme(null);
+    setWorld(EMPTY_WORLD);
+    setEcho(null);
+    setPageBeats([]);
+    setPages((cur) => {
+      cur.forEach((p) => URL.revokeObjectURL(p.url));
+      return [];
+    });
+    lastPageBlob.current = null;
+    directorWorld.current = "";
+    lastPromptRef.current = "";
+    bookId.current = newBookId();
+    bookBorn.current = Date.now();
+    setBookTitle("");
+    voices.current.clear();
+    setTurning(false);
+    turningRef.current = false;
+    if (session.runStarted) void session.reset();
+    void refreshShelf();
   };
 
   const newStory = () => {
@@ -1258,10 +1291,7 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
                     <div className="sb-next-kicker">scene {pages.length + 1}</div>
                     <div className="sb-next-lead">and then…</div>
                     <div className="sb-next-or">
-                      <button className="sb-next-idea" disabled={thinking} onClick={surprise}>
-                        💡 what if…
-                      </button>
-                      <span className="sb-next-hint">or hold the mic and say it</span>
+                      <span className="sb-next-hint">hold the mic and say what happens next</span>
                     </div>
                   </>
                 )}
@@ -1430,7 +1460,7 @@ function Stage({ clearJwt }: { clearJwt: () => void }) {
               <span className="sb-toybtn-label">the end</span>
             </button>
           )}
-          {live && (
+          {(live || showTurn) && (
             <button
               className="sb-toybtn sb-wonder"
               disabled={thinking}
