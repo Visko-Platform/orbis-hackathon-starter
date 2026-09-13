@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import Link from "next/link";
 import {
@@ -66,6 +67,29 @@ import { useLiveVideo } from "./use-live-video";
 
 import { speechRecognizer, type SpeechRecognizer } from "./speech";
 import { useScore } from "./score";
+// Score preference, read after hydration so server and client render the same.
+const musicListeners = new Set<() => void>();
+const musicStore = {
+  subscribe(listener: () => void) {
+    musicListeners.add(listener);
+    return () => {
+      musicListeners.delete(listener);
+    };
+  },
+  get() {
+    try {
+      return window.localStorage.getItem("cutline_music") !== "off";
+    } catch {
+      return true;
+    }
+  },
+  set(on: boolean) {
+    try {
+      window.localStorage.setItem("cutline_music", on ? "on" : "off");
+    } catch {}
+    musicListeners.forEach((listener) => listener());
+  },
+};
 const CosmicFlight = lazy(() =>
   import("./cosmic-flight").then((module) => ({
     default: module.CosmicFlight,
@@ -161,27 +185,18 @@ export default function Studio() {
     : [];
   const canSend = live.status === "live";
   // Adaptive ambient score across the opening and the film; ducks under Orbis audio.
-  const [music, setMusic] = useState(() => {
-    try {
-      return window.localStorage.getItem("cutline_music") !== "off";
-    } catch {
-      return true;
-    }
-  });
+  const music = useSyncExternalStore(
+    musicStore.subscribe,
+    musicStore.get,
+    () => true,
+  );
   useScore({
     chapter,
     opening: isOpening,
     liveAudio: live.status === "live" && !live.muted,
     enabled: music,
   });
-  const toggleMusic = () => {
-    setMusic((on) => {
-      try {
-        window.localStorage.setItem("cutline_music", on ? "off" : "on");
-      } catch {}
-      return !on;
-    });
-  };
+  const toggleMusic = () => musicStore.set(!music);
   const shareUrl =
     typeof window === "undefined" || !story
       ? ""
