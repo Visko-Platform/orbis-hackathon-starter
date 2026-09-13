@@ -24,7 +24,7 @@ export async function POST() {
         {
           type: "session",
           resources: { models: { match: [MODEL_NAME] } },
-          constraints: { max_sessions: 1 },
+          constraints: { max_sessions: 5 },
         },
       ],
     }),

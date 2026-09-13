@@ -10,9 +10,10 @@ import {
 } from "@/lib/orbis";
 
 export function useOrbisSession(onDisconnected: () => void) {
-  const { status, connect, disconnect, sendCommand, uploadFile } = useReactor(
+  const { status, sessionId, connect, disconnect, sendCommand, uploadFile } = useReactor(
     (state) => ({
       status: state.status,
+      sessionId: state.sessionId,
       connect: state.connect,
       disconnect: state.disconnect,
       sendCommand: state.sendCommand,
@@ -63,6 +64,7 @@ export function useOrbisSession(onDisconnected: () => void) {
     try {
       await action();
     } catch (caught) {
+      console.error("[orbis] action failed:", caught);
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
       setBusy(false);
@@ -145,7 +147,7 @@ export function useOrbisSession(onDisconnected: () => void) {
       timeout = setTimeout(() => {
         resolver.current = null;
         reject(new Error(`Timed out waiting for Orbis ${signalName}.`));
-      }, 15_000);
+      }, 45_000);
       resolver.current = () => {
         clearTimeout(timeout);
         resolve();
@@ -189,7 +191,12 @@ export function useOrbisSession(onDisconnected: () => void) {
         );
       }
 
-      await imageReady.promise;
+      try {
+        await imageReady.promise;
+      } catch (slow) {
+        // Signal missed or slow — the image was accepted, so keep going.
+        console.warn("[orbis] proceeding without state.has_image:", slow);
+      }
 
       const dimensions =
         reply.width && reply.height ? ` (${reply.width}×${reply.height})` : "";
@@ -217,9 +224,26 @@ export function useOrbisSession(onDisconnected: () => void) {
       throw new Error(`set_prompt: ${promptMessage.reason || "rejected"}`);
     }
 
-    await conditionsReady.promise;
-    setEvents((current) => ["conditions_ready", ...current].slice(0, 8));
-    await sendCommand("start", {});
+    try {
+      await conditionsReady.promise;
+      setEvents((current) => ["conditions_ready", ...current].slice(0, 8));
+    } catch (slow) {
+      // Cold model, or the signal never arrived. Starting anyway beats
+      // bouncing the kid back to a blank start screen.
+      console.warn("[orbis] no conditions_ready, starting anyway:", slow);
+      setEvents((current) => ["conditions_ready_skipped", ...current].slice(0, 8));
+    }
+    let startReply = unwrapOrbisMessage(await sendCommand("start", {}));
+    if (startReply.type === "command_error") {
+      // One quiet retry — a model that was still waking up will usually
+      // take it the second time.
+      console.warn("[orbis] start rejected, retrying once:", startReply.reason);
+      await new Promise((r) => setTimeout(r, 1200));
+      startReply = unwrapOrbisMessage(await sendCommand("start", {}));
+      if (startReply.type === "command_error") {
+        throw new Error(`start: ${startReply.reason || "rejected"}`);
+      }
+    }
     setRunStarted(true);
     setPaused(false);
   };
@@ -246,6 +270,36 @@ export function useOrbisSession(onDisconnected: () => void) {
       await sendCommand("set_prompt", { prompt: prompt.trim() });
     });
 
+  // Kid mode ("Storybooks"): start or steer directly with a composed prompt,
+  // bypassing the textarea state.
+  const startWithPrompt = (runPrompt: string) =>
+    runAction(() => startGeneration(null, runPrompt));
+
+  const steerWithPrompt = (runPrompt: string) =>
+    runAction(async () => {
+      if (!runPrompt.trim()) throw new Error("Empty prompt.");
+      await sendCommand("set_prompt", { prompt: runPrompt.trim() });
+    });
+
+  // Kid mode: rewind — reset the run and restart from a captured frame.
+  const rewindTo = (frame: File, runPrompt: string) =>
+    runAction(async () => {
+      await sendCommand("reset", {});
+      setRunStarted(false);
+      setPaused(false);
+      await new Promise((r) => setTimeout(r, 400));
+      await startGeneration(frame, runPrompt);
+    });
+
+  const startWithImage = (frame: File, runPrompt: string) =>
+    runAction(() => startGeneration(frame, runPrompt));
+
+  // Synchronous-ish teardown for page unload: no rAF wait, no state churn.
+  const disconnectNow = () => {
+    disconnecting.current = true;
+    void disconnect();
+  };
+
   const disconnectSession = async () => {
     disconnecting.current = true;
     setRunStarted(false);
@@ -264,6 +318,7 @@ export function useOrbisSession(onDisconnected: () => void) {
 
   return {
     status,
+    sessionId,
     connected,
     controlsBusy,
     runStarted,
@@ -286,6 +341,12 @@ export function useOrbisSession(onDisconnected: () => void) {
     startFromNanoOutput,
     setNanoBusy,
     steer,
+    startWithPrompt,
+    steerWithPrompt,
+    rewindTo,
+    startWithImage,
+    setMuted,
+    disconnectNow,
     pause: () => runAction(() => sendCommand("pause", {})),
     resume: () => runAction(() => sendCommand("resume", {})),
     reset: () => runAction(() => sendCommand("reset", {})),
