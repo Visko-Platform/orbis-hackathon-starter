@@ -8,6 +8,8 @@ export interface CosmicFlightProps {
   chapter: number;
   onNavigate: (index: number) => void;
   disabled?: boolean;
+  /** Camera travel time per chapter in ms; follows the journey pace. */
+  travelMs?: number;
 }
 
 // Original NASA imagery mapped into the 3D scene. Credits: docs/provenance/NASA.md
@@ -58,12 +60,14 @@ export function CosmicFlight({
   chapter,
   onNavigate,
   disabled = false,
+  travelMs = 4000,
 }: CosmicFlightProps) {
   const host = useRef<HTMLDivElement>(null);
   const target = useRef<HTMLButtonElement>(null);
   const chapterRef = useRef(clampChapter(chapter));
   const navigateRef = useRef(onNavigate);
   const disabledRef = useRef(disabled);
+  const travelRef = useRef(travelMs);
   const [failed, setFailed] = useState(false);
   const [travelling, setTravelling] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -71,7 +75,8 @@ export function CosmicFlight({
     chapterRef.current = clampChapter(chapter);
     navigateRef.current = onNavigate;
     disabledRef.current = disabled;
-  }, [chapter, onNavigate, disabled]);
+    travelRef.current = travelMs;
+  }, [chapter, onNavigate, disabled, travelMs]);
 
   useEffect(() => {
     const element = host.current;
@@ -784,7 +789,7 @@ export function CosmicFlight({
           transition = true;
           setTravelling(true);
         }
-        const duration = reduce ? 250 : 4000;
+        const duration = reduce ? 250 : travelRef.current;
         const progress = Math.min(1, (now - startedAt) / duration);
         current = THREE.MathUtils.lerp(start, destination, ease(progress));
         if (transition && progress === 1) {

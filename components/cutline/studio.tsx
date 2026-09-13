@@ -116,7 +116,7 @@ export default function Studio() {
   const [prompt, setPrompt] = useState(
     "The train slows. Every light goes out except the one above the last door.",
   );
-  const [duration, setDuration] = useState(7);
+  const [duration, setDuration] = useState(2);
   const [autoZoom, setAutoZoom] = useState(false);
   const [cinemaMode, setCinemaMode] = useState(false);
   const [selectedScene, setSelectedScene] = useState<Beat | null>(null);
@@ -917,6 +917,7 @@ export default function Studio() {
                   >
                     <CosmicFlight
                       chapter={chapter}
+                      travelMs={Math.min(4000, Math.max(1200, duration * 850))}
                       disabled={
                         busy || live.sending || data.loading || !!data.error
                       }
@@ -1302,7 +1303,7 @@ export default function Studio() {
                         <span className="mono muted">PACE</span>
                         <Slider
                           aria-label="Seconds per cosmic chapter"
-                          min={4}
+                          min={2}
                           max={15}
                           step={1}
                           value={[duration]}
