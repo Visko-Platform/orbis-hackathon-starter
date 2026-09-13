@@ -35,6 +35,8 @@ import {
   SkipForward,
   Mic,
   MicOff,
+  Music,
+  Music2,
   Sparkles,
   Square,
   Sun,
@@ -86,6 +88,7 @@ const speechRecognizer = () => {
   };
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 };
+import { useScore } from "./score";
 const CosmicFlight = lazy(() =>
   import("./cosmic-flight").then((module) => ({
     default: module.CosmicFlight,
@@ -180,6 +183,28 @@ export default function Studio() {
     ? activePath(story.state.scenes, story.state.currentSceneId)
     : [];
   const canSend = live.status === "live";
+  // Adaptive ambient score across the opening and the film; ducks under Orbis audio.
+  const [music, setMusic] = useState(() => {
+    try {
+      return window.localStorage.getItem("cutline_music") !== "off";
+    } catch {
+      return true;
+    }
+  });
+  useScore({
+    chapter,
+    opening: isOpening,
+    liveAudio: live.status === "live" && !live.muted,
+    enabled: music,
+  });
+  const toggleMusic = () => {
+    setMusic((on) => {
+      try {
+        window.localStorage.setItem("cutline_music", on ? "off" : "on");
+      } catch {}
+      return !on;
+    });
+  };
   const shareUrl =
     typeof window === "undefined" || !story
       ? ""
@@ -1108,6 +1133,14 @@ export default function Studio() {
                       onClick={() => setModal("sources")}
                     >
                       <Info size={15} />
+                    </button>
+                    <button
+                      aria-label={music ? "Turn score off" : "Turn score on"}
+                      title={music ? "Score on · click to silence" : "Score off · click to play"}
+                      aria-pressed={music}
+                      onClick={toggleMusic}
+                    >
+                      {music ? <Music2 size={15} /> : <Music size={15} />}
                     </button>
                     <button
                       aria-label={
