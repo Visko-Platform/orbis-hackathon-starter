@@ -80,6 +80,12 @@ behind the Google-login gate above. Before adding the key in production:
 - `auth.ts` / `middleware.ts` — NextAuth Google login gate and route matcher.
 - `.env.example` — documents the required environment variables.
 
+## Documentation
+
+- [How Add Family turns a photo into an Orbis prompt](docs/memory-prompt-pipeline.md) — which
+  form fields reach Gemini, what blank fields fall back to, and why the photo outranks the
+  typed memory.
+
 For the complete command parameters, message schemas, tracks, and current model behavior, see the
 public Reactor documentation:
 
