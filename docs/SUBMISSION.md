@@ -2,6 +2,8 @@
 
 Repository: [vnmoorthy/cutline](https://github.com/vnmoorthy/cutline). Submission branch: **Cutline-vnmoorthy**, following the organizer’s ProductName-TeamName format.
 
+Organizer submission: **[pull request #6](https://github.com/Visko-Platform/orbis-hackathon-starter/pull/6)**. Complete continuation context: [CLAUDE-HANDOFF.md](../CLAUDE-HANDOFF.md).
+
 The organizer repository is [Visko-Platform/orbis-hackathon-starter](https://github.com/Visko-Platform/orbis-hackathon-starter). The authenticated vnmoorthy account has read access but no direct push permission. The project is therefore published as a fork branch with a submission pull request. An organizer must accept that submission or grant direct branch-write access if they require a branch inside their repository.
 
 ## Included

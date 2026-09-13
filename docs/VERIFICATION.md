@@ -1,6 +1,6 @@
 # Verification record
 
-Cutline has local application tests, real Orbis media observations, and a verified Nebius scene-planning request. Public deployment and the final combined presentation rehearsal are separate checks. This page records what each result actually establishes.
+Cutline has local application tests and a verified combined audience → Nebius → Orbis rehearsal. Public deployment remains unverified. This page records what each result actually establishes.
 
 ## Application checks
 
@@ -13,8 +13,9 @@ Cutline has local application tests, real Orbis media observations, and a verifi
 | Story logic                | Six passing unit tests                                                                                      | `npm test`                                                                     |
 | Mocked live lifecycle      | Stale connection failure did not kill a newer session; a zero-frame chunk did not count as visible progress | [Lifecycle report](testing/live-lifecycle.json), `npm run test:live-lifecycle` |
 | Lint                       | Zero errors and zero warnings in the latest local run                                                       | `npm run lint`                                                                 |
-| Production build           | Passed locally after the Reactor runtime WASM import fix                                                    | `npm run build`                                                                |
-| GitHub Actions             | Workflow added; hosted execution not yet verified                                                           | [Verify workflow](../.github/workflows/verify.yml)                             |
+| Production build / types   | Passed locally after final Three.js, on-video choices and SF arrival changes | `npm run build`, `npm run typecheck` |
+| Choice regressions         | Three passing groups, no provider calls | [Choice report](testing/choice-regressions.json), `npm run test:choices` |
+| GitHub Actions             | Two runs failed at the oversized-input test: Worker proxy HTTP 503 instead of 413; 11 other groups passed in each | [Latest checked run 34726670796](https://github.com/vnmoorthy/cutline/actions/runs/34726670796) |
 
 The reports are dated local observations. The retained API and voting reports reflect the successful final rerun after the pause, stale-poll, and manual-direction fixes. Do not aggregate these assertion counts into unique coverage, performance, or load-testing claims.
 
@@ -55,6 +56,7 @@ npm run test:live-lifecycle
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:integration
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:regressions
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:cosmic
+CUTLINE_TEST_BASE=http://localhost:3000 npm run test:choices
 npm run build
 ```
 
@@ -62,19 +64,20 @@ HTTP suites require a running local preview and create isolated test stories. Th
 
 GitHub Actions provisions a fresh local D1 database, starts the built Worker, runs the tests, and retains `test-results` artifacts. It receives no sponsor secrets. A checked-in workflow is not evidence of a successful hosted run.
 
-## Release checks still open
+## Release status
 
 | Item                                                       | State                                             |
 | ---------------------------------------------------------- | ------------------------------------------------- |
-| Final commit SHA and retained final test reports           | Pending final run / commit                        |
-| Final combined Nebius → Orbis audience rehearsal           | In progress; separate provider checks have passed |
-| Final source-opening controls and mobile layout            | Final UI review in progress                       |
-| Latest ten-slide PowerPoint regeneration and render review | Presentation update in progress                   |
+| Application baseline and retained reports                  | Published at `b058987`; reports in `docs/testing` |
+| Combined Nebius → Orbis audience rehearsal                 | Passed locally; evidence below |
+| Final flight arrival, overlay controls and mobile layout   | Targeted final visual review remains |
+| Ten-slide PowerPoint regeneration and render review        | Complete; PPTX, PDF, source and 180-second storyboard committed |
 | Public HTTPS product and second-device check               | Pending deployment                                |
-| Public GitHub repository, About URL, and topics            | Pending creation                                  |
-| GitHub Actions hosted run                                  | Pending repository publication                    |
-| Organizer `ProductName-TeamName` branch                    | Pending exact destination/team/access             |
-| X announcement                                             | Draft only                                        |
+| Public GitHub repository, About URL, and topics            | [Published](https://github.com/vnmoorthy/cutline); homepage links recorded demo |
+| GitHub Actions hosted run                                  | Two runs failed at the same request; details in [handoff](../CLAUDE-HANDOFF.md) |
+| Static GitHub Pages website                                | HTTP 200 and Pages `built`; full Worker/D1 backend remains separate |
+| Organizer `ProductName-TeamName` branch                    | `Cutline-vnmoorthy` pushed to fork; [PR #6](https://github.com/Visko-Platform/orbis-hackathon-starter/pull/6) open; upstream write unavailable |
+| X announcement                                             | Prepared copy; pending user sign-in; no post sent |
 
 Before publishing, verify a fresh room on the actual public URL: join from another device, vote, close, apply, inspect live frames, branch, export, and end the session. Retain the final evidence without provider keys, JWTs, or browser cookies.
 

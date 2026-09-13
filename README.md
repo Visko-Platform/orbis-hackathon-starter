@@ -29,7 +29,7 @@
 </p>
 
 > **🌐 Website:** [vnmoorthy.github.io/cutline](https://vnmoorthy.github.io/cutline/) — pitch, recorded live take, and how the loop works.
-> **Hackathon branch:** [`Cutline-vnmoorthy`](https://github.com/vnmoorthy/cutline/tree/Cutline-vnmoorthy) · [PowerPoint](presentation/CUTLINE-3-minute-pitch.pptx) · [Three-minute script](presentation/STORYBOARD.md) · [Claude review handoff](CLAUDE-REVIEW.md)
+> **Hackathon branch:** [`Cutline-vnmoorthy`](https://github.com/vnmoorthy/cutline/tree/Cutline-vnmoorthy) · [PowerPoint](presentation/CUTLINE-3-minute-pitch.pptx) · [Three-minute script](presentation/STORYBOARD.md) · [Complete Claude handoff](CLAUDE-HANDOFF.md) · [Review checklist](CLAUDE-REVIEW.md)
 > The complete interactive app is a Cloudflare Worker with a D1 database. Run it locally in three commands, or publish your own public copy with `npm run deploy` (see [Quick start](#quick-start)).
 
 ## Quick start

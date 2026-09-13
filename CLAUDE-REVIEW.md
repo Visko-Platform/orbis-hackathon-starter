@@ -1,5 +1,7 @@
 # Claude handoff: final review of Cutline
 
+For the complete conversation context, current submission status, private-environment handling and takeover order, read **[CLAUDE-HANDOFF.md](CLAUDE-HANDOFF.md) first**. This file is the narrower review checklist.
+
 Review the final integrated product, identify material failures, and help the lead finish the release quickly. Prioritize reproducible functional/security issues and mismatches between the demo and the code. Avoid broad rewrites or repeating unchanged checks. This is a review handoff, not a claim that the release is complete.
 
 **Workspace:** repository root  
@@ -40,7 +42,7 @@ Creator live hook → scoped Reactor session → Visko Orbis → shared video/au
 | `presentation/STORYBOARD.md`                                      | Sole timed speaker script; `docs/DEMO-RUNBOOK.md` should link it                                            |
 | `.github/workflows/verify.yml`                                    | Local built-Worker CI with D1, tests, no sponsor secrets                                                    |
 
-Runtime: React 19 / TypeScript / Tailwind 4 / Vinext + Vite / Cloudflare Worker + D1. `.openai/hosting.json` declares `DB`; there is no R2 dependency for story storage. Follow the existing Sites project workflow when editing/building/publishing; do not reinitialize or replace its scaffold.
+Runtime: React 19 / TypeScript / Tailwind 4 / Vinext + Vite / Cloudflare Worker + D1. `.openai/hosting.json` declares `DB`; there is no R2 dependency for story storage. Preserve the scaffold. The user's latest publishing choice is GitHub; no public Worker/D1 backend has been deployed.
 
 ## Verified checks and their limits
 
@@ -51,12 +53,14 @@ Runtime: React 19 / TypeScript / Tailwind 4 / Vinext + Vite / Cloudflare Worker 
 | Replay preservation    | **233 assertions, five groups, zero failures**, completed 23:22:19 UTC; six fixtures removed; `docs/testing/cosmic-preservation.json`                                                          |
 | Story unit tests       | Six passed; `tests/story.test.ts`                                                                                                                                                              |
 | Mock live lifecycle    | Old canceled failure did not kill a new session; zero-frame chunk did not count as observed media; `docs/testing/live-lifecycle.json`                                                          |
-| Lint/build             | Lead reported zero lint errors/warnings and a production build pass before the new flight/overlay changes                                                                                      |
+| Lint/build/typecheck   | Passed locally after the final Three.js, overlay and SF arrival changes; zero lint errors/warnings |
+| Choice regressions    | Three groups passed; `docs/testing/choice-regressions.json` |
+| GitHub CI             | Two hosted runs failed at the same oversized request: Wrangler proxy HTTP 503 instead of expected 413; see the primary handoff |
 | Real Nebius            | One HTTP200 request to `openai/gpt-oss-120b` in **3,630 ms**; three valid choices, character/coat/train/compass retention, correct parent/version/persistence; `docs/testing/nebius-live.json` |
 | Real Orbis             | Dynamic/Stable media observed; Stable image conditioning and **2560×1440 delivery at 18 fps**; recorded example in `public/demo/`                                                              |
 | Actual recording       | Browser WebM inspected with ffprobe; converted MP4 and real-frame poster retained                                                                                                              |
 
-The Nebius verification saved `visualStatus: draft`: it proves planning/persistence, not that the same planned scene was rendered. Cue timing observations (1,642/3,464 ms and a later audience cue 419/2,317 ms) separate command acknowledgement and later chunk arrival. They are not latency benchmarks or proof of semantic visual compliance. Delivery resolution is not native generation resolution. The new Three.js/overlay changes are not covered by earlier UI/build results.
+The standalone Nebius verification saved `visualStatus: draft`: it proves planning/persistence, not rendered video. The separate combined rehearsal verified the full loop. Cue timing observations separate command acknowledgement and later chunk arrival; they are not latency benchmarks or proof of exact semantic compliance. Delivery resolution is not native generation resolution. Final source changes passed static/build checks; the final SF arrival and exact on-video button flow still need a targeted visual pass.
 
 Run relevant checks after the final integration:
 
@@ -68,6 +72,7 @@ npm run test:live-lifecycle
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:integration
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:regressions
 CUTLINE_TEST_BASE=http://localhost:3000 npm run test:cosmic
+CUTLINE_TEST_BASE=http://localhost:3000 npm run test:choices
 npm run build
 ```
 

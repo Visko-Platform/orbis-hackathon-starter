@@ -2,7 +2,7 @@
 
 Use the [canonical three-minute speaker script and ten-slide storyboard](../presentation/STORYBOARD.md) with the [PowerPoint](../presentation/CUTLINE-3-minute-pitch.pptx) or [PDF](../presentation/CUTLINE-3-minute-pitch.pdf). Keep timing and spoken copy in that single storyboard so the deck and narration cannot drift apart. This document covers operating the product before, during, and after the pitch.
 
-The presentation artifacts are being refreshed for the latest verified sponsor results. Use the final regenerated versions and complete their render review before presenting.
+The ten-slide PPTX and PDF have been regenerated and visually reviewed for the continuous cosmic canvas and verified sponsor results. Use the canonical 180-second storyboard when rehearsing.
 
 ## Before the timer
 
@@ -13,13 +13,13 @@ The presentation artifacts are being refreshed for the latest verified sponsor r
 5. Enter a Nebius key or shared presenter code and confirm a scene tagged `nebius`. The recorded smoke test proves the adapter works; this rehearsal checks the current credentials and combined live path.
 6. Invite the audience and test the QR/link from a second device or isolated browser profile. Ensure the phone displays the shared-screen instruction and can change its vote.
 7. Close credential dialogs. Set audio deliberately and keep the stage readable. Keep a [recorded live example](../public/demo/cutline-live.mp4) ready as a clearly identified fallback.
-8. If using the cosmic opening, show the original source sequence and then enter the film. Scientific frames remain intact; Orbis generates the fiction.
+8. If using the cosmic opening, click the projected destinations in the continuous canvas and then enter the film. Agency textures retain their provenance; Orbis generates the fiction.
 
 ## Operate the live loop
 
 | Action | Expected evidence |
 | --- | --- |
-| Play the cinematic opening | Labeled original source images with subtle camera motion; any connected model stays paused |
+| Play the cinematic opening | One continuous Three.js canvas with clickable destinations and sourced Earth/SF imagery; any connected model stays paused |
 | Enter live film | The fictional story is selected; Orbis primes its take and moving frames arrive |
 | Invite audience | QR and actual room link open the voting companion |
 | Open audience voting | Three choices and totals synchronize across identities |

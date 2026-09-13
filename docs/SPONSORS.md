@@ -6,7 +6,7 @@ Cutline was built for the [Live Models Hackathon hosted by Visko × Reactor × N
 
 The default model is `reactor/visko-orbis-dynamic`. Connections also offers `reactor/visko-orbis-stable`, the model used by the official starter. The creator controls an ongoing session through prompts, optional image conditioning, generation start/reset, and pause/resume. Directions favor one visible change, one continuing subject, and a stable setting.
 
-The cosmic opening displays original observations, a scientific simulation, artist concepts, and an archival theater photograph with subtle camera motion. Their classifications and credits remain visible. A connected model is paused while that source sequence plays. Entering the fictional train film starts an anchored live take; custom stories can start from their own prompt without an unrelated forced reference. The cosmic sequence is editorial, not generated scientific footage or an exact physical zoom.
+The cosmic opening uses one interactive Three.js canvas with continuous camera travel, projected destination buttons, an original NASA Earth texture and San Francisco aerial imagery. Multiverse, galaxy and theater geometry and compressed scales are cinematic interpretation. Agency/reference images retain their classifications and credits. A connected model is paused during the opening. Entering the fictional train film starts an anchored live take; custom stories can start from their own prompt without an unrelated forced reference. The opening is not generated scientific footage or an exact physical zoom.
 
 Primary references: [Dynamic overview](https://docs.reactor.inc/model-api-reference/visko-orbis-dynamic/overview), [schema](https://docs.reactor.inc/model-api-reference/visko-orbis-dynamic/schema), [prompt guide](https://docs.reactor.inc/model-api-reference/visko-orbis-dynamic/prompt-guide).
 
@@ -28,7 +28,7 @@ Primary references: [authentication](https://docs.reactor.inc/authentication), [
 
 A real authorized request passed on **12 September 2026**: HTTP 200 in **3,630 ms**, three valid choices, preserved character/coat/train/compass details, correct parent/version, and persistence across a fresh read. [Sanitized Nebius evidence](testing/nebius-live.json)
 
-That result verifies live scene planning. Its video status remained `draft`, so it does not claim the same direction was already rendered by Orbis. The final combined audience-to-planner-to-video rehearsal remains a distinct release check.
+That standalone result verifies planning; its video status remained `draft`. A separate [combined rehearsal](testing/combined-live.json) subsequently verified an audience winner, Nebius planning, Orbis cue acknowledgement and a later movie chunk. This distinguishes the two observations without treating text success as proof of rendered video.
 
 API planning defaults to `rehearsal`. The client selects Nebius when a personal key or usable shared configuration is supplied. Explicit Nebius mode without credentials fails; provider errors are surfaced rather than silently presented as successful AI direction. Shared server credentials require a presenter access code and atomic cross-browser hourly request caps. Personal keys stay in the current tab's memory and are not saved in stories.
 
@@ -46,4 +46,4 @@ The upstream starter did not declare a license at this commit. Its adapted code 
 
 ## Evidence boundaries
 
-The repository records real sponsor calls and media observations alongside application tests. A single observed timing is not a benchmark; command acceptance is not proof of visual compliance. Delivery resolution is not native generation resolution. Public deployment, hosted CI, and the final combined rehearsal must be verified separately before release claims are updated.
+The repository records real sponsor calls and media observations alongside application tests. A single observed timing is not a benchmark; command acceptance is not proof of exact visual compliance. Delivery resolution is not native generation resolution. The combined local rehearsal passed; public backend deployment remains unverified and two hosted CI runs failed on the same Worker proxy interruption. See [VERIFICATION.md](VERIFICATION.md).
