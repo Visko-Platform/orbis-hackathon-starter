@@ -74,7 +74,7 @@ footer{padding:36px 0;color:var(--muted);font-size:14px;border-top:1px solid var
   <p class="lead">The theater screen shows the video. Audience phones show the room, the choices, the vote totals, and the winning decision.</p>
   <div class="loop">
     <div class="step"><b>01 · SCENE</b>A live Orbis scene plays on the shared screen.</div>
-    <div class="step"><b>02 · CHOOSE</b>Audience phones get three choices. Votes can change until the director closes.</div>
+    <div class="step"><b>02 · SPEAK OR CHOOSE</b>Audience phones talk to the screen, or vote between three choices.</div>
     <div class="step"><b>03 · DECIDE</b>The vote closes; tallies and the winner are frozen atomically.</div>
     <div class="step"><b>04 · PLAN</b>Nebius turns the winning choice into a coherent scene direction with story memory.</div>
     <div class="step"><b>05 · STEER</b>The direction is sent to the running Orbis world through Reactor. The next moment is generated live.</div>
@@ -86,12 +86,13 @@ footer{padding:36px 0;color:var(--muted);font-size:14px;border-top:1px solid var
   <div class="grid">
     <div class="card"><div class="n">LIVE</div><h3>Start live cinema</h3><p>A creator-only endpoint mints a scoped Reactor session; the browser receives Orbis video and audio over WebRTC.</p></div>
     <div class="card"><div class="n">DIRECT</div><h3>Direct by typing or talking</h3><p>Type what happens next, or press “Talk to direct the film” and just say it. When you stop talking, the direction is sent and the video changes.</p></div>
+    <div class="card"><div class="n">VOICE</div><h3>The audience talks, the film obeys</h3><p>Anyone in the room taps “Talk to the film” on their phone and just says it. Their voices are merged into one visible change and sent to the running film automatically, same story, same character.</p></div>
     <div class="card"><div class="n">ROOM</div><h3>Invite the room</h3><p>Share a link or QR code. Separate browsers vote; a vote can be changed until voting closes.</p></div>
     <div class="card"><div class="n">DECIDE</div><h3>Make a collective decision</h3><p>Close voting, freeze the result, apply the winning action exactly once. Ties follow displayed order.</p></div>
     <div class="card"><div class="n">MEMORY</div><h3>Preserve continuity</h3><p>Character, clothing, setting, and style live in editable story memory that the Nebius director receives.</p></div>
     <div class="card"><div class="n">BRANCH</div><h3>Explore another ending</h3><p>Return to any saved scene and continue along a new branch. Every branch stays in the exported story graph.</p></div>
     <div class="card"><div class="n">COSMOS</div><h3>Cosmic opening from real NASA imagery</h3><p>A continuous 3D flight where the actual NASA frames are in the scene: Webb’s deep field, the cosmic-web simulation, the JPL Milky Way, the SDO Sun, an equirectangular Earth, and ISS San Francisco, at 2 seconds per stop.</p></div>
-    <div class="card"><div class="n">EXPORT</div><h3>Keep the result</h3><p>Export Markdown and JSON story data, and record clips of the actual live media in the browser.</p></div>
+    <div class="card"><div class="n">EXPORT</div><h3>Keep the result</h3><p>Export Markdown and JSON story data, and record clips of the actual live media. An adaptive generated score plays across the whole journey and ducks under the film's own audio.</p></div>
   </div>
 </div></section>
 
