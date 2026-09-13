@@ -2707,3 +2707,13 @@ body {
 .audience-talk p { margin: 0; color: #b9c2d2; font-size: 14px; }
 .audience-heard { font-style: italic; color: #f4f3ee !important; }
 .audience-sent { display: flex; gap: 6px; align-items: center; color: #9fd6b0 !important; font-size: 13px !important; }
+
+/* Voice direction stays on the film, including theater mode. */
+.film-voice { position:absolute; z-index:8; top:64px; right:22px; width:min(350px, calc(100% - 44px)); display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+.film-voice button { display:flex; align-items:center; gap:10px; min-height:44px; padding:10px 16px; border:1px solid #e6c48b99; border-radius:999px; color:#ffe8bf; background:#121723db; backdrop-filter:blur(18px); cursor:pointer; }
+.film-voice button:disabled { opacity:.5; cursor:default; }
+.film-voice.is-listening button { background:#6b3025e8; border-color:#ffb291; color:#fff4e5; box-shadow:0 0 24px #d8783730; }
+.film-voice > div { display:grid; gap:7px; max-width:100%; padding:12px 15px; border-radius:10px; color:#f8eddb; background:#080c15c9; backdrop-filter:blur(16px); }
+.film-voice strong { font:9px var(--font-mono),monospace; letter-spacing:.1em; color:#e6bd83; }
+.film-voice span { font-size:12px; line-height:1.5; max-height:72px; overflow:auto; }
+@media(max-width:640px) { .film-voice { top:48px; right:12px; width:min(270px,calc(100% - 24px)); gap:6px; } .film-voice > div { padding:8px 10px; } .film-voice span { max-height:40px; font-size:10px; } .film-voice button { padding:8px 12px; font-size:11px; } }

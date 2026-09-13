@@ -65,7 +65,7 @@ import { CHAPTER_REFERENCES } from "@/lib/cutline/references";
 import { useStory } from "./use-story";
 import { useLiveVideo } from "./use-live-video";
 
-import { speechRecognizer, type SpeechRecognizer } from "./speech";
+import { useVoiceDirector } from "./use-voice-director";
 import { useScore } from "./score";
 // Score preference, read after hydration so server and client render the same.
 const musicListeners = new Set<() => void>();
@@ -395,77 +395,18 @@ export default function Studio() {
       setPrompt("");
     });
   };
-  // Voice direction: speak the next moment; the final transcript is sent as a direction.
-  const [listening, setListening] = useState(false);
-  const recognizer = useRef<SpeechRecognizer | null>(null);
-  useEffect(() => () => recognizer.current?.abort(), []);
-  const toggleVoice = () => {
-    if (listening) {
-      recognizer.current?.stop();
-      return;
-    }
-    const Recognizer = speechRecognizer();
-    if (!Recognizer) {
-      toast.info(
-        "Voice direction needs speech recognition. Use Chrome, Edge, or Safari.",
-      );
-      return;
-    }
-    if (isOpening) {
-      toast.info("Enter the film to direct by voice.");
-      return;
-    }
-    if (poll?.open) {
-      toast.info("Close audience voting before directing by voice.");
-      return;
-    }
-    const recognition = new Recognizer();
-    recognition.lang = navigator.language || "en-US";
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-    let finalText = "";
-    recognition.onresult = (event) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) finalText += result[0].transcript;
-        else interim += result[0].transcript;
-      }
-      setPrompt((finalText + interim).trim().slice(0, 1200));
-    };
-    recognition.onerror = (event) => {
-      if (event.error === "no-speech")
-        toast.info("No speech heard. Try again closer to the microphone.");
-      else if (event.error === "not-allowed")
-        toast.error(
-          "Microphone access was blocked. Allow it to direct by voice.",
-        );
-      else if (event.error !== "aborted")
-        toast.error("Voice direction failed: " + event.error);
-    };
-    recognition.onend = () => {
-      recognizer.current = null;
-      setListening(false);
-      const text = finalText.trim().slice(0, 1200);
-      if (text.length >= 3) {
-        setPrompt(text);
-        setStageNotice(
-          "Voice: " + (text.length > 48 ? text.slice(0, 45) + "…" : text),
-        );
-        void direct(text);
-      }
-    };
-    recognizer.current = recognition;
-    setListening(true);
-    try {
-      recognition.start();
-    } catch {
-      recognizer.current = null;
-      setListening(false);
-      toast.error("Could not start listening. Try again.");
-    }
-  };
+  const voice = useVoiceDirector({
+    roomId: story?.id || "",
+    enabled: !isOpening && canSend && !poll?.open && !data.error,
+    busy: busy || live.sending || data.loading,
+    onDirection: async (text) => {
+      setPrompt(text);
+      setStageNotice("Voice · " + text.slice(0, 80));
+      await direct(text);
+    },
+  });
+  const listening = voice.active;
+  const toggleVoice = voice.toggle;
   const cue = useCallback(
     async (cueId: string) => {
       const item = QUICK_CUES.find((x) => x.id === cueId);
@@ -1143,6 +1084,19 @@ export default function Studio() {
                   </div>
                 )}
                 {live.hasFrames && !isOpening && (
+                  <div className={`film-voice ${listening ? "is-listening" : ""}`}>
+                    <button type="button" onClick={toggleVoice} aria-pressed={listening}
+                      disabled={!listening && (busy || live.sending || !!poll?.open || !canSend)}>
+                      {listening ? <MicOff size={17} /> : <Mic size={17} />}
+                      {listening ? "Stop microphone" : "Talk to the movie"}
+                    </button>
+                    <div role="status" aria-live="polite">
+                      <strong>{listening ? (busy || live.sending ? "DIRECTING YOUR SCENE" : "LISTENING · SPEAK A CHANGE") : "YOUR VOICE. THE NEXT FRAME."}</strong>
+                      <span>{voice.transcript || 'Try “Mara opens the door slowly”'}</span>
+                    </div>
+                  </div>
+                )}
+                {live.hasFrames && !isOpening && (
                   <div
                     className="film-decisions"
                     aria-label="Choose what happens in the movie"
@@ -1631,13 +1585,13 @@ export default function Studio() {
                   onClick={toggleVoice}
                   aria-pressed={listening}
                   disabled={
-                    busy || live.sending || data.loading || !!data.error
+                    !listening && (busy || live.sending || data.loading || !!data.error || !canSend || !!poll?.open || isOpening)
                   }
-                  title="Say what happens next. When you stop talking, the direction is sent."
+                  title="Speak one change. Listening resumes after the direction is delivered. Use headphones to avoid movie audio entering the microphone."
                 >
                   {listening ? <MicOff size={16} /> : <Mic size={16} />}
                   {listening
-                    ? "Listening… tap when you finish"
+                    ? "Voice is on · tap to stop"
                     : "Talk to direct the film"}
                 </button>
                 <button

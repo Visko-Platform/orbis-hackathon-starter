@@ -35,6 +35,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run test:live-lifecycle
+      - run: npm run test:voice
       - name: Initialize fresh local D1
         run: |
           for migration in drizzle/*.sql; do

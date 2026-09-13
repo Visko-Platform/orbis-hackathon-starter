@@ -19,7 +19,8 @@
     "test:live-lifecycle": "node tests/live-lifecycle.mjs",
     "test:cosmic": "node tests/cosmic-preservation.mjs",
     "test:choices": "node tests/choice-regressions.mjs",
-    "deploy": "bash scripts/deploy-cloudflare.sh"
+    "deploy": "bash scripts/deploy-cloudflare.sh",
+    "test:voice": "node tests/voice-lifecycle.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
