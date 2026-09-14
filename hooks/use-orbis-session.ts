@@ -84,6 +84,56 @@ export function useOrbisSession(
     return () => window.removeEventListener("pagehide", handlePageHide);
   }, [getCurrentJwt, sessionId]);
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development" || !sessionId) {
+      return;
+    }
+
+    const jwt = getCurrentJwt();
+    if (!jwt) return;
+
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const register = async (attempt: number) => {
+      try {
+        const response = await fetch("/api/session-registry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, jwt }),
+        });
+        if (!response.ok) {
+          const result = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(
+            result?.error ?? `registry returned ${response.status}`,
+          );
+        }
+      } catch (caught) {
+        if (cancelled) return;
+        if (attempt < 5) {
+          retryTimer = setTimeout(
+            () => void register(attempt + 1),
+            attempt * 1_000,
+          );
+          return;
+        }
+        setError(
+          `Could not register Reactor session for development cleanup: ${
+            caught instanceof Error ? caught.message : String(caught)
+          }`,
+        );
+      }
+    };
+
+    void register(1);
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [getCurrentJwt, sessionId]);
+
   const runAction = async (action: () => Promise<unknown>) => {
     setBusy(true);
     setError("");
@@ -286,7 +336,21 @@ export function useOrbisSession(
     );
     try {
       const disconnected = await runAction(() => disconnect());
-      if (disconnected) clearJwt();
+      if (disconnected) {
+        if (process.env.NODE_ENV === "development" && sessionId) {
+          try {
+            await fetch("/api/session-registry", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId }),
+            });
+          } catch {
+            // A stale registry entry is harmless: the next sweep gets a 404
+            // from Reactor and removes it.
+          }
+        }
+        clearJwt();
+      }
     } finally {
       disconnecting.current = false;
     }

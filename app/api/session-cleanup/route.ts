@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { unregisterReactorSession } from "@/lib/server/reactor-session-registry";
+
+export const runtime = "nodejs";
+
 const REACTOR_API_URL = "https://api.reactor.inc";
 
 type CleanupRequest = {
@@ -49,6 +53,9 @@ export async function POST(request: Request) {
 
   // Cleanup is idempotent: a missing session has already been terminated.
   if (response.ok || response.status === 404) {
+    if (process.env.NODE_ENV === "development") {
+      await unregisterReactorSession(sessionId);
+    }
     return new Response(null, { status: 204 });
   }
 

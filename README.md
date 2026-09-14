@@ -22,6 +22,15 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+`npm run dev` starts Next.js through a small session-cleanup wrapper. While in
+development, sessions created by this starter are recorded in the gitignored
+`.reactor-dev-sessions.json` file. It contains session IDs and metadata, but no
+API keys or JWTs. The wrapper uses the server-only `REACTOR_API_KEY` to delete
+recorded sessions before startup and again on `Ctrl+C`/`SIGTERM`, so restarting
+the dev server cannot silently leave a previous Orbis session consuming
+capacity. If a startup sweep cannot delete a recorded session, the wrapper
+refuses to start another dev server and reports the session ID.
+
 Set both keys in `.env.local`:
 
 ```dotenv
@@ -84,6 +93,12 @@ before it is sent to Orbis.
 ## Project files
 
 - `app/api/token/route.ts` performs the server-side token exchange.
+- `app/api/session-cleanup/route.ts` performs best-effort session deletion when
+  the browser page exits.
+- `app/api/session-registry/route.ts` records verified development sessions for
+  startup and shutdown cleanup.
+- `scripts/dev-with-session-cleanup.mjs` wraps `next dev` with the development
+  cleanup sweeps.
 - `app/api/nano-banana/route.ts` performs the server-side image edit.
 - `app/api/orbis-prompt/route.ts` creates the image-grounded video prompt.
 - `components/orbis-demo.tsx` composes the provider, player, controls, and demo.
