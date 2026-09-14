@@ -9,16 +9,19 @@ import {
   unwrapOrbisMessage,
 } from "@/lib/orbis";
 
-export function useOrbisSession(onDisconnected: () => void) {
-  const { status, connect, disconnect, sendCommand, uploadFile } = useReactor(
-    (state) => ({
+export function useOrbisSession(
+  clearJwt: () => void,
+  getCurrentJwt: () => string | null,
+) {
+  const { status, sessionId, connect, disconnect, sendCommand, uploadFile } =
+    useReactor((state) => ({
       status: state.status,
+      sessionId: state.sessionId,
       connect: state.connect,
       disconnect: state.disconnect,
       sendCommand: state.sendCommand,
       uploadFile: state.uploadFile,
-    }),
-  );
+    }));
 
   const [prompt, setPrompt] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -49,21 +52,47 @@ export function useOrbisSession(onDisconnected: () => void) {
       status === "disconnected" &&
       previousStatus.current !== "disconnected"
     ) {
-      onDisconnected();
       setRunStarted(false);
       setPaused(false);
       setImageStatus("");
     }
     previousStatus.current = status;
-  }, [onDisconnected, status]);
+  }, [status]);
+
+  useEffect(() => {
+    const handlePageHide = (event: PageTransitionEvent) => {
+      // A page entering the back-forward cache is suspended, not closed.
+      if (event.persisted || !sessionId) return;
+
+      const jwt = getCurrentJwt();
+      if (!jwt) return;
+
+      // keepalive asks the browser to finish uploading this small request even
+      // after the document starts unloading. The server then terminates only
+      // the session owned by this session-scoped JWT.
+      void fetch("/api/session-cleanup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, jwt }),
+        keepalive: true,
+      }).catch(() => {
+        // The page is leaving, so there is nowhere useful to surface failure.
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
+  }, [getCurrentJwt, sessionId]);
 
   const runAction = async (action: () => Promise<unknown>) => {
     setBusy(true);
     setError("");
     try {
       await action();
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -256,7 +285,8 @@ export function useOrbisSession(onDisconnected: () => void) {
       requestAnimationFrame(() => resolve()),
     );
     try {
-      await runAction(() => disconnect());
+      const disconnected = await runAction(() => disconnect());
+      if (disconnected) clearJwt();
     } finally {
       disconnecting.current = false;
     }

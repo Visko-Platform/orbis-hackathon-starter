@@ -11,12 +11,23 @@ import { ORBIS_MODEL_NAME, ORBIS_TRACKS, requestReactorJwt } from "@/lib/orbis";
 
 export function OrbisDemo() {
   const jwtPromise = useRef<Promise<string> | null>(null);
-  const getJwt = useCallback(() => {
-    jwtPromise.current ??= requestReactorJwt();
-    return jwtPromise.current;
+  const currentJwt = useRef<string | null>(null);
+  const getJwt = useCallback(async () => {
+    const pending = (jwtPromise.current ??= requestReactorJwt());
+    try {
+      const jwt = await pending;
+      currentJwt.current = jwt;
+      return jwt;
+    } catch (error) {
+      // Do not permanently cache a failed token request.
+      if (jwtPromise.current === pending) jwtPromise.current = null;
+      throw error;
+    }
   }, []);
+  const getCurrentJwt = useCallback(() => currentJwt.current, []);
   const clearJwt = useCallback(() => {
     jwtPromise.current = null;
+    currentJwt.current = null;
   }, []);
 
   return (
@@ -28,14 +39,23 @@ export function OrbisDemo() {
         connectOptions={{ autoConnect: false }}
         jwtToken={getJwt}
       >
-        <OrbisSession clearJwt={clearJwt} />
+        <OrbisSession
+          clearJwt={clearJwt}
+          getCurrentJwt={getCurrentJwt}
+        />
       </ReactorProvider>
     </section>
   );
 }
 
-function OrbisSession({ clearJwt }: { clearJwt: () => void }) {
-  const session = useOrbisSession(clearJwt);
+function OrbisSession({
+  clearJwt,
+  getCurrentJwt,
+}: {
+  clearJwt: () => void;
+  getCurrentJwt: () => string | null;
+}) {
+  const session = useOrbisSession(clearJwt, getCurrentJwt);
 
   return (
     <>
